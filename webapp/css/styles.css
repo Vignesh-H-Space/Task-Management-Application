@@ -7324,6 +7324,95 @@ body {
   opacity: 0.8;
 }
 
+/* ── ✋ Drag & Drop Task Reordering Styles ──────────────────── */
+
+/* Drag Handle Grip Icon */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+  cursor: grab;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.15s ease;
+  margin-left: -4px;
+  margin-right: 2px;
+}
+
+.drag-handle i {
+  width: 14px;
+  height: 14px;
+}
+
+.task-card:hover .drag-handle {
+  opacity: 0.6;
+}
+
+.task-card:hover .drag-handle:hover {
+  opacity: 1;
+  color: var(--accent-primary);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Dragging state — the card being dragged */
+.task-card.dragging,
+.em-task-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  border: 1.5px dashed var(--accent-primary) !important;
+  background: rgba(245, 158, 11, 0.06) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15) !important;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Touch dragging — slightly elevated */
+.task-card.touch-dragging,
+.em-task-card.touch-dragging {
+  z-index: 1000;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(245, 158, 11, 0.2) !important;
+  transform: scale(1.03) rotate(1deg);
+}
+
+/* Draggable marker — subtle cursor change */
+.draggable-task {
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Sortable container visual hint when something is being dragged over */
+.tasks-grid {
+  min-height: 40px;
+}
+
+.em-quadrant-body {
+  min-height: 60px;
+  transition: background 0.2s ease;
+}
+
+/* Matrix quadrant highlight when dragging over */
+.em-quadrant-body.drag-over {
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: var(--radius-md);
+}
+
+/* Make sure task-card has the right flex layout with drag handle */
+.task-card {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Mobile: always show drag handle since hover doesn't exist */
+@media (max-width: 768px) {
+  .drag-handle {
+    opacity: 0.4;
+  }
+}
+
+
 
 
 
