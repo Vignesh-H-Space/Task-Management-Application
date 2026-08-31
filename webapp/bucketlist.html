@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life's Bucket List | Tesseract</title>
+  <meta name="description" content="Curate your lifetime dreams, epic adventures, and summit ambitions.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- Life's Bucket List View -->
+      <section class="bucketlist-view" id="bucketlist-view-container">
+        <!-- Hero Inspiration Card -->
+        <div class="bucketlist-hero">
+          <div class="bucketlist-hero-left">
+            <div class="bucketlist-tag">
+              <i data-lucide="sparkles"></i>
+              <span>LIFETIME LEGACY & DREAMS</span>
+            </div>
+            <h2 class="bucketlist-hero-title">Your Life's Bucket List</h2>
+            <p class="bucketlist-hero-desc">The collection of experiences, summit milestones, and adventures that define a life well-lived.</p>
+            
+            <div class="bucketlist-quote-card">
+              <div class="quote-symbol">“</div>
+              <p class="quote-text" id="bucketlist-quote-text">"The purpose of life is to live it, to taste experience to the utmost, to reach out eagerly and without fear."</p>
+              <span class="quote-author" id="bucketlist-quote-author">— Eleanor Roosevelt</span>
+            </div>
+          </div>
+
+          <!-- Stats Ribbon -->
+          <div class="bucketlist-stats-grid">
+            <div class="bl-stat-box">
+              <span class="bl-stat-val" id="stat-bl-total">0</span>
+              <span class="bl-stat-lbl">Total Dreams</span>
+            </div>
+            <div class="bl-stat-box accent-emerald">
+              <span class="bl-stat-val" id="stat-bl-achieved">0</span>
+              <span class="bl-stat-lbl">Achieved</span>
+            </div>
+            <div class="bl-stat-box accent-amber">
+              <span class="bl-stat-val" id="stat-bl-progress">0</span>
+              <span class="bl-stat-lbl">In Progress</span>
+            </div>
+            <div class="bl-stat-box accent-cyan">
+              <span class="bl-stat-val" id="stat-bl-pct">0%</span>
+              <span class="bl-stat-lbl">Fulfillment</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div class="bucketlist-toolbar">
+          <!-- Category Pills -->
+          <div class="category-filter-pills">
+            <button class="category-pill active" data-cat="all" onclick="BucketListEngine.setCategoryFilter('all');">
+              <span>✨</span>
+              <span>All Dreams</span>
+            </button>
+            <button class="category-pill" data-cat="travel" onclick="BucketListEngine.setCategoryFilter('travel');">
+              <span>🌍</span>
+              <span>Travel & Adventure</span>
+            </button>
+            <button class="category-pill" data-cat="career" onclick="BucketListEngine.setCategoryFilter('career');">
+              <span>🎯</span>
+              <span>Career & Mastery</span>
+            </button>
+            <button class="category-pill" data-cat="health" onclick="BucketListEngine.setCategoryFilter('health');">
+              <span>💪</span>
+              <span>Health & Vitality</span>
+            </button>
+            <button class="category-pill" data-cat="creative" onclick="BucketListEngine.setCategoryFilter('creative');">
+              <span>🎨</span>
+              <span>Creative & Skills</span>
+            </button>
+            <button class="category-pill" data-cat="financial" onclick="BucketListEngine.setCategoryFilter('financial');">
+              <span>💰</span>
+              <span>Financial Freedom</span>
+            </button>
+            <button class="category-pill" data-cat="relationships" onclick="BucketListEngine.setCategoryFilter('relationships');">
+              <span>❤️</span>
+              <span>Life & Legacy</span>
+            </button>
+          </div>
+
+          <!-- Status Filter Tabs & Add Button -->
+          <div class="bucketlist-toolbar-actions">
+            <div class="status-filter-tabs">
+              <button class="status-filter-btn active" data-status="all" onclick="BucketListEngine.setStatusFilter('all');">All</button>
+              <button class="status-filter-btn" data-status="dream" onclick="BucketListEngine.setStatusFilter('dream');">🔮 Dreams</button>
+              <button class="status-filter-btn" data-status="in_progress" onclick="BucketListEngine.setStatusFilter('in_progress');">🚀 In Progress</button>
+              <button class="status-filter-btn" data-status="achieved" onclick="BucketListEngine.setStatusFilter('achieved');">✅ Achieved</button>
+            </div>
+
+            <button class="btn btn-primary" onclick="BucketListEngine.openAddModal();">
+              <i data-lucide="plus"></i>
+              <span>Add Dream</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dream Cards Grid -->
+        <div class="bucketlist-grid" id="bucketlist-grid">
+          <!-- Injected by BucketListEngine.render() -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add / Edit Life Dream Modal -->
+  <div class="modal-backdrop" id="bucketlist-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="bl-modal-title">Add Life Dream</h3>
+        <button class="modal-close-btn" onclick="BucketListEngine.closeModal();">&times;</button>
+      </div>
+      <form id="bucketlist-form" onsubmit="BucketListEngine.saveDream(event);">
+        <input type="hidden" id="bl-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="bl-title">Dream Title *</label>
+            <input type="text" id="bl-title" class="form-control" placeholder="e.g. Scuba dive the Great Barrier Reef" required autofocus>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="bl-category">Life Category</label>
+              <select id="bl-category" class="form-control">
+                <option value="travel">🌍 Travel & Adventure</option>
+                <option value="career">🎯 Career & Mastery</option>
+                <option value="health">💪 Health & Vitality</option>
+                <option value="creative">🎨 Creative & Skills</option>
+                <option value="financial">💰 Financial Freedom</option>
+                <option value="relationships">❤️ Life & Legacy</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bl-emoji">Icon / Emoji</label>
+              <input type="text" id="bl-emoji" class="form-control" placeholder="e.g. 🌊" maxlength="4" value="✨">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="bl-status">Status</label>
+              <select id="bl-status" class="form-control">
+                <option value="dream">🔮 Dream (Aspirational)</option>
+                <option value="in_progress">🚀 In Progress (Active Pursuit)</option>
+                <option value="achieved">✅ Achieved (Accomplished)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bl-priority">Significance</label>
+              <select id="bl-priority" class="form-control">
+                <option value="high">🔴 High (Top Life Priority)</option>
+                <option value="medium" selected>🟡 Medium (Exciting Goal)</option>
+                <option value="low">🟢 Someday / Casual</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bl-target-date">Target Date / Year (Optional)</label>
+            <input type="date" id="bl-target-date" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bl-description">Vision & Details</label>
+            <textarea id="bl-description" class="form-control" rows="2" placeholder="Describe what this experience means to you..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bl-notes">Action Steps & Research Notes</label>
+            <textarea id="bl-notes" class="form-control" rows="2" placeholder="Notes on location, budget, training, or timing..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="BucketListEngine.closeModal();">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="sparkles"></i>
+            <span>Save Life Dream</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

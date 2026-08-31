@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tesseract | Multi-Horizon Goal & Task Matrix</title>
+  <meta name="description" content="Tesseract: Multi-dimensional goal & task management across Daily, Weekly, Monthly, Quarterly, and Annual horizons with cascading alignment.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- Daily Mindset / Affirmation Principle Ribbon (Executive Priming Banner) -->
+      <div class="mindset-ribbon" id="mindset-ribbon">
+        <div class="mindset-left">
+          <div class="mindset-icon-box" id="mindset-icon-box">
+            <span class="mindset-icon" id="mindset-emoji">⚡</span>
+          </div>
+          <div class="mindset-content">
+            <div class="mindset-tag-row">
+              <span class="mindset-label" id="mindset-category">EXECUTIVE MENTAL MODEL</span>
+              <span class="mindset-author-pill" id="mindset-author">— James Clear</span>
+            </div>
+            <p class="mindset-quote" id="mindset-quote">"You do not rise to the level of your goals. You fall to the level of your systems."</p>
+          </div>
+        </div>
+        <div class="mindset-actions">
+          <button class="mindset-btn" id="btn-refresh-mindset" onclick="rotateMindsetPrinciple(true)" title="Shuffle to another executive principle">
+            <i data-lucide="shuffle"></i>
+            <span>New Principle</span>
+          </button>
+          <button class="mindset-icon-btn" id="btn-copy-mindset" onclick="copyMindsetPrinciple()" title="Copy quote to clipboard">
+            <i data-lucide="copy"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Executive Command Hub Hero (Landing Page) -->
+      <section class="command-hero" id="command-hero">
+        <div class="command-hero-content">
+          <div class="command-greeting-row">
+            <div>
+              <div class="command-date-pill" id="command-date-pill">
+                <i data-lucide="calendar"></i>
+                <span id="live-date-text">Today</span>
+              </div>
+              <h2 class="command-greeting-title" id="home-greeting-title">Welcome back 👋</h2>
+              <p class="command-greeting-desc" id="home-greeting-desc">Your multi-horizon flight plan for today. Lock in and execute.</p>
+              
+              <!-- Daily Ritual Buttons -->
+              <div class="ritual-quick-actions">
+                <button class="ritual-action-btn morning" onclick="RitualsEngine.openMorningModal();" title="Set Today's Top 3 Wins">
+                  <span class="ritual-btn-emoji">🌅</span>
+                  <span>Morning Setup</span>
+                </button>
+                <button class="ritual-action-btn evening" onclick="RitualsEngine.openEveningModal();" title="Review Day & Roll Over Tasks">
+                  <span class="ritual-btn-emoji">🌙</span>
+                  <span>Evening Review</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="command-quick-metrics">
+              <div class="quick-metric-item">
+                <span class="quick-metric-val" id="metric-daily-ratio">0/0</span>
+                <span class="quick-metric-lbl">Daily Goals</span>
+              </div>
+              <div class="quick-metric-divider"></div>
+              <div class="quick-metric-item accent">
+                <span class="quick-metric-val" id="metric-streak-count">0 🔥</span>
+                <span class="quick-metric-lbl">Day Streak</span>
+              </div>
+              <div class="quick-metric-divider"></div>
+              <div class="quick-metric-item">
+                <span class="quick-metric-val" id="metric-urgent-count">0</span>
+                <span class="quick-metric-lbl">Urgent Open</span>
+              </div>
+              <div class="quick-metric-divider"></div>
+              <div class="quick-metric-item" title="Strategic Alignment: % of tactical goals linked to higher horizons">
+                <span class="quick-metric-val text-emerald" id="metric-alignment-score">100%</span>
+                <span class="quick-metric-lbl">🌐 Alignment</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top 3 Priority Focus Banner (The Rule of 3) -->
+          <div class="morning-priority-banner" id="morning-priority-banner">
+            <!-- Injected by RitualsEngine.renderMorningBanner() -->
+          </div>
+
+          <!-- Spotlight Target Priority Card -->
+          <div class="command-spotlight-card" id="command-spotlight-card">
+            <div class="spotlight-badge"><i data-lucide="zap"></i> CURRENT FOCUS TARGET</div>
+            <div class="spotlight-inner" id="spotlight-inner">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+          <!-- Daily Executive Quests Board (Habitica / WoW System) -->
+          <div class="daily-quest-board" id="daily-quest-board">
+            <!-- Injected by XPEngine.renderQuestBoard() -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 7-Day Consistency Dot Matrix Habits Widget -->
+      <section class="habits-widget-container" id="habits-widget-container">
+        <!-- Injected by HabitsEngine.renderWidget() -->
+      </section>
+
+      <!-- Horizon Launchpad Cards -->
+      <section class="progress-summary-grid" id="progress-summary-container">
+        <!-- Daily -->
+        <div class="horizon-card" data-horizon="daily">
+          <div class="horizon-card-top">
+            <div class="horizon-badge tier-daily">🌅 Daily</div>
+            <button class="card-add-btn" title="Add Daily Task" onclick="event.stopPropagation(); openAddModal('daily');">
+              <i data-lucide="plus"></i>
+            </button>
+          </div>
+          <div class="horizon-card-body">
+            <div class="horizon-card-stats">
+              <div class="horizon-pct" id="stat-pct-daily">0%</div>
+              <span class="horizon-ratio" id="stat-ratio-daily">0/0</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar-fill fill-daily" id="stat-bar-daily" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly -->
+        <div class="horizon-card" data-horizon="weekly">
+          <div class="horizon-card-top">
+            <div class="horizon-badge tier-weekly">📅 Weekly</div>
+            <button class="card-add-btn" title="Add Weekly Milestone" onclick="event.stopPropagation(); openAddModal('weekly');">
+              <i data-lucide="plus"></i>
+            </button>
+          </div>
+          <div class="horizon-card-body">
+            <div class="horizon-card-stats">
+              <div class="horizon-pct" id="stat-pct-weekly">0%</div>
+              <span class="horizon-ratio" id="stat-ratio-weekly">0/0</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar-fill fill-weekly" id="stat-bar-weekly" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly -->
+        <div class="horizon-card" data-horizon="monthly">
+          <div class="horizon-card-top">
+            <div class="horizon-badge tier-monthly">🗓️ Monthly</div>
+            <button class="card-add-btn" title="Add Monthly Goal" onclick="event.stopPropagation(); openAddModal('monthly');">
+              <i data-lucide="plus"></i>
+            </button>
+          </div>
+          <div class="horizon-card-body">
+            <div class="horizon-card-stats">
+              <div class="horizon-pct" id="stat-pct-monthly">0%</div>
+              <span class="horizon-ratio" id="stat-ratio-monthly">0/0</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar-fill fill-monthly" id="stat-bar-monthly" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quarterly (hidden by default in General view) -->
+        <div class="horizon-card" data-horizon="quarterly" style="display:none;">
+          <div class="horizon-card-top">
+            <div class="horizon-badge tier-quarterly">🎯 Quarterly</div>
+            <button class="card-add-btn" title="Add Quarterly Goal" onclick="event.stopPropagation(); openAddModal('quarterly');">
+              <i data-lucide="plus"></i>
+            </button>
+          </div>
+          <div class="horizon-card-body">
+            <div class="horizon-card-stats">
+              <div class="horizon-pct" id="stat-pct-quarterly">0%</div>
+              <span class="horizon-ratio" id="stat-ratio-quarterly">0/0</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar-fill fill-quarterly" id="stat-bar-quarterly" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Annual (hidden by default in General view) -->
+        <div class="horizon-card" data-horizon="annual" style="display:none;">
+          <div class="horizon-card-top">
+            <div class="horizon-badge tier-annual">🏆 Annual</div>
+            <button class="card-add-btn" title="Add Annual Vision" onclick="event.stopPropagation(); openAddModal('annual');">
+              <i data-lucide="plus"></i>
+            </button>
+          </div>
+          <div class="horizon-card-body">
+            <div class="horizon-card-stats">
+              <div class="horizon-pct" id="stat-pct-annual">0%</div>
+              <span class="horizon-ratio" id="stat-ratio-annual">0/0</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar-fill fill-annual" id="stat-bar-annual" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View Mode Switcher -->
+      <div class="view-mode-switcher">
+        <span class="view-mode-label">View:</span>
+        <div class="segmented-control view-mode-control">
+          <button class="segment active" id="view-mode-list" onclick="toggleViewMode()" title="Standard List View">
+            <i data-lucide="list"></i>
+            <span>List</span>
+          </button>
+          <button class="segment" id="view-mode-matrix" onclick="toggleViewMode()" title="Eisenhower Matrix">
+            <i data-lucide="layout-grid"></i>
+            <span>Matrix</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Eisenhower Matrix Container (hidden by default) -->
+      <section class="eisenhower-matrix" id="eisenhower-matrix-container" style="display: none;">
+        <!-- Rendered by renderEisenhowerMatrix() -->
+      </section>
+
+      <!-- Filter Controls Bar -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Horizon:</span>
+          <select class="custom-select" id="horizon-select-filter">
+            <option value="general">🏠 Home (Daily, Weekly, Monthly)</option>
+            <option value="daily">🌅 Daily Tasks</option>
+            <option value="weekly">📅 Weekly Milestones</option>
+            <option value="monthly">🗓️ Monthly Goals</option>
+            <option value="quarterly">🎯 Quarterly Goals</option>
+            <option value="annual">🏆 Annual Vision</option>
+            <option value="all">🌐 All 5 Horizons</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <div class="segmented-control" id="status-filter">
+            <button class="segment active" data-status="all">All</button>
+            <button class="segment" data-status="active">Incomplete</button>
+            <button class="segment" data-status="completed">Completed</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Category:</span>
+          <select class="custom-select" id="category-filter">
+            <option value="all">All Categories</option>
+            <option value="Product">Product</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Career">Career</option>
+            <option value="Finance">Finance</option>
+            <option value="Health">Health</option>
+            <option value="Personal">Personal</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Priority:</span>
+          <select class="custom-select" id="priority-filter">
+            <option value="all">All Priorities</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn btn-ghost btn-sm" id="btn-export-markdown" title="Copy Markdown Summary to Clipboard">
+            <i data-lucide="clipboard-copy"></i>
+            <span>Export Markdown</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Tasks List Container -->
+      <section class="task-list-view" id="tasks-container">
+        <!-- Injected via JavaScript -->
+      </section>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

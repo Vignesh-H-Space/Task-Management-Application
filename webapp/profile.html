@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile | Tesseract</title>
+  <meta name="description" content="Personal Profile, Streak Milestones, Badges, and Activity in Tesseract.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- Profile Page View -->
+      <section class="profile-view" id="profile-container">
+        <div class="profile-hero">
+          <button class="profile-back-btn" id="btn-profile-back" onclick="window.location.href='index.html'">
+            <i data-lucide="arrow-left"></i>
+            <span>Back to Dashboard</span>
+          </button>
+          <div class="profile-hero-inner">
+            <div class="profile-avatar-large" id="profile-avatar-large" title="Click to change photo">
+              <img id="profile-avatar-img" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
+              <i data-lucide="user" id="profile-avatar-fallback"></i>
+              <div class="avatar-overlay"><i data-lucide="camera"></i></div>
+            </div>
+            <input type="file" id="profile-image-input" accept="image/*" style="display:none;">
+            <div class="profile-hero-info">
+              <div class="profile-name-row">
+                <h2 class="profile-name" id="profile-name">Tesseract User</h2>
+                <button class="profile-edit-name-btn" id="btn-edit-name" title="Edit name"><i data-lucide="pencil"></i></button>
+              </div>
+              <p class="profile-tagline" id="profile-tagline">Starter</p>
+              <div class="profile-joined">
+                <i data-lucide="calendar"></i>
+                <span id="profile-joined-date">Member since —</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Executive Level & XP Progression Card -->
+        <div class="profile-xp-card" id="profile-xp-card">
+          <div class="xp-card-top">
+            <div class="xp-card-rank-info">
+              <span class="xp-level-badge" id="profile-level-badge">Lvl 1</span>
+              <div>
+                <h3 class="xp-rank-title" id="profile-rank-title">🌱 Apprentice</h3>
+                <span class="xp-rank-desc" id="profile-rank-desc">Embarking on the execution matrix</span>
+              </div>
+            </div>
+            <div class="xp-card-total-box">
+              <span class="xp-total-digits" id="profile-total-xp">120 XP</span>
+              <span class="xp-multiplier-pill" id="profile-multiplier-pill">1.0x Multiplier</span>
+            </div>
+          </div>
+          <div class="xp-progress-section">
+            <div class="xp-progress-labels">
+              <span id="profile-xp-in-level">120 / 500 XP to next rank</span>
+              <span id="profile-next-rank-preview">Next: 🎯 Operator</span>
+            </div>
+            <div class="xp-track">
+              <div class="xp-fill" id="profile-xp-fill" style="width: 24%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🏛️ Personal North Star Creed & Core Values Card -->
+        <div class="profile-section-card profile-creed-card" id="profile-creed-card">
+          <div class="creed-card-header">
+            <div class="creed-title-group">
+              <div class="creed-icon-badge">🏛️</div>
+              <div>
+                <h3 class="profile-section-title">Personal North Star Creed & Core Values</h3>
+                <p class="profile-section-sub">Your non-negotiable mission, personal operating philosophy, and core principles.</p>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-edit-creed" onclick="openCreedModal();" title="Edit your personal creed and values">
+              <i data-lucide="edit-3"></i>
+              <span>Edit Creed</span>
+            </button>
+          </div>
+
+          <div class="creed-card-body">
+            <!-- Mission Quote Box -->
+            <div class="creed-mission-box">
+              <div class="creed-quote-mark">“</div>
+              <div class="creed-mission-content">
+                <span class="creed-label">LIFE MISSION & PHILOSOPHY</span>
+                <p class="creed-mission-text" id="creed-display-mission">Architect scalable systems, execute with ruthless consistency, and compound value across all life dimensions.</p>
+              </div>
+            </div>
+
+            <!-- Motto & Core Values Row -->
+            <div class="creed-details-grid">
+              <div class="creed-motto-box">
+                <span class="creed-label">EXECUTIVE MOTTO</span>
+                <div class="creed-motto-pill">
+                  <span class="motto-sparkle">⚡</span>
+                  <span id="creed-display-motto">Discipline is freedom. Compound daily.</span>
+                </div>
+              </div>
+
+              <div class="creed-values-box">
+                <span class="creed-label">3 CORE VALUES</span>
+                <div class="creed-values-tags" id="creed-display-values">
+                  <span class="creed-value-tag"><i data-lucide="shield-check"></i> <span>Ruthless Prioritization</span></span>
+                  <span class="creed-value-tag"><i data-lucide="zap"></i> <span>Deep Work Intensity</span></span>
+                  <span class="creed-value-tag"><i data-lucide="target"></i> <span>Unwavering Follow-Through</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="profile-stats-row" id="profile-stats-row">
+          <div class="profile-stat-card">
+            <div class="profile-stat-value" id="pstat-total-tasks">0</div>
+            <div class="profile-stat-label">Total Tasks</div>
+          </div>
+          <div class="profile-stat-card">
+            <div class="profile-stat-value" id="pstat-completed">0</div>
+            <div class="profile-stat-label">Completed</div>
+          </div>
+          <div class="profile-stat-card">
+            <div class="profile-stat-value" id="pstat-completion-rate">0%</div>
+            <div class="profile-stat-label">Completion Rate</div>
+          </div>
+          <div class="profile-stat-card accent">
+            <div class="profile-stat-value" id="pstat-streak">0</div>
+            <div class="profile-stat-label">Day Streak 🔥</div>
+          </div>
+          <div class="profile-stat-card">
+            <div class="profile-stat-value" id="pstat-shields">1 🛡️</div>
+            <div class="profile-stat-label">Streak Shields</div>
+          </div>
+          <div class="profile-stat-card">
+            <div class="profile-stat-value" id="pstat-deep-work">0h</div>
+            <div class="profile-stat-label">Deep Work Logged</div>
+          </div>
+        </div>
+
+        <!-- Achievement Badge Showcase -->
+        <div class="profile-section-card">
+          <div class="badge-section-header">
+            <div>
+              <h3 class="profile-section-title"><i data-lucide="award"></i> Lifetime Achievement Badges</h3>
+              <p class="profile-section-sub">Earn badges by conquering tactical milestones, deep work hours, and maintaining daily streaks.</p>
+            </div>
+            <span class="badge-count-pill" id="profile-badge-count">0 / 12 Unlocked</span>
+          </div>
+          <div class="profile-badge-showcase" id="profile-badge-showcase">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Per-Horizon Breakdown -->
+        <div class="profile-section-card">
+          <h3 class="profile-section-title"><i data-lucide="layers"></i> Horizon Breakdown</h3>
+          <div class="profile-horizon-breakdown" id="profile-horizon-breakdown">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Recent Activity & XP History -->
+        <div class="profile-section-card">
+          <h3 class="profile-section-title"><i data-lucide="activity"></i> Recent XP & Execution History</h3>
+          <div class="profile-activity-list" id="profile-activity-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- 💾 Executive Data Vault & Backup Control Center -->
+        <div class="profile-section-card profile-vault-card" id="profile-vault-card">
+          <div class="vault-card-header">
+            <div class="vault-title-group">
+              <div class="vault-icon-badge">💾</div>
+              <div>
+                <h3 class="profile-section-title">Executive Data Vault & Backup Controls</h3>
+                <p class="profile-section-sub">100% private, client-side persistent storage. Export, restore, or archive your matrix anytime.</p>
+              </div>
+            </div>
+            <div class="vault-storage-badge" id="vault-storage-badge">
+              <i data-lucide="database"></i>
+              <span id="vault-storage-size">Calculating storage...</span>
+            </div>
+          </div>
+
+          <div class="vault-card-body">
+            <!-- Storage breakdown metrics -->
+            <div class="vault-metrics-grid">
+              <div class="vault-metric-box">
+                <span class="vault-metric-num" id="vstat-tasks">0</span>
+                <span class="vault-metric-name">Active Goals & Tasks</span>
+              </div>
+              <div class="vault-metric-box">
+                <span class="vault-metric-num" id="vstat-habits">0</span>
+                <span class="vault-metric-name">Habit Trackers</span>
+              </div>
+              <div class="vault-metric-box">
+                <span class="vault-metric-num" id="vstat-bucket">0</span>
+                <span class="vault-metric-name">Bucket List Dreams</span>
+              </div>
+              <div class="vault-metric-box">
+                <span class="vault-metric-num" id="vstat-focus">0</span>
+                <span class="vault-metric-name">Focus Sprints Logged</span>
+              </div>
+            </div>
+
+            <!-- Action Controls Grid -->
+            <div class="vault-actions-grid">
+              <button class="btn btn-primary" onclick="exportDataJSON();" title="Download complete database as a .json backup file">
+                <i data-lucide="download"></i>
+                <span>Export JSON Backup</span>
+              </button>
+
+              <button class="btn btn-secondary" onclick="triggerImportJSON();" title="Import JSON backup from PC or phone">
+                <i data-lucide="upload"></i>
+                <span>Import JSON Backup</span>
+              </button>
+              <input type="file" id="vault-import-input" accept=".json" style="display:none;" onchange="handleVaultImport(event)">
+
+              <button class="btn btn-secondary" onclick="WeeklyReportEngine.open();" title="Generate formatted 7-day executive debrief report">
+                <i data-lucide="file-text"></i>
+                <span>Weekly Executive Report</span>
+              </button>
+
+              <button class="btn btn-secondary" onclick="archiveCompletedTasks();" title="Clean up finished daily tasks to optimize storage">
+                <i data-lucide="archive"></i>
+                <span>Archive Completed Tasks</span>
+              </button>
+
+              <button class="btn btn-ghost text-danger" onclick="confirmResetData();" title="Reset all data back to clean factory starter state">
+                <i data-lucide="refresh-cw"></i>
+                <span>Reset to Factory State</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
