@@ -12,6 +12,7 @@ const ASSETS_TO_CACHE = [
   './js/app.js',
   './js/components.js',
   './js/command_palette.js',
+  './js/drag_drop.js',
   './js/initial_data.js',
   './js/xp_engine.js',
   './js/habits_engine.js',

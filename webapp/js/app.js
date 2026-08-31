@@ -1334,6 +1334,11 @@ function renderTaskList() {
   }
 
   lucide.createIcons();
+
+  // Bind drag-and-drop reordering
+  if (typeof DragDropEngine !== 'undefined') {
+    setTimeout(() => DragDropEngine.bindListView(), 50);
+  }
 }
 
 // ── Eisenhower Matrix View ──────────────────────────────────────
@@ -1467,6 +1472,11 @@ function renderEisenhowerMatrix() {
   }).join('');
 
   lucide.createIcons();
+
+  // Bind drag-and-drop for Eisenhower quadrants
+  if (typeof DragDropEngine !== 'undefined') {
+    setTimeout(() => DragDropEngine.bindMatrixView(), 50);
+  }
 }
 
 function moveTaskToQuadrant(taskId, quadrantId, event) {
@@ -1573,6 +1583,9 @@ function createTaskCardElement(task) {
   }
 
   card.innerHTML = `
+    <div class="drag-handle" title="Drag to reorder">
+      <i data-lucide="grip-vertical"></i>
+    </div>
     <div class="checkbox-wrapper">
       <input type="checkbox" class="custom-checkbox" id="chk-${task.id}" ${task.completed ? 'checked' : ''} aria-label="Mark ${task.title} complete" />
     </div>
