@@ -232,13 +232,17 @@
       <div class="view-mode-switcher">
         <span class="view-mode-label">View:</span>
         <div class="segmented-control view-mode-control">
-          <button class="segment active" id="view-mode-list" onclick="toggleViewMode()" title="Standard List View">
+          <button class="segment active" id="view-mode-list" onclick="switchView('list')" title="Standard List View">
             <i data-lucide="list"></i>
             <span>List</span>
           </button>
-          <button class="segment" id="view-mode-matrix" onclick="toggleViewMode()" title="Eisenhower Matrix">
+          <button class="segment" id="view-mode-matrix" onclick="switchView('eisenhower')" title="Eisenhower Matrix">
             <i data-lucide="layout-grid"></i>
             <span>Matrix</span>
+          </button>
+          <button class="segment" id="view-mode-kanban" onclick="switchView('kanban')" title="Kanban Board">
+            <i data-lucide="columns"></i>
+            <span>Kanban</span>
           </button>
         </div>
       </div>
@@ -246,6 +250,11 @@
       <!-- Eisenhower Matrix Container (hidden by default) -->
       <section class="eisenhower-matrix" id="eisenhower-matrix-container" style="display: none;">
         <!-- Rendered by renderEisenhowerMatrix() -->
+      </section>
+
+      <!-- Kanban Board Container (hidden by default) -->
+      <section class="kanban-board" id="kanban-board-container" style="display: none;">
+        <!-- Rendered by renderKanbanBoard() -->
       </section>
 
       <!-- Filter Controls Bar -->
