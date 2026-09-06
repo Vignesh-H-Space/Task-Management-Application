@@ -3955,6 +3955,141 @@ body {
   color: #fff;
 }
 
+/* Roadmap Navigation Controls */
+.roadmap-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-roadmap-nav {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.btn-roadmap-nav:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.btn-roadmap-nav svg {
+  width: 15px;
+  height: 15px;
+}
+
+.btn-roadmap-today {
+  padding: 5px 12px;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.btn-roadmap-today:hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #f59e0b;
+  color: #fef08a;
+}
+
+/* Roadmap Secondary Filter Bar */
+.roadmap-filters-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 10px 18px;
+  flex-wrap: wrap;
+}
+
+.roadmap-filters-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.roadmap-filters-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.roadmap-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.roadmap-filter-item label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.roadmap-filter-item label svg {
+  width: 13px;
+  height: 13px;
+  color: #f59e0b;
+}
+
+.roadmap-count-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.btn-roadmap-reset {
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.btn-roadmap-reset:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.btn-roadmap-reset svg {
+  width: 13px;
+  height: 13px;
+}
+
 .form-control-sm {
   padding: 4px 10px;
   font-size: 0.76rem;
@@ -4040,10 +4175,39 @@ body {
   color: var(--text-muted);
   text-align: center;
   border-right: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 0;
+  transition: var(--transition);
 }
 
 .gantt-month-cell:last-child {
   border-right: none;
+}
+
+.gantt-month-cell.weekend {
+  background: rgba(255, 255, 255, 0.015);
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.gantt-month-cell.is-today {
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
+  font-weight: 800;
+  border-radius: 4px;
+}
+
+.gantt-cell-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.gantt-cell-sublabel {
+  font-size: 0.62rem;
+  opacity: 0.75;
+  font-weight: 600;
 }
 
 /* Today Marker Line */
@@ -4248,6 +4412,127 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Gantt Task Meta Badges & Indicators */
+.gantt-task-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.gantt-task-tier-pill {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+}
+
+.gantt-urgent-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+  display: inline-block;
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 10px #ef4444; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* Gantt Clipped Indicators */
+.gantt-bar-wrapper.clipped-left .gantt-bar {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.4);
+}
+
+.gantt-bar-wrapper.clipped-right .gantt-bar {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  border-right: 2px dashed rgba(255, 255, 255, 0.4);
+}
+
+/* Priority text colors in tooltip */
+.priority-urgent { color: #ef4444 !important; }
+.priority-high { color: #f97316 !important; }
+.priority-medium { color: #eab308 !important; }
+.priority-low { color: #10b981 !important; }
+
+/* Gantt Empty State */
+.gantt-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  margin: 20px 0;
+}
+
+.gantt-empty-state svg {
+  width: 44px;
+  height: 44px;
+  color: #f59e0b;
+  opacity: 0.8;
+  margin-bottom: 14px;
+}
+
+.gantt-empty-state h4 {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.gantt-empty-state p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0 0 16px 0;
+  max-width: 420px;
+}
+
+.gantt-empty-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Roadmap Toolbar Responsive Breakpoints */
+@media (max-width: 900px) {
+  .roadmap-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .roadmap-toolbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .roadmap-filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .roadmap-filters-left {
+    width: 100%;
+    gap: 10px;
+  }
+  .roadmap-filters-right {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* ── The Executive Ritual Engine Styles ───────────────────── */
@@ -7412,7 +7697,322 @@ body {
   }
 }
 
+/* ── 📋 Kanban Board View ──────────────────────────────────── */
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  min-height: 400px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
 
+.kanban-board::-webkit-scrollbar {
+  height: 6px;
+}
 
+.kanban-board::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
 
+.kanban-board::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.kb-column {
+  min-width: 280px;
+  max-width: 320px;
+  flex: 1;
+  background: rgba(12, 12, 16, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+}
+
+.kb-column-header {
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+}
+
+.kb-column-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kb-column-emoji {
+  font-size: 1.1rem;
+}
+
+.kb-column-label {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.kb-column-count {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid;
+  margin-left: auto;
+}
+
+.kb-column-body {
+  flex: 1;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 100px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.kb-column-body.kb-drag-over {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-md);
+}
+
+.kb-empty {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 2rem 1rem;
+  opacity: 0.6;
+}
+
+/* ── Kanban Card ───────────────────────────────────────────── */
+.kb-card {
+  background: rgba(18, 18, 24, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kb-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.kb-card:active {
+  cursor: grabbing;
+}
+
+.kb-card.kb-dragging {
+  opacity: 0.35;
+  transform: scale(0.95) rotate(1deg);
+  border: 1.5px dashed var(--accent-primary) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+.kb-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.kb-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+  flex: 1;
+}
+
+.kb-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.kb-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.kb-tier-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.kb-prio-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.kb-prio-urgent { color: #ef4444; border-color: rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.1); }
+.kb-prio-high { color: #f97316; border-color: rgba(249, 115, 22, 0.35); background: rgba(249, 115, 22, 0.1); }
+.kb-prio-medium { color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.1); }
+.kb-prio-low { color: #10b981; border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.1); }
+
+.kb-due-pill {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.kb-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kb-progress-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.kb-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.kb-progress-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.kb-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kb-category-tag {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.kb-focus-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--accent-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.kb-focus-btn i { width: 12px; height: 12px; }
+
+.kb-focus-btn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+/* ── Kanban Card Move Dropdown ─────────────────────────────── */
+.kb-card-move-dropdown {
+  position: relative;
+}
+
+.kb-move-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.kb-move-btn i { width: 14px; height: 14px; }
+
+.kb-move-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.kb-move-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 160px;
+  background: #141418;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.kb-card-move-dropdown:hover .kb-move-menu,
+.kb-move-btn:focus + .kb-move-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.kb-move-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.kb-move-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Kanban Responsive ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .kanban-board {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .kb-column {
+    min-width: 100%;
+    max-width: 100%;
+  }
+}
 
