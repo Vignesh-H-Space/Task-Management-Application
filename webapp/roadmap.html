@@ -34,37 +34,104 @@
 
       <!-- Roadmap Timeline View -->
       <section class="roadmap-view" id="roadmap-view-container">
-        <!-- View Toolbar & Filters -->
+        <!-- View Toolbar & Navigation -->
         <div class="roadmap-toolbar">
           <div class="roadmap-toolbar-left">
             <h3 class="roadmap-toolbar-title">
               <i data-lucide="calendar-range"></i>
-              <span>12-Month Horizon Roadmap</span>
+              <span id="roadmap-view-title">Horizon Roadmap & Gantt</span>
             </h3>
-            <span class="roadmap-year-badge">2026 Flight Plan</span>
+            <span class="roadmap-year-badge" id="roadmap-period-badge">2026 Flight Plan</span>
           </div>
 
           <div class="roadmap-toolbar-right">
-            <!-- Zoom Quarter Filter -->
-            <div class="roadmap-filter-group">
+            <!-- Period Navigation Controls -->
+            <div class="roadmap-nav-controls">
+              <button class="btn-roadmap-nav" id="roadmap-prev-btn" title="Previous period" aria-label="Previous period">
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <button class="btn-roadmap-nav btn-roadmap-today" id="roadmap-today-btn" title="Jump to Current Date" aria-label="Current period">
+                <i data-lucide="clock"></i>
+                <span>Today</span>
+              </button>
+              <button class="btn-roadmap-nav" id="roadmap-next-btn" title="Next period" aria-label="Next period">
+                <i data-lucide="chevron-right"></i>
+              </button>
+            </div>
+
+            <!-- Multi-Zoom Span Filter -->
+            <div class="roadmap-filter-group" id="roadmap-zoom-group">
               <span class="filter-label">Span:</span>
-              <button class="roadmap-zoom-btn active" data-quarter="all">Full Year (12M)</button>
-              <button class="roadmap-zoom-btn" data-quarter="q1">Q1</button>
-              <button class="roadmap-zoom-btn" data-quarter="q2">Q2</button>
-              <button class="roadmap-zoom-btn" data-quarter="q3">Q3</button>
-              <button class="roadmap-zoom-btn" data-quarter="q4">Q4</button>
+              <button class="roadmap-zoom-btn" data-zoom="day">Day</button>
+              <button class="roadmap-zoom-btn" data-zoom="week">Week</button>
+              <button class="roadmap-zoom-btn" data-zoom="month">Month</button>
+              <button class="roadmap-zoom-btn" data-zoom="quarter">Quarter</button>
+              <button class="roadmap-zoom-btn active" data-zoom="year">Year</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Multi-Filter Toolbar -->
+        <div class="roadmap-filters-bar">
+          <div class="roadmap-filters-left">
+            <!-- Horizon Tier Filter -->
+            <div class="roadmap-filter-item">
+              <label for="roadmap-tier-select"><i data-lucide="layers"></i> Horizon:</label>
+              <select id="roadmap-tier-select" class="form-control form-control-sm">
+                <option value="all">All Horizons</option>
+                <option value="annual">🏆 Annual Vision</option>
+                <option value="quarterly">🎯 Quarterly Goals</option>
+                <option value="monthly">🗓️ Monthly Focus</option>
+                <option value="weekly">📅 Weekly Milestones</option>
+                <option value="daily">🌅 Daily Tasks</option>
+              </select>
             </div>
 
             <!-- Category Filter -->
-            <select id="roadmap-category-select" class="form-control form-control-sm">
-              <option value="all">All Categories</option>
-              <option value="Product">Product</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Career">Career</option>
-              <option value="Finance">Finance</option>
-              <option value="Health">Health</option>
-              <option value="Personal">Personal</option>
-            </select>
+            <div class="roadmap-filter-item">
+              <label for="roadmap-category-select"><i data-lucide="tag"></i> Category:</label>
+              <select id="roadmap-category-select" class="form-control form-control-sm">
+                <option value="all">All Categories</option>
+                <option value="Product">Product</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Career">Career</option>
+                <option value="Finance">Finance</option>
+                <option value="Health">Health</option>
+                <option value="Personal">Personal</option>
+              </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="roadmap-filter-item">
+              <label for="roadmap-priority-select"><i data-lucide="alert-circle"></i> Priority:</label>
+              <select id="roadmap-priority-select" class="form-control form-control-sm">
+                <option value="all">All Priorities</option>
+                <option value="urgent">🚨 Urgent</option>
+                <option value="high">🔥 High</option>
+                <option value="medium">⚡ Medium</option>
+                <option value="low">🌱 Low</option>
+              </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="roadmap-filter-item">
+              <label for="roadmap-status-select"><i data-lucide="check-circle-2"></i> Status:</label>
+              <select id="roadmap-status-select" class="form-control form-control-sm">
+                <option value="all">All Statuses</option>
+                <option value="active">⏳ Active</option>
+                <option value="completed">✅ Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="roadmap-filters-right">
+            <!-- Filtered Task Count Pill -->
+            <span class="roadmap-count-badge" id="roadmap-task-count">0 items</span>
+            <!-- Reset Button -->
+            <button class="btn-roadmap-reset" id="roadmap-reset-filters-btn" title="Reset all filters">
+              <i data-lucide="rotate-ccw"></i>
+              <span>Reset</span>
+            </button>
           </div>
         </div>
 
