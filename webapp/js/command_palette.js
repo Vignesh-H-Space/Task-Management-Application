@@ -251,21 +251,42 @@ const CommandPalette = {
       }
     ];
 
-    // Add matrix toggle action if on index.html
+    // Add view toggle actions if on index.html
     if (document.getElementById('eisenhower-matrix-container')) {
       actions.unshift({
-        id: 'act-toggle-matrix',
+        id: 'act-view-kanban',
         category: 'POWER ACTIONS',
-        title: 'Toggle Eisenhower 2×2 Matrix View',
-        desc: 'Switch between quadrant matrix and list view',
+        title: 'Switch to Kanban Board View',
+        desc: 'Visual drag-and-drop columns: Backlog → To Do → In Progress → Done',
+        icon: 'columns',
+        badge: 'KANBAN',
+        action: () => {
+          this.close();
+          if (typeof switchView === 'function') switchView('kanban');
+        }
+      });
+      actions.unshift({
+        id: 'act-view-matrix',
+        category: 'POWER ACTIONS',
+        title: 'Switch to Eisenhower 2×2 Matrix',
+        desc: 'Classify tasks by urgency and importance quadrants',
         icon: 'grid',
         badge: 'MATRIX',
         action: () => {
           this.close();
-          const currentView = (typeof state !== 'undefined' && state.currentView) ? state.currentView : 'list';
-          if (typeof switchView === 'function') {
-            switchView(currentView === 'matrix' ? 'list' : 'matrix');
-          }
+          if (typeof switchView === 'function') switchView('eisenhower');
+        }
+      });
+      actions.unshift({
+        id: 'act-view-list',
+        category: 'POWER ACTIONS',
+        title: 'Switch to Standard List View',
+        desc: 'Traditional task list grouped by horizon tier',
+        icon: 'list',
+        badge: 'LIST',
+        action: () => {
+          this.close();
+          if (typeof switchView === 'function') switchView('list');
         }
       });
     }

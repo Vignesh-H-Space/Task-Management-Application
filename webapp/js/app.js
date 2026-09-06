@@ -1368,26 +1368,44 @@ function classifyTaskQuadrant(task) {
 }
 
 function toggleViewMode() {
-  state.viewMode = state.viewMode === 'list' ? 'eisenhower' : 'list';
+  // Legacy: cycle list → eisenhower → kanban → list
+  const modes = ['list', 'eisenhower', 'kanban'];
+  const currentIdx = modes.indexOf(state.viewMode || 'list');
+  switchView(modes[(currentIdx + 1) % modes.length]);
+}
+
+function switchView(mode) {
+  state.viewMode = mode;
   const listBtn = document.getElementById('view-mode-list');
   const matrixBtn = document.getElementById('view-mode-matrix');
+  const kanbanBtn = document.getElementById('view-mode-kanban');
   const filterBar = document.querySelector('.filter-bar');
   const matrixContainer = document.getElementById('eisenhower-matrix-container');
+  const kanbanContainer = document.getElementById('kanban-board-container');
   const tasksContainer = document.getElementById('tasks-container');
 
-  if (listBtn) listBtn.classList.toggle('active', state.viewMode === 'list');
-  if (matrixBtn) matrixBtn.classList.toggle('active', state.viewMode === 'eisenhower');
+  // Reset all button states
+  if (listBtn) listBtn.classList.toggle('active', mode === 'list');
+  if (matrixBtn) matrixBtn.classList.toggle('active', mode === 'eisenhower');
+  if (kanbanBtn) kanbanBtn.classList.toggle('active', mode === 'kanban');
 
-  if (state.viewMode === 'eisenhower') {
-    if (filterBar) filterBar.style.display = 'none';
-    if (tasksContainer) tasksContainer.style.display = 'none';
-    if (matrixContainer) matrixContainer.style.display = 'grid';
-    renderEisenhowerMatrix();
-  } else {
+  // Hide all views
+  if (tasksContainer) tasksContainer.style.display = 'none';
+  if (matrixContainer) matrixContainer.style.display = 'none';
+  if (kanbanContainer) kanbanContainer.style.display = 'none';
+  if (filterBar) filterBar.style.display = 'none';
+
+  // Show the selected view
+  if (mode === 'list') {
     if (filterBar) filterBar.style.display = '';
     if (tasksContainer) tasksContainer.style.display = '';
-    if (matrixContainer) matrixContainer.style.display = 'none';
     renderTaskList();
+  } else if (mode === 'eisenhower') {
+    if (matrixContainer) matrixContainer.style.display = 'grid';
+    renderEisenhowerMatrix();
+  } else if (mode === 'kanban') {
+    if (kanbanContainer) kanbanContainer.style.display = 'flex';
+    renderKanbanBoard();
   }
   lucide.createIcons();
 }
@@ -1510,6 +1528,211 @@ function moveTaskToQuadrant(taskId, quadrantId, event) {
     const qLabel = EISENHOWER_QUADRANTS.find(q => q.id === quadrantId);
     showToast(`${qLabel.emoji} Moved "${task.title.substring(0, 25)}..." to ${qLabel.label}`, 'success');
   }
+}
+
+// ── Kanban Board View ───────────────────────────────────────────
+const KANBAN_COLUMNS = [
+  { id: 'backlog',     label: 'BACKLOG',       emoji: '📥', color: '#64748b', bg: 'rgba(100, 116, 139, 0.06)', border: 'rgba(100, 116, 139, 0.25)' },
+  { id: 'todo',        label: 'TO DO',         emoji: '📋', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.06)',  border: 'rgba(245, 158, 11, 0.25)' },
+  { id: 'in_progress', label: 'IN PROGRESS',   emoji: '🔥', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.06)', border: 'rgba(59, 130, 246, 0.30)' },
+  { id: 'done',        label: 'DONE',          emoji: '✅', color: '#10b981', bg: 'rgba(16, 185, 129, 0.06)', border: 'rgba(16, 185, 129, 0.30)' }
+];
+
+function getKanbanStatus(task) {
+  if (task.completed) return 'done';
+  if (task.kanbanStatus) return task.kanbanStatus;
+  // Auto-classify based on existing data
+  if (task.priority === 'low' && !task.dueDate) return 'backlog';
+  return 'todo';
+}
+
+function moveTaskToKanban(taskId, columnId, event) {
+  if (event) event.stopPropagation();
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  if (columnId === 'done') {
+    task.completed = true;
+    task.kanbanStatus = 'done';
+    // Award XP
+    if (typeof XPEngine !== 'undefined') {
+      XPEngine.awardXP(task);
+    }
+  } else {
+    task.completed = false;
+    task.kanbanStatus = columnId;
+  }
+
+  saveData();
+  renderKanbanBoard();
+  const col = KANBAN_COLUMNS.find(c => c.id === columnId);
+  if (typeof showToast === 'function' && col) {
+    showToast(`${col.emoji} Moved to ${col.label}`, 'info');
+  }
+}
+
+function renderKanbanBoard() {
+  const container = document.getElementById('kanban-board-container');
+  if (!container) return;
+
+  // Get tasks based on current horizon filter
+  let tasks = state.tasks.filter(task => {
+    if (state.activeHorizon === 'general') {
+      return ['daily', 'weekly', 'monthly'].includes(task.tier);
+    } else if (state.activeHorizon !== 'all') {
+      return task.tier === state.activeHorizon;
+    }
+    return true;
+  });
+
+  // Apply search filter
+  if (state.searchQuery) {
+    const q = state.searchQuery.toLowerCase();
+    tasks = tasks.filter(t => {
+      return (t.title || '').toLowerCase().includes(q) ||
+             (t.description || '').toLowerCase().includes(q) ||
+             (t.category || '').toLowerCase().includes(q) ||
+             (t.tags || []).some(tg => tg.toLowerCase().includes(q));
+    });
+  }
+
+  // Group tasks by kanban status
+  const columns = { backlog: [], todo: [], in_progress: [], done: [] };
+  tasks.forEach(t => {
+    const status = getKanbanStatus(t);
+    if (columns[status]) {
+      columns[status].push(t);
+    } else {
+      columns.todo.push(t);
+    }
+  });
+
+  container.innerHTML = KANBAN_COLUMNS.map(col => {
+    const colTasks = columns[col.id] || [];
+    const otherCols = KANBAN_COLUMNS.filter(c => c.id !== col.id);
+
+    return `
+      <div class="kb-column" data-column="${col.id}">
+        <div class="kb-column-header" style="border-bottom-color: ${col.border};">
+          <div class="kb-column-title-row">
+            <span class="kb-column-emoji">${col.emoji}</span>
+            <span class="kb-column-label" style="color: ${col.color};">${col.label}</span>
+            <span class="kb-column-count" style="background: ${col.bg}; color: ${col.color}; border-color: ${col.border};">${colTasks.length}</span>
+          </div>
+        </div>
+        <div class="kb-column-body" id="kb-body-${col.id}" data-column="${col.id}">
+          ${colTasks.length === 0 ? `<div class="kb-empty">No tasks here</div>` :
+            colTasks.map(t => {
+              const tierObj = TIERS.find(ti => ti.id === t.tier) || { emoji: '📌', name: 'Task', color: '#888' };
+              const subtasks = t.subtasks || [];
+              const doneSubs = subtasks.filter(s => s.completed).length;
+              const totalSubs = subtasks.length;
+              const subPct = totalSubs > 0 ? Math.round((doneSubs / totalSubs) * 100) : -1;
+
+              return `
+                <div class="kb-card" data-id="${t.id}" draggable="true">
+                  <div class="kb-card-top">
+                    <div class="kb-card-title">${escapeHTML(t.title)}</div>
+                    <div class="kb-card-move-dropdown">
+                      <button class="kb-move-btn" title="Move to column">
+                        <i data-lucide="more-horizontal"></i>
+                      </button>
+                      <div class="kb-move-menu">
+                        ${otherCols.map(oc => `
+                          <button class="kb-move-option" onclick="moveTaskToKanban('${t.id}', '${oc.id}', event)" style="color: ${oc.color};">
+                            ${oc.emoji} ${oc.label}
+                          </button>
+                        `).join('')}
+                        <hr style="border-color: rgba(255,255,255,0.06); margin: 4px 0;">
+                        <button class="kb-move-option" onclick="openEditModal('${t.id}')" style="color: var(--text-secondary);">
+                          ✏️ Edit Task
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  ${t.description ? `<div class="kb-card-desc">${escapeHTML(t.description.substring(0, 80))}${t.description.length > 80 ? '...' : ''}</div>` : ''}
+                  <div class="kb-card-meta">
+                    <span class="kb-tier-pill" style="color: ${tierObj.color || '#888'}">${tierObj.emoji} ${tierObj.name}</span>
+                    <span class="kb-prio-pill kb-prio-${t.priority}">${t.priority}</span>
+                    ${t.dueDate ? `<span class="kb-due-pill"><i data-lucide="calendar" style="width:10px;height:10px;"></i> ${t.dueDate}</span>` : ''}
+                  </div>
+                  ${subPct >= 0 ? `
+                    <div class="kb-card-progress">
+                      <div class="kb-progress-track">
+                        <div class="kb-progress-fill" style="width: ${subPct}%; background: ${col.color};"></div>
+                      </div>
+                      <span class="kb-progress-label">${doneSubs}/${totalSubs}</span>
+                    </div>
+                  ` : ''}
+                  <div class="kb-card-footer">
+                    <span class="kb-category-tag">#${t.category || 'General'}</span>
+                    ${col.id !== 'done' ? `
+                      <button class="kb-focus-btn" onclick="if(typeof FocusEngine!=='undefined') FocusEngine.open('${t.id}')" title="Focus Mode">
+                        <i data-lucide="zap"></i>
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+
+  // Bind drag-and-drop for Kanban columns
+  bindKanbanDragDrop();
+}
+
+function bindKanbanDragDrop() {
+  const columns = document.querySelectorAll('.kb-column-body');
+
+  columns.forEach(colBody => {
+    const cards = colBody.querySelectorAll('.kb-card');
+
+    cards.forEach(card => {
+      card.addEventListener('dragstart', (e) => {
+        if (e.target.closest('button, .kb-move-dropdown')) {
+          e.preventDefault();
+          return;
+        }
+        card.classList.add('kb-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('kb-dragging');
+        document.querySelectorAll('.kb-column-body').forEach(c => c.classList.remove('kb-drag-over'));
+      });
+    });
+
+    colBody.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      colBody.classList.add('kb-drag-over');
+    });
+
+    colBody.addEventListener('dragleave', (e) => {
+      // Only remove if leaving the actual column body, not entering a child
+      if (!colBody.contains(e.relatedTarget)) {
+        colBody.classList.remove('kb-drag-over');
+      }
+    });
+
+    colBody.addEventListener('drop', (e) => {
+      e.preventDefault();
+      colBody.classList.remove('kb-drag-over');
+      const taskId = e.dataTransfer.getData('text/plain');
+      const targetColumn = colBody.getAttribute('data-column');
+      if (taskId && targetColumn) {
+        moveTaskToKanban(taskId, targetColumn);
+      }
+    });
+  });
 }
 
 function createTaskCardElement(task) {
