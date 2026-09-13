@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14141a" />
+      <stop offset="100%" stop-color="#08080a" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background tile with gold border -->
+  <rect width="192" height="192" rx="42" fill="url(#bgGrad)" stroke="rgba(245,158,11,0.3)" stroke-width="2" />
+
+  <!-- Action Icon: Today / Sun & Calendar Horizon -->
+  <g transform="translate(96, 96)">
+    <!-- Calendar Body -->
+    <rect x="-38" y="-30" width="76" height="66" rx="14" fill="rgba(245,158,11,0.1)" stroke="url(#goldGrad)" stroke-width="4.5" filter="url(#goldGlow)" />
+    <!-- Binder Pins -->
+    <line x1="-20" y1="-40" x2="-20" y2="-26" stroke="url(#goldGrad)" stroke-width="5" stroke-linecap="round" />
+    <line x1="20" y1="-40" x2="20" y2="-26" stroke="url(#goldGrad)" stroke-width="5" stroke-linecap="round" />
+    <!-- Calendar Divider Line -->
+    <line x1="-38" y1="-10" x2="38" y2="-10" stroke="url(#goldGrad)" stroke-width="3" stroke-opacity="0.6" />
+    <!-- Sun / Focus Core -->
+    <circle cx="0" cy="14" r="10" fill="url(#goldGrad)" />
+    <line x1="0" y1="-1" x2="0" y2="3" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="0" y1="25" x2="0" y2="29" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="-15" y1="14" x2="-11" y2="14" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="11" y1="14" x2="15" y2="14" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" />
+  </g>
+</svg>
