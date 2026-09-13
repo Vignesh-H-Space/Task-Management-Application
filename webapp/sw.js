@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tesseract-pwa-v2';
+const CACHE_NAME = 'tesseract-pwa-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -7,8 +7,10 @@ const ASSETS_TO_CACHE = [
   './analytics.html',
   './bucketlist.html',
   './profile.html',
+  './report.html',
   './manifest.json',
   './css/styles.css',
+  './js/touch_engine.js',
   './js/app.js',
   './js/components.js',
   './js/command_palette.js',
@@ -20,8 +22,14 @@ const ASSETS_TO_CACHE = [
   './js/bucketlist_engine.js',
   './js/alignment_engine.js',
   './js/roadmap_engine.js',
+  './js/report_engine.js',
   './icons/icon-192.svg',
-  './icons/icon-512.svg'
+  './icons/icon-512.svg',
+  './icons/shortcut-task.svg',
+  './icons/shortcut-today.svg',
+  './icons/shortcut-report.svg',
+  './icons/shortcut-analytics.svg',
+  './icons/shortcut-roadmap.svg'
 ];
 
 // Install Event - Cache Core Assets
