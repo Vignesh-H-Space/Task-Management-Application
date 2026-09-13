@@ -101,6 +101,14 @@ const CommandPalette = {
         action: () => { window.location.href = 'bucketlist.html'; }
       },
       {
+        id: 'nav-report',
+        category: 'NAVIGATION',
+        title: 'Executive Intelligence & Reports',
+        desc: 'Weekly, Monthly & Annual debriefs, SVG charts, and velocity metrics',
+        icon: 'file-text',
+        action: () => { window.location.href = 'report.html'; }
+      },
+      {
         id: 'nav-profile',
         category: 'NAVIGATION',
         title: 'Executive Profile & North Star Creed',
@@ -164,15 +172,13 @@ const CommandPalette = {
       {
         id: 'act-weekly-report',
         category: 'POWER ACTIONS',
-        title: 'Generate Executive Weekly Report',
-        desc: '1-click debrief of weekly XP, focus hours, habits & wins',
+        title: 'View Executive Intelligence Reports',
+        desc: 'Dedicated Weekly, Monthly & Annual debriefs with charts & analytics',
         icon: 'file-text',
-        badge: 'DEBRIEF',
+        badge: 'REPORTS',
         action: () => {
           this.close();
-          if (typeof WeeklyReportEngine !== 'undefined') {
-            WeeklyReportEngine.open();
-          }
+          window.location.href = 'report.html';
         }
       },
       {
