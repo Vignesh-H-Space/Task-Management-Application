@@ -28,5 +28,72 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["productivity", "utilities", "business"]
+  "categories": ["productivity", "utilities", "business"],
+  "shortcuts": [
+    {
+      "name": "Add Daily Task",
+      "short_name": "New Task",
+      "description": "Quickly capture an executive task or goal for today",
+      "url": "./index.html?action=new-task&horizon=daily",
+      "icons": [
+        {
+          "src": "icons/shortcut-task.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Today's Agenda",
+      "short_name": "Today",
+      "description": "Open today's active tasks, quests, and daily mindset",
+      "url": "./index.html?horizon=daily",
+      "icons": [
+        {
+          "src": "icons/shortcut-today.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Executive Reports",
+      "short_name": "Reports",
+      "description": "View cadence debriefs and performance intelligence",
+      "url": "./report.html",
+      "icons": [
+        {
+          "src": "icons/shortcut-report.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Productivity Analytics",
+      "short_name": "Analytics",
+      "description": "Track completion rates, velocity, and alignment metrics",
+      "url": "./analytics.html",
+      "icons": [
+        {
+          "src": "icons/shortcut-analytics.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Horizon Roadmap",
+      "short_name": "Roadmap",
+      "description": "Strategic 12-month timeline connecting goals to deadlines",
+      "url": "./roadmap.html",
+      "icons": [
+        {
+          "src": "icons/shortcut-roadmap.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
 }

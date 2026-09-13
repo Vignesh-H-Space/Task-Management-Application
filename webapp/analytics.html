@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Productivity Analytics | Tesseract</title>
   <meta name="description" content="Productivity Metrics & Performance Analytics across all 5 time horizons in Tesseract.">
   <meta name="theme-color" content="#08080a">
@@ -141,6 +141,23 @@
             <!-- Injected dynamically -->
           </div>
         </div>
+
+        <!-- Executive Reports Banner -->
+        <div class="analytics-report-banner">
+          <div class="analytics-banner-content">
+            <div class="analytics-banner-icon">
+              <i data-lucide="file-text"></i>
+            </div>
+            <div>
+              <h4 class="analytics-banner-title">Need Formal Executive Debriefs & Printable Summaries?</h4>
+              <p class="analytics-banner-desc">Generate Weekly Debriefs, Monthly Velocity Reviews, and 365-Day Retrospectives with interactive SVG charts and Markdown export.</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="window.location.href='report.html';">
+            <i data-lucide="arrow-right"></i>
+            <span>Open Executive Reports</span>
+          </button>
+        </div>
       </section>
     </main>
   </div>
@@ -156,6 +173,7 @@
   <script src="js/roadmap_engine.js"></script>
   <script src="js/bucketlist_engine.js"></script>
   <script src="js/alignment_engine.js"></script>
+  <script src="js/touch_engine.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

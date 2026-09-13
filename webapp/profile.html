@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>User Profile | Tesseract</title>
   <meta name="description" content="Personal Profile, Streak Milestones, Badges, and Activity in Tesseract.">
   <meta name="theme-color" content="#08080a">
@@ -242,9 +242,9 @@
               </button>
               <input type="file" id="vault-import-input" accept=".json" style="display:none;" onchange="handleVaultImport(event)">
 
-              <button class="btn btn-secondary" onclick="WeeklyReportEngine.open();" title="Generate formatted 7-day executive debrief report">
+              <button class="btn btn-secondary" onclick="window.location.href='report.html';" title="View Executive Debrief Reports & Analytics">
                 <i data-lucide="file-text"></i>
-                <span>Weekly Executive Report</span>
+                <span>Executive Reports Hub</span>
               </button>
 
               <button class="btn btn-secondary" onclick="archiveCompletedTasks();" title="Clean up finished daily tasks to optimize storage">
@@ -274,6 +274,7 @@
   <script src="js/roadmap_engine.js"></script>
   <script src="js/bucketlist_engine.js"></script>
   <script src="js/alignment_engine.js"></script>
+  <script src="js/touch_engine.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
