@@ -189,6 +189,33 @@ const Components = {
   },
 
   /**
+   * Toggle Mobile Tools & Executive Suite Bottom Sheet
+   */
+  toggleMobileToolsSheet() {
+    const sheet = document.getElementById('mobile-tools-sheet');
+    if (!sheet) return;
+    const isShowing = sheet.style.display !== 'none';
+    if (isShowing) {
+      this.closeMobileToolsSheet();
+    } else {
+      sheet.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  },
+
+  /**
+   * Close Mobile Tools Bottom Sheet
+   */
+  closeMobileToolsSheet() {
+    const sheet = document.getElementById('mobile-tools-sheet');
+    if (sheet) {
+      sheet.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  },
+
+  /**
    * Render Top Header into #header-mount or main-content
    */
   renderHeader({ title = 'All Goals & Tasks', subtitle = 'Holistic overview across all 5 strategic horizons.', showSearch = true } = {}) {
@@ -252,10 +279,14 @@ const Components = {
    * Render Task Modal, Focus Overlay, and Toast Container at the bottom of the body
    */
   renderModalAndToasts() {
+    const page = this.getCurrentPage();
     const extraHTML = `
     <!-- Add / Edit Task Modal -->
     <div class="modal-backdrop" id="task-modal" style="display: none;">
       <div class="modal-card">
+        <div class="sheet-grabber-bar" onclick="closeModal();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
         <div class="modal-header">
           <h3 class="modal-title" id="modal-title-text">Create Goal / Task</h3>
           <button class="modal-close-btn" id="modal-close-btn">&times;</button>
@@ -475,6 +506,9 @@ const Components = {
     <!-- 🌅 Morning Priming Modal (The Rule of 3) -->
     <div class="modal-backdrop" id="morning-priming-modal" style="display: none;">
       <div class="ritual-modal-card">
+        <div class="sheet-grabber-bar" onclick="RitualsEngine.closeModals();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
         <div class="ritual-modal-header">
           <div class="ritual-header-icon">🌅</div>
           <div>
@@ -501,6 +535,9 @@ const Components = {
     <!-- 🌙 Evening Shutdown Protocol Modal -->
     <div class="modal-backdrop" id="evening-shutdown-modal" style="display: none;">
       <div class="ritual-modal-card evening-modal">
+        <div class="sheet-grabber-bar" onclick="RitualsEngine.closeModals();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
         <div class="ritual-modal-header">
           <div class="ritual-header-icon">🌙</div>
           <div>
@@ -553,6 +590,9 @@ const Components = {
     <!-- 🌐 Strategic Alignment Linker Modal -->
     <div class="modal-backdrop" id="link-parent-modal" style="display: none;">
       <div class="ritual-modal-card parent-linker-card">
+        <div class="sheet-grabber-bar" onclick="AlignmentEngine.closeModal();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
         <div class="ritual-modal-header">
           <div class="ritual-header-icon">🌐</div>
           <div>
@@ -682,6 +722,101 @@ const Components = {
           </div>
           <span class="palette-brand-tag">TESSERACT OS</span>
         </div>
+      </div>
+    </div>
+
+    <!-- 📱 Mobile Tools & Executive Suite Bottom Sheet -->
+    <div class="modal-backdrop mobile-sheet-backdrop" id="mobile-tools-sheet" style="display: none;" onclick="if(event.target === this) Components.closeMobileToolsSheet();">
+      <div class="ritual-modal-card mobile-tools-card">
+        <div class="sheet-grabber-bar" onclick="Components.closeMobileToolsSheet();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
+        <div class="mobile-tools-header">
+          <div class="tools-title-group">
+            <div class="tools-header-badge"><i data-lucide="grid"></i></div>
+            <div>
+              <h3 class="mobile-tools-title">Executive Suite & Tools</h3>
+              <p class="mobile-tools-sub">Tactical controls, horizons & intelligence</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" onclick="Components.closeMobileToolsSheet();">&times;</button>
+        </div>
+        <div class="mobile-tools-grid">
+          <button class="tool-tile ${page === 'analytics' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='analytics.html';">
+            <div class="tool-tile-icon gold"><i data-lucide="bar-chart-3"></i></div>
+            <span class="tool-tile-label">Analytics</span>
+          </button>
+          <button class="tool-tile ${page === 'cascade' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='cascade.html';">
+            <div class="tool-tile-icon cyan"><i data-lucide="git-merge"></i></div>
+            <span class="tool-tile-label">Goal Cascade</span>
+          </button>
+          <button class="tool-tile ${page === 'bucketlist' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='bucketlist.html';">
+            <div class="tool-tile-icon purple"><i data-lucide="sparkles"></i></div>
+            <span class="tool-tile-label">Bucket List</span>
+          </button>
+          <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof FocusEngine !== 'undefined') FocusEngine.open();">
+            <div class="tool-tile-icon amber"><i data-lucide="zap"></i></div>
+            <span class="tool-tile-label">Focus Mode</span>
+          </button>
+          <button class="tool-tile ${page === 'profile' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='profile.html';">
+            <div class="tool-tile-icon emerald"><i data-lucide="user"></i></div>
+            <span class="tool-tile-label">Profile & XP</span>
+          </button>
+          <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof RitualsEngine !== 'undefined') RitualsEngine.openMorningModal();">
+            <div class="tool-tile-icon orange"><i data-lucide="sun"></i></div>
+            <span class="tool-tile-label">Morning Top 3</span>
+          </button>
+          <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof RitualsEngine !== 'undefined') RitualsEngine.openEveningModal();">
+            <div class="tool-tile-icon indigo"><i data-lucide="moon"></i></div>
+            <span class="tool-tile-label">Evening Review</span>
+          </button>
+          <button class="tool-tile" onclick="if(typeof toggleTheme === 'function') toggleTheme();">
+            <div class="tool-tile-icon rose"><i data-lucide="palette"></i></div>
+            <span class="tool-tile-label">Theme Mode</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📱 Mobile Bottom Navigation Bar (Docked) -->
+    <nav class="mobile-bottom-bar" id="mobile-bottom-bar" aria-label="Mobile Navigation">
+      <button class="bottom-nav-item ${page === 'index' ? 'active' : ''}" onclick="window.location.href='index.html'" aria-label="Today">
+        <i data-lucide="home"></i>
+        <span>Today</span>
+      </button>
+      <button class="bottom-nav-item ${page === 'roadmap' ? 'active' : ''}" onclick="window.location.href='roadmap.html'" aria-label="Roadmap">
+        <i data-lucide="calendar-range"></i>
+        <span>Roadmap</span>
+      </button>
+      <button class="bottom-nav-action-btn" onclick="openAddModal('daily')" aria-label="Quick Add Task" title="Create New Task">
+        <div class="bottom-action-icon-wrap">
+          <i data-lucide="plus"></i>
+        </div>
+      </button>
+      <button class="bottom-nav-item ${page === 'report' ? 'active' : ''}" onclick="window.location.href='report.html'" aria-label="Reports">
+        <i data-lucide="file-text"></i>
+        <span>Reports</span>
+      </button>
+      <button class="bottom-nav-item ${['analytics', 'cascade', 'bucketlist', 'profile'].includes(page) ? 'active' : ''}" onclick="Components.toggleMobileToolsSheet()" aria-label="Tools">
+        <i data-lucide="grid"></i>
+        <span>Tools</span>
+      </button>
+    </nav>
+
+    <!-- 📲 PWA Smart Install Banner -->
+    <div class="pwa-install-banner" id="pwa-install-banner" style="display: none;">
+      <div class="pwa-install-content">
+        <div class="pwa-install-icon">
+          <i data-lucide="download"></i>
+        </div>
+        <div class="pwa-install-text">
+          <div class="pwa-install-title">Install Tesseract App</div>
+          <p class="pwa-install-desc" id="pwa-install-desc">Tap Install for full-screen offline executive cockpit.</p>
+        </div>
+      </div>
+      <div class="pwa-install-actions">
+        <button class="btn btn-primary btn-sm" id="btn-pwa-install" onclick="triggerPwaInstall()">Install</button>
+        <button class="btn btn-ghost btn-sm" onclick="dismissPwaInstall()">Dismiss</button>
       </div>
     </div>
 

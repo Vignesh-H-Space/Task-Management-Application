@@ -57,9 +57,10 @@ function init() {
   loadStreak();
   loadProfile();
 
-  // Read URL parameters on index.html (e.g. ?horizon=daily)
+  // Read URL parameters on index.html (e.g. ?horizon=daily or ?action=new-task)
   const urlParams = new URLSearchParams(window.location.search);
   const horizonParam = urlParams.get('horizon');
+  const actionParam = urlParams.get('action');
   if (horizonParam && ['general', 'daily', 'weekly', 'monthly', 'quarterly', 'annual', 'all'].includes(horizonParam)) {
     state.activeHorizon = horizonParam;
   }
@@ -78,6 +79,8 @@ function init() {
       headerConfig = { title: '12-Month Horizon Timeline', subtitle: 'Interactive Gantt roadmap connecting annual & quarterly goals to deadlines.', showSearch: false };
     } else if (page === 'bucketlist') {
       headerConfig = { title: "Life's Bucket List", subtitle: 'Lifetime dreams, epic adventures, and summit ambitions.', showSearch: false };
+    } else if (page === 'report') {
+      headerConfig = { title: 'Executive Intelligence & Reports', subtitle: 'Multi-cadence debriefs, SVG velocity charts, habit heatmaps, and strategic synthesis.', showSearch: false };
     } else if (page === 'profile') {
       headerConfig = { title: 'Your Profile', subtitle: 'Stats, badges, and activity history.', showSearch: false };
     }
@@ -92,9 +95,31 @@ function init() {
   if (typeof RoadmapEngine !== 'undefined') RoadmapEngine.init();
   if (typeof RitualsEngine !== 'undefined') RitualsEngine.init();
   if (typeof BucketListEngine !== 'undefined') BucketListEngine.init();
+  if (typeof ReportEngine !== 'undefined') ReportEngine.init();
+  if (typeof TouchEngine !== 'undefined') TouchEngine.init();
   renderAll();
   renderStreakUI();
   lucide.createIcons();
+  initPwaInstallPrompt();
+  updateAppBadge();
+
+  // Handle Quick Action shortcuts from PWA manifest or launcher links
+  if (actionParam) {
+    handleQuickActionShortcut(actionParam, horizonParam);
+  }
+}
+
+function handleQuickActionShortcut(action, horizon) {
+  setTimeout(() => {
+    if (action === 'new-task' || action === 'add-task' || action === 'add') {
+      const targetTier = horizon && ['daily', 'weekly', 'monthly', 'quarterly', 'annual'].includes(horizon) ? horizon : 'daily';
+      openAddModal(targetTier);
+    } else if (action === 'morning' && typeof RitualsEngine !== 'undefined') {
+      RitualsEngine.openMorningModal();
+    } else if (action === 'evening' && typeof RitualsEngine !== 'undefined') {
+      RitualsEngine.openEveningModal();
+    }
+  }, 250);
 }
 
 function loadData() {
@@ -114,6 +139,7 @@ function loadData() {
 
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+  updateAppBadge();
 }
 
 function loadProfile() {
@@ -1054,6 +1080,8 @@ function renderAll() {
     if (typeof RoadmapEngine !== 'undefined') RoadmapEngine.render();
   } else if (page === 'bucketlist') {
     if (typeof BucketListEngine !== 'undefined') BucketListEngine.render();
+  } else if (page === 'report') {
+    if (typeof ReportEngine !== 'undefined') ReportEngine.render();
   } else if (page === 'profile') {
     renderProfileView();
   }
@@ -1066,6 +1094,7 @@ function renderAll() {
     AlignmentEngine.renderAlignmentUI();
   }
 
+  updateAppBadge();
   lucide.createIcons();
 }
 
@@ -2767,6 +2796,28 @@ const FocusEngine = {
   soundNodes: null,
   currentSound: 'rain',
   volume: 0.5,
+  wakeLock: null,
+
+  async requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        this.wakeLock = await navigator.wakeLock.request('screen');
+        this.wakeLock.addEventListener('release', () => {
+          this.wakeLock = null;
+        });
+      } catch (e) {
+        console.warn('Screen Wake Lock could not be obtained:', e);
+      }
+    }
+  },
+
+  releaseWakeLock() {
+    if (this.wakeLock) {
+      this.wakeLock.release().then(() => {
+        this.wakeLock = null;
+      }).catch(() => {});
+    }
+  },
 
   init() {
     // Preset buttons
@@ -2984,6 +3035,7 @@ const FocusEngine = {
 
   close() {
     this.pause();
+    this.releaseWakeLock();
     this.stopAudio();
     const overlay = document.getElementById('focus-mode-overlay');
     if (overlay) overlay.style.display = 'none';
@@ -3038,6 +3090,7 @@ const FocusEngine = {
   start() {
     if (this.isRunning) return;
     this.isRunning = true;
+    this.requestWakeLock();
 
     const statusEl = document.getElementById('focus-time-status');
     if (statusEl) statusEl.textContent = 'IN FLOW';
@@ -3066,6 +3119,7 @@ const FocusEngine = {
 
   pause() {
     this.isRunning = false;
+    this.releaseWakeLock();
     clearInterval(this.timerInterval);
     this.timerInterval = null;
 
@@ -3668,17 +3722,7 @@ const WeeklyReportEngine = {
   },
 
   open() {
-    const modal = document.getElementById('weekly-report-modal');
-    const body = document.getElementById('weekly-report-body');
-    const dateRangeEl = document.getElementById('report-modal-daterange');
-    if (!modal || !body) return;
-
-    const data = this.getReportData();
-    if (dateRangeEl) dateRangeEl.textContent = `Debrief for ${data.dateRangeStr}`;
-    body.innerHTML = this.generateHTMLPreview();
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    window.location.href = 'report.html';
   },
 
   close() {
@@ -3714,6 +3758,122 @@ const WeeklyReportEngine = {
     window.print();
   }
 };
+
+// ── 📱 Mobile Application Enhancements ─────────────────────────
+
+/**
+ * App Icon Badge API (navigator.setAppBadge)
+ * Sets the badge on the device home screen showing open Daily Goals
+ */
+function updateAppBadge() {
+  if ('setAppBadge' in navigator) {
+    const dailyOpen = state.tasks ? state.tasks.filter(t => t.tier === 'daily' && !t.completed).length : 0;
+    if (dailyOpen > 0) {
+      navigator.setAppBadge(dailyOpen).catch(() => {});
+    } else if ('clearAppBadge' in navigator) {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  }
+}
+
+/**
+ * Native Web Share API (navigator.share)
+ * Shares executive debrief with native iOS / Android share sheet
+ */
+function shareExecutiveReport() {
+  const dailyTasks = state.tasks ? state.tasks.filter(t => t.tier === 'daily') : [];
+  const dailyDone = dailyTasks.filter(t => t.completed).length;
+  const streak = state.streak ? state.streak.count : 0;
+  const xp = (typeof XPEngine !== 'undefined' && XPEngine.data) ? XPEngine.data.xp : 0;
+
+  const shareText = `🏛️ TESSERACT EXECUTIVE DEBRIEF\n` +
+    `⚡ Execution Velocity: ${dailyDone}/${dailyTasks.length} Daily Goals Cleared\n` +
+    `🔥 Current Streak: ${streak} Days\n` +
+    `🏆 Executive XP: ${xp} XP\n` +
+    `Unified multi-horizon alignment across Daily, Weekly & Annual horizons.`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: 'Tesseract Executive Debrief',
+      text: shareText,
+      url: window.location.href
+    }).catch((err) => {
+      if (err.name !== 'AbortError') {
+        copyShareFallback(shareText);
+      }
+    });
+  } else {
+    copyShareFallback(shareText);
+  }
+}
+
+function copyShareFallback(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 Executive Debrief copied to clipboard!', 'success');
+    }).catch(() => {
+      prompt('Copy Executive Debrief:', text);
+    });
+  } else {
+    prompt('Copy Executive Debrief:', text);
+  }
+}
+
+/**
+ * PWA Smart Install Prompt Engine
+ */
+let deferredPwaPrompt = null;
+
+function initPwaInstallPrompt() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone) return;
+
+  const isDismissed = localStorage.getItem('tesseract_pwa_dismissed');
+  const banner = document.getElementById('pwa-install-banner');
+  const desc = document.getElementById('pwa-install-desc');
+
+  // Android Chrome / Desktop beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    if (banner && !isDismissed) {
+      banner.style.display = 'flex';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  });
+
+  // iOS Safari detection
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('CriOS');
+  if (isIOS && isSafari && !isStandalone && !isDismissed && banner) {
+    if (desc) desc.textContent = 'Tap Share ⎋ then "Add to Home Screen" ➕';
+    const installBtn = document.getElementById('btn-pwa-install');
+    if (installBtn) installBtn.style.display = 'none';
+    banner.style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+function triggerPwaInstall() {
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    deferredPwaPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        showToast('🚀 Installing Tesseract Executive App...', 'success');
+      }
+      dismissPwaInstall();
+      deferredPwaPrompt = null;
+    });
+  } else {
+    showToast('Add to Home Screen from your browser menu.', 'info');
+  }
+}
+
+function dismissPwaInstall() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('tesseract_pwa_dismissed', Date.now().toString());
+}
 
 // Start application on DOM load
 document.addEventListener('DOMContentLoaded', init);
