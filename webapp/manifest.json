@@ -94,6 +94,19 @@
           "type": "image/svg+xml"
         }
       ]
+    },
+    {
+      "name": "Executive Backlogs",
+      "short_name": "Backlogs",
+      "description": "Notion-style grouped matrix for tracking cross-functional objectives",
+      "url": "./backlogs.html",
+      "icons": [
+        {
+          "src": "icons/shortcut-task.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ]
 }

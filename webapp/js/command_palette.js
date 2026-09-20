@@ -101,6 +101,14 @@ const CommandPalette = {
         action: () => { window.location.href = 'bucketlist.html'; }
       },
       {
+        id: 'nav-backlogs',
+        category: 'NAVIGATION',
+        title: 'Executive Backlogs',
+        desc: 'Notion-style grouped matrix for cross-functional objectives & severities',
+        icon: 'list-checks',
+        action: () => { window.location.href = 'backlogs.html'; }
+      },
+      {
         id: 'nav-report',
         category: 'NAVIGATION',
         title: 'Executive Intelligence & Reports',

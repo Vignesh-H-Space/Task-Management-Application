@@ -24,6 +24,7 @@ const Components = {
     const isAnalytics = page === 'analytics';
     const isRoadmap = page === 'roadmap';
     const isBucketlist = page === 'bucketlist';
+    const isBacklogs = page === 'backlogs' || page === 'completed_backlogs';
     const isReport = page === 'report';
 
     const sidebarHTML = `
@@ -100,6 +101,10 @@ const Components = {
         <button class="nav-item ${isBucketlist ? 'active' : ''}" id="btn-view-bucketlist" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='bucketlist') window.location.href='bucketlist.html';">
           <i data-lucide="sparkles"></i>
           <span>Life's Bucket List</span>
+        </button>
+        <button class="nav-item ${isBacklogs ? 'active' : ''}" id="btn-view-backlogs" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='backlogs') window.location.href='backlogs.html';" title="Executive Notion-Style Backlog Matrix">
+          <i data-lucide="list-checks"></i>
+          <span>Backlogs</span>
         </button>
         <button class="nav-item ${isAnalytics ? 'active' : ''}" id="btn-view-analytics" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='analytics') window.location.href='analytics.html';">
           <i data-lucide="bar-chart-3"></i>
@@ -975,6 +980,27 @@ const Components = {
             <div class="tool-tile-icon purple"><i data-lucide="sparkles"></i></div>
             <span class="tool-tile-label">Bucket List</span>
           </button>
+          <button class="tool-tile ${page === 'backlogs' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='backlogs.html';">
+            <div class="tool-tile-icon cyan"><i data-lucide="list-checks"></i></div>
+            <span class="tool-tile-label">Backlogs</span>
+          </button>
+          ${(() => {
+            try {
+              const raw = localStorage.getItem('tesseract_backlog_data');
+              if (raw) {
+                const items = JSON.parse(raw);
+                if (items.some(i => i.completed)) {
+                  return `
+                    <button class="tool-tile ${page === 'completed_backlogs' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='completed_backlogs.html';">
+                      <div class="tool-tile-icon emerald"><i data-lucide="check-circle-2"></i></div>
+                      <span class="tool-tile-label">Done Backlogs</span>
+                    </button>
+                  `;
+                }
+              }
+            } catch(e) {}
+            return '';
+          })()}
           <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof FocusEngine !== 'undefined') FocusEngine.open();">
             <div class="tool-tile-icon amber"><i data-lucide="zap"></i></div>
             <span class="tool-tile-label">Focus Mode</span>
@@ -1030,7 +1056,7 @@ const Components = {
         <i data-lucide="file-text"></i>
         <span>Reports</span>
       </button>
-      <button class="bottom-nav-item ${['analytics', 'cascade', 'bucketlist', 'profile'].includes(page) ? 'active' : ''}" onclick="Components.toggleMobileToolsSheet()" aria-label="Tools">
+      <button class="bottom-nav-item ${['analytics', 'cascade', 'bucketlist', 'profile', 'backlogs', 'completed_backlogs'].includes(page) ? 'active' : ''}" onclick="Components.toggleMobileToolsSheet()" aria-label="Tools">
         <i data-lucide="grid"></i>
         <span>Tools</span>
       </button>

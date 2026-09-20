@@ -445,7 +445,8 @@ const SyncEngine = {
         habits: (typeof HabitsEngine !== 'undefined') ? HabitsEngine.habits : JSON.parse(localStorage.getItem('tesseract_habits_data') || '[]'),
         bucketList: (typeof BucketListEngine !== 'undefined') ? BucketListEngine.dreams : JSON.parse(localStorage.getItem('tesseract_bucketlist_data') || '[]'),
         focusSessions: (typeof FocusEngine !== 'undefined') ? FocusEngine.getSessions() : JSON.parse(localStorage.getItem('tesseract_focus_sessions') || '[]'),
-        rituals: (typeof RitualsEngine !== 'undefined') ? RitualsEngine.data : JSON.parse(localStorage.getItem('tesseract_rituals_data') || '{}')
+        rituals: (typeof RitualsEngine !== 'undefined') ? RitualsEngine.data : JSON.parse(localStorage.getItem('tesseract_rituals_data') || '{}'),
+        backlogs: (typeof BacklogEngine !== 'undefined') ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]')
       };
 
       // Encrypt with native AES-256-GCM
@@ -526,6 +527,17 @@ const SyncEngine = {
           RitualsEngine.data = data.rituals;
         }
         localStorage.setItem('tesseract_rituals_data', JSON.stringify(data.rituals));
+      }
+
+      // 9. Backlogs
+      if (data.backlogs) {
+        if (typeof BacklogEngine !== 'undefined') {
+          BacklogEngine.items = data.backlogs;
+          if (typeof Components !== 'undefined' && Components.getCurrentPage() === 'backlogs') {
+            BacklogEngine.render();
+          }
+        }
+        localStorage.setItem('tesseract_backlog_data', JSON.stringify(data.backlogs));
       }
 
       // 9. Re-render UI views dynamically

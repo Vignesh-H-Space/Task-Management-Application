@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Executive Backlogs | Tesseract</title>
+  <meta name="description" content="Tesseract Executive Backlogs - Notion-style grouped matrix for tracking cross-functional objectives, priority severities, and target dates.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Executive Authentication Gatekeeper -->
+  <script src="js/auth_engine.js"></script>
+  <script>if (typeof AuthEngine !== 'undefined') AuthEngine.requireAuth();</script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- Executive Backlogs View -->
+      <section class="backlog-view" id="backlog-view-container">
+        <!-- Hero Header & Stats Card -->
+        <div class="backlog-hero-card">
+          <div class="backlog-hero-main">
+            <div class="backlog-hero-tag">
+              <i data-lucide="list-checks"></i>
+              <span>EXECUTIVE OBJECTIVE MATRIX</span>
+            </div>
+            <h2 class="backlog-hero-title">Executive Backlogs</h2>
+            <p class="backlog-hero-subtitle">
+              Structured Notion-style workspace for long-horizon objectives, cross-functional severities, and target schedules.
+            </p>
+          </div>
+
+          <!-- Stats Ribbon -->
+          <div class="backlog-stats-grid">
+            <div class="backlog-stat-box">
+              <span class="backlog-stat-val" id="stat-backlog-total">0</span>
+              <span class="backlog-stat-lbl">Total Objectives</span>
+            </div>
+            <div class="backlog-stat-box accent-emerald">
+              <span class="backlog-stat-val" id="stat-backlog-open">0</span>
+              <span class="backlog-stat-lbl">Active / Open</span>
+            </div>
+            <div class="backlog-stat-box accent-crimson">
+              <span class="backlog-stat-val" id="stat-backlog-high">0</span>
+              <span class="backlog-stat-lbl">High Severity</span>
+            </div>
+            <div class="backlog-stat-box accent-amber">
+              <span class="backlog-stat-val" id="stat-backlog-overdue">0</span>
+              <span class="backlog-stat-lbl">Overdue</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Toolbar: Group Filter Pills & Search -->
+        <div class="backlog-toolbar">
+          <div class="backlog-filter-scroll">
+            <div class="backlog-pills-row" id="backlog-filter-pills">
+              <!-- Dynamically populated by BacklogEngine.renderFilters() -->
+            </div>
+          </div>
+
+          <div class="backlog-toolbar-actions">
+            <!-- Dynamic Completed Backlogs link (appears only when tasks are completed) -->
+            <a href="completed_backlogs.html" class="btn btn-secondary completed-backlogs-nav-btn" id="btn-completed-backlogs" style="display: none;" title="View Completed Backlogs Archive">
+              <i data-lucide="check-circle-2"></i>
+              <span>Completed (<span id="completed-count-badge">0</span>)</span>
+            </a>
+
+            <div class="backlog-search-wrap">
+              <i data-lucide="search" class="backlog-search-icon"></i>
+              <input type="text" id="backlog-search-input" class="backlog-search-input" placeholder="Filter objectives..." autocomplete="off">
+            </div>
+
+            <button class="btn btn-primary backlog-add-trigger-btn" id="btn-add-objective-trigger" onclick="BacklogEngine.toggleInlineForm(true)">
+              <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add New Objective</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Notion-Style Table View -->
+        <div class="backlog-table-container">
+          <div class="backlog-table-scroller">
+            <table class="backlog-notion-table" id="backlog-table">
+              <thead>
+                <tr>
+                  <th class="col-select" title="Mark Done (vanishes in 5s)">Done</th>
+                  <th class="col-objective">Objective Name</th>
+                  <th class="col-created">Created Date</th>
+                  <th class="col-severity">Severity</th>
+                  <th class="col-due">Estimated End Date</th>
+                  <th class="col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="backlog-table-body">
+                <!-- Dynamically populated by BacklogEngine.renderTable() -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State -->
+          <div class="backlog-empty-state" id="backlog-empty-state" style="display: none;">
+            <div class="backlog-empty-icon">
+              <i data-lucide="inbox"></i>
+            </div>
+            <h3 class="backlog-empty-title">No backlog objectives found</h3>
+            <p class="backlog-empty-sub">Add a new objective to this group or clear your filter to view all categories.</p>
+            <button class="btn btn-secondary btn-sm" onclick="BacklogEngine.toggleInlineForm(true)">
+              <svg class="btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add First Objective</span>
+            </button>
+          </div>
+
+          <!-- Bottom "+ Add Row" Button -->
+          <div class="backlog-table-bottom-bar">
+            <button class="backlog-add-row-btn" onclick="BacklogEngine.toggleInlineForm(true)">
+              <svg class="btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add New Row</span>
+            </button>
+            <span class="backlog-tip-text">
+              <i data-lucide="info"></i>
+              Tip: Click any severity badge to cycle (Low &rarr; Moderate &rarr; High). Click text to edit inline.
+            </span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Core Scripts -->
+  <!-- Firebase Compat v10 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- E2EE Sync Engine -->
+  <script src="js/sync_engine.js"></script>
+  <script src="js/notification_engine.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/drag_drop.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/backlog_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/touch_engine.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

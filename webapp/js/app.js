@@ -79,6 +79,10 @@ function init() {
       headerConfig = { title: '12-Month Horizon Timeline', subtitle: 'Interactive Gantt roadmap connecting annual & quarterly goals to deadlines.', showSearch: false };
     } else if (page === 'bucketlist') {
       headerConfig = { title: "Life's Bucket List", subtitle: 'Lifetime dreams, epic adventures, and summit ambitions.', showSearch: false };
+    } else if (page === 'backlogs') {
+      headerConfig = { title: 'Executive Backlogs', subtitle: 'Notion-style grouped matrix for cross-functional objectives, severities, and target schedules.', showSearch: false };
+    } else if (page === 'completed_backlogs') {
+      headerConfig = { title: 'Completed Backlogs', subtitle: 'Executive archive of finished objectives, executed milestones, and accomplishments.', showSearch: false };
     } else if (page === 'report') {
       headerConfig = { title: 'Executive Intelligence & Reports', subtitle: 'Multi-cadence debriefs, SVG velocity charts, habit heatmaps, and strategic synthesis.', showSearch: false };
     } else if (page === 'profile') {
@@ -95,6 +99,7 @@ function init() {
   if (typeof RoadmapEngine !== 'undefined') RoadmapEngine.init();
   if (typeof RitualsEngine !== 'undefined') RitualsEngine.init();
   if (typeof BucketListEngine !== 'undefined') BucketListEngine.init();
+  if (typeof BacklogEngine !== 'undefined') BacklogEngine.init();
   if (typeof ReportEngine !== 'undefined') ReportEngine.init();
   if (typeof TouchEngine !== 'undefined') TouchEngine.init();
   if (typeof SyncEngine !== 'undefined') SyncEngine.init();

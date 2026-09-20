@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Completed Backlogs | Tesseract</title>
+  <meta name="description" content="Tesseract Completed Backlogs - Executive archive of finished objectives and accomplishments across groups.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Executive Authentication Gatekeeper -->
+  <script src="js/auth_engine.js"></script>
+  <script>if (typeof AuthEngine !== 'undefined') AuthEngine.requireAuth();</script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- Executive Completed Backlogs View -->
+      <section class="backlog-view" id="backlog-view-container">
+        <!-- Hero Header & Stats Card -->
+        <div class="backlog-hero-card">
+          <div class="backlog-hero-main">
+            <div class="backlog-hero-tag accent-emerald-tag">
+              <i data-lucide="check-circle-2"></i>
+              <span>EXECUTIVE ARCHIVE & ACCOMPLISHMENTS</span>
+            </div>
+            <h2 class="backlog-hero-title">Completed Backlogs</h2>
+            <p class="backlog-hero-subtitle">
+              Verified archive of finished objectives, executed milestones, and completed errands across all strategic groups.
+            </p>
+          </div>
+
+          <!-- Stats Ribbon -->
+          <div class="backlog-stats-grid">
+            <div class="backlog-stat-box accent-emerald">
+              <span class="backlog-stat-val" id="stat-backlog-total">0</span>
+              <span class="backlog-stat-lbl">Completed</span>
+            </div>
+            <div class="backlog-stat-box accent-crimson">
+              <span class="backlog-stat-val" id="stat-backlog-high">0</span>
+              <span class="backlog-stat-lbl">High Priority</span>
+            </div>
+            <div class="backlog-stat-box">
+              <a href="backlogs.html" class="btn btn-secondary back-to-active-btn" title="Return to Active Backlogs">
+                <i data-lucide="arrow-left"></i>
+                <span>Active Backlogs</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Toolbar: Group Filter Pills & Search -->
+        <div class="backlog-toolbar">
+          <div class="backlog-filter-scroll">
+            <div class="backlog-pills-row" id="backlog-filter-pills">
+              <!-- Dynamically populated by BacklogEngine.renderFilters() -->
+            </div>
+          </div>
+
+          <div class="backlog-toolbar-actions">
+            <div class="backlog-search-wrap">
+              <i data-lucide="search" class="backlog-search-icon"></i>
+              <input type="text" id="backlog-search-input" class="backlog-search-input" placeholder="Filter completed..." autocomplete="off">
+            </div>
+
+            <a href="backlogs.html" class="btn btn-primary backlog-return-link">
+              <i data-lucide="list-checks"></i>
+              <span>Active Backlogs</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Notion-Style Table View (Completed Archive) -->
+        <div class="backlog-table-container">
+          <div class="backlog-table-scroller">
+            <table class="backlog-notion-table" id="backlog-table">
+              <thead>
+                <tr>
+                  <th class="col-select" title="Status">Done</th>
+                  <th class="col-objective">Objective Name</th>
+                  <th class="col-created">Completed Date</th>
+                  <th class="col-severity">Severity</th>
+                  <th class="col-due">Estimated End Date</th>
+                  <th class="col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="backlog-table-body">
+                <!-- Dynamically populated by BacklogEngine.renderTable() -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State -->
+          <div class="backlog-empty-state" id="backlog-empty-state" style="display: none;">
+            <div class="backlog-empty-icon">
+              <i data-lucide="check-circle-2"></i>
+            </div>
+            <h3 class="backlog-empty-title">No completed objectives in this group</h3>
+            <p class="backlog-empty-sub">When you check off objectives in your active backlogs, they will vanish and appear here automatically.</p>
+            <a href="backlogs.html" class="btn btn-secondary btn-sm">
+              <i data-lucide="arrow-left"></i>
+              <span>Go to Active Backlogs</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Core Scripts -->
+  <!-- Firebase Compat v10 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- E2EE Sync Engine -->
+  <script src="js/sync_engine.js"></script>
+  <script src="js/notification_engine.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/drag_drop.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/backlog_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/touch_engine.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
