@@ -10341,5 +10341,361 @@ body {
   }
 }
 
+/* ════════════════════════════════════════════════════════════
+   🔒 ZERO-KNOWLEDGE E2EE CLOUD SYNC & STATUS INDICATORS
+   ════════════════════════════════════════════════════════════ */
 
+/* Header Status Pill */
+.header-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  outline: none;
+}
 
+.header-sync-pill:hover {
+  transform: translateY(-1px);
+}
+
+.header-sync-pill .sync-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.sync-icon.spin {
+  animation: sync-spin 1.2s linear infinite;
+}
+
+@keyframes sync-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Sync Pill Color States */
+.sync-pill-local {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+.sync-pill-synced {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+.sync-pill-syncing {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.sync-pill-connecting {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.sync-pill-error {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.sync-pill-offline {
+  background: rgba(100, 116, 139, 0.12);
+  border-color: rgba(100, 116, 139, 0.3);
+  color: #94a3b8;
+}
+
+/* Modal Card */
+.sync-modal-card {
+  max-width: 620px;
+  width: 92%;
+  background: #111116;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(245, 158, 11, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.sync-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding-bottom: 14px;
+}
+
+.sync-modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.sync-modal-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin: 2px 0 0 0;
+}
+
+/* Status Banner */
+.sync-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.sync-banner-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sync-banner-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sync-banner-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.sync-banner-desc {
+  font-size: 0.73rem;
+  opacity: 0.85;
+}
+
+/* Inputs & Form Groups */
+.sync-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sync-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sync-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .sync-field-row {
+    flex-direction: column;
+  }
+}
+
+.sync-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sync-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.02em;
+}
+
+.sync-ext-link {
+  font-size: 0.72rem;
+  color: var(--accent-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sync-ext-link:hover {
+  text-decoration: underline;
+}
+
+.sync-ext-link svg {
+  width: 12px;
+  height: 12px;
+}
+
+.sync-textarea,
+.sync-input {
+  width: 100%;
+  background: rgba(18, 18, 24, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace, sans-serif;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.sync-textarea:focus,
+.sync-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.sync-field-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.sync-pass-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sync-pass-wrapper .sync-input {
+  padding-right: 36px;
+}
+
+.sync-pass-toggle {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sync-pass-toggle:hover {
+  color: var(--text-primary);
+}
+
+.sync-pass-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-text-action {
+  background: transparent;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-text-action:hover {
+  text-decoration: underline;
+}
+
+/* Fast Pairing Box */
+.sync-pairing-box {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.sync-pairing-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #fbbf24;
+  margin-bottom: 4px;
+}
+
+.sync-pairing-header svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sync-pairing-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0 0 8px 0;
+}
+
+.sync-pair-action-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sync-input-readonly {
+  background: rgba(0, 0, 0, 0.4);
+  color: #94a3b8;
+  font-size: 0.72rem;
+  user-select: all;
+}
+
+/* Guarantee Note */
+.sync-guarantee-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: rgba(30, 41, 59, 0.4);
+  border-radius: 8px;
+  border-left: 3px solid #10b981;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.sync-guarantee-note svg {
+  width: 18px;
+  height: 18px;
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Modal Footer */
+.sync-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 14px;
+  gap: 10px;
+}
+
+.sync-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

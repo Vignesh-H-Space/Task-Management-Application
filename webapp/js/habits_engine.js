@@ -61,6 +61,7 @@ const HabitsEngine = {
 
   save() {
     localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(this.habits));
+    if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
   },
 
   seedDefaultHistoryIfNeeded() {

@@ -246,6 +246,12 @@ const Components = {
           <span class="cmd-badge-text">Ctrl + K</span>
         </button>
 
+        <!-- Live E2EE Cloud Sync Indicator -->
+        <button class="header-sync-pill sync-pill-local" id="sync-status-indicator" onclick="if(typeof SyncEngine !== 'undefined') SyncEngine.openModal();" title="Cloud Sync & E2EE Settings">
+          <i data-lucide="hard-drive" class="sync-icon"></i>
+          <span class="sync-text">Local Only</span>
+        </button>
+
         <!-- Live Header XP & Rank Widget -->
         <div class="header-xp-pill" id="header-xp-pill" onclick="window.location.href='profile.html'" title="View Level, Badges & XP Profile">
           <span class="header-level-tag" id="header-level-badge">Lvl 1</span>
@@ -725,6 +731,107 @@ const Components = {
       </div>
     </div>
 
+    <!-- 🔒 Zero-Knowledge E2EE Cloud Sync Modal -->
+    <div class="modal-backdrop mobile-sheet-backdrop" id="cloud-sync-modal" style="display: none;" onclick="if(event.target === this) SyncEngine.closeModal();">
+      <div class="ritual-modal-card sync-modal-card">
+        <div class="sheet-grabber-bar" onclick="SyncEngine.closeModal();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
+        <div class="sync-modal-header">
+          <div class="tools-title-group">
+            <div class="tools-header-badge gold"><i data-lucide="shield-check"></i></div>
+            <div>
+              <h3 class="sync-modal-title">E2EE Cloud Synchronization</h3>
+              <p class="sync-modal-sub">Zero-Knowledge AES-256-GCM + Firebase Real-Time Mesh</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" onclick="SyncEngine.closeModal();">&times;</button>
+        </div>
+
+        <!-- Dynamic Status Banner -->
+        <div id="sync-modal-status" class="sync-status-banner sync-pill-local">
+          <div class="sync-banner-icon"><i data-lucide="hard-drive"></i></div>
+          <div class="sync-banner-info">
+            <div class="sync-banner-title">Local Storage Only</div>
+            <div class="sync-banner-desc">Changes are stored solely in this browser.</div>
+          </div>
+        </div>
+
+        <div class="sync-modal-body">
+          <!-- Step 1: Firebase Config -->
+          <div class="sync-field-group">
+            <div class="sync-field-header">
+              <label class="sync-label" for="sync-config-input">1. Firebase Web App Configuration</label>
+              <a href="https://console.firebase.google.com/" target="_blank" rel="noopener" class="sync-ext-link">
+                Firebase Console <i data-lucide="external-link"></i>
+              </a>
+            </div>
+            <textarea id="sync-config-input" class="sync-textarea" rows="3" placeholder="Paste your firebaseConfig code block or JSON here:&#10;{&#10;  apiKey: '...',&#10;  projectId: '...'&#10;}"></textarea>
+            <p class="sync-field-hint">From Firebase Console ⚙️ Project Settings &rarr; Your apps &rarr; Web app &lt;/&gt; snippet.</p>
+          </div>
+
+          <!-- Step 2: Room ID & Passphrase -->
+          <div class="sync-field-row">
+            <div class="sync-field-group" style="flex: 1;">
+              <label class="sync-label" for="sync-room-input">2. Sync Room ID</label>
+              <input type="text" id="sync-room-input" class="sync-input" placeholder="e.g. executive-workspace-1" autocomplete="off">
+              <p class="sync-field-hint">Shared room ID for your devices.</p>
+            </div>
+
+            <div class="sync-field-group" style="flex: 1.2;">
+              <div class="sync-field-header">
+                <label class="sync-label" for="sync-passphrase-input">3. Secret Encryption Passphrase</label>
+                <button type="button" class="btn-text-action" onclick="const p = SyncEngine.generateRandomPassphrase(); document.getElementById('sync-passphrase-input').value = p;">
+                  🎲 Generate Key
+                </button>
+              </div>
+              <div class="sync-pass-wrapper">
+                <input type="password" id="sync-passphrase-input" class="sync-input" placeholder="Enter secret passphrase" autocomplete="off">
+                <button type="button" class="sync-pass-toggle" onclick="const inp = document.getElementById('sync-passphrase-input'); inp.type = inp.type === 'password' ? 'text' : 'password';">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+              <p class="sync-field-hint">Never sent to Google. Mathematically encrypts data locally.</p>
+            </div>
+          </div>
+
+          <!-- Step 3: Fast Pairing Section (shown when synced) -->
+          <div id="sync-pairing-section" class="sync-pairing-box" style="display: none;">
+            <div class="sync-pairing-header">
+              <i data-lucide="smartphone"></i>
+              <strong>Pair Mobile Phone in 1 Tap</strong>
+            </div>
+            <p class="sync-pairing-desc">Send this private pairing link to your phone (via WhatsApp, Slack, Notes, or AirDrop) to instantly sync your phone without typing keys:</p>
+            <div class="sync-pair-action-row">
+              <input type="text" id="sync-pair-url" class="sync-input sync-input-readonly" readonly>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="SyncEngine.copyPairingLink()">
+                <i data-lucide="copy"></i> Copy Link
+              </button>
+            </div>
+          </div>
+
+          <div class="sync-guarantee-note">
+            <i data-lucide="shield-alert"></i>
+            <span><strong>Zero-Knowledge Guarantee:</strong> Google Firestore only ever receives scrambled ciphertext. Even if their databases are inspected, your tasks, notes, habits, and streaks cannot be read without this exact passphrase.</span>
+          </div>
+        </div>
+
+        <div class="sync-modal-footer">
+          <button type="button" class="btn btn-ghost text-danger" onclick="if(confirm('Disconnect cloud sync from this device? (Local data will be kept)')) { SyncEngine.clearCredentials(); }">
+            Disconnect
+          </button>
+          <div class="sync-footer-actions">
+            <button type="button" class="btn btn-secondary" onclick="SyncEngine.pushNow()">
+              <i data-lucide="upload-cloud"></i> Push Local Data
+            </button>
+            <button type="button" class="btn btn-primary" onclick="SyncEngine.handleSaveSettings()">
+              <i data-lucide="check"></i> Save & Connect
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 📱 Mobile Tools & Executive Suite Bottom Sheet -->
     <div class="modal-backdrop mobile-sheet-backdrop" id="mobile-tools-sheet" style="display: none;" onclick="if(event.target === this) Components.closeMobileToolsSheet();">
       <div class="ritual-modal-card mobile-tools-card">
@@ -769,6 +876,10 @@ const Components = {
           <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof RitualsEngine !== 'undefined') RitualsEngine.openEveningModal();">
             <div class="tool-tile-icon indigo"><i data-lucide="moon"></i></div>
             <span class="tool-tile-label">Evening Review</span>
+          </button>
+          <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof SyncEngine !== 'undefined') SyncEngine.openModal();">
+            <div class="tool-tile-icon gold"><i data-lucide="shield-check"></i></div>
+            <span class="tool-tile-label">Cloud Sync</span>
           </button>
           <button class="tool-tile" onclick="if(typeof toggleTheme === 'function') toggleTheme();">
             <div class="tool-tile-icon rose"><i data-lucide="palette"></i></div>

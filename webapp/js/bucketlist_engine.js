@@ -133,6 +133,7 @@ const BucketListEngine = {
 
   save() {
     localStorage.setItem(BUCKETLIST_STORAGE_KEY, JSON.stringify(this.dreams));
+    if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
   },
 
   renderQuote() {

@@ -97,6 +97,7 @@ function init() {
   if (typeof BucketListEngine !== 'undefined') BucketListEngine.init();
   if (typeof ReportEngine !== 'undefined') ReportEngine.init();
   if (typeof TouchEngine !== 'undefined') TouchEngine.init();
+  if (typeof SyncEngine !== 'undefined') SyncEngine.init();
   renderAll();
   renderStreakUI();
   lucide.createIcons();
@@ -140,6 +141,7 @@ function loadData() {
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
   updateAppBadge();
+  if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
 }
 
 function loadProfile() {
@@ -155,6 +157,7 @@ function loadProfile() {
 
 function saveProfile() {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile));
+  if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
 }
 
 // ── Streak Engine ──────────────────────────────────────────
@@ -205,6 +208,7 @@ function saveStreak() {
     XPEngine.data.lastActiveDate = state.streak.lastDate;
     XPEngine.save();
   }
+  if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
 }
 
 function checkAndUpdateStreak() {

@@ -31,6 +31,7 @@ const RitualsEngine = {
 
   save() {
     localStorage.setItem(RITUALS_STORAGE_KEY, JSON.stringify(this.data));
+    if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
   },
 
   getToday() {

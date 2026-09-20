@@ -126,6 +126,7 @@ const XPEngine = {
 
   save() {
     localStorage.setItem(XP_STORAGE_KEY, JSON.stringify(this.data));
+    if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
   },
 
   // Calculate current multiplier based on active streak
