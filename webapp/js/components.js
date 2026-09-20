@@ -252,6 +252,11 @@ const Components = {
           <span class="sync-text">Local Only</span>
         </button>
 
+        <!-- Native Notifications & Alarms Bell Button -->
+        <button class="header-icon-btn" id="header-notif-btn" onclick="if(typeof NotificationEngine !== 'undefined') NotificationEngine.openModal();" title="Notifications & Ritual Alarms">
+          <i data-lucide="bell"></i>
+        </button>
+
         <!-- Live Header XP & Rank Widget -->
         <div class="header-xp-pill" id="header-xp-pill" onclick="window.location.href='profile.html'" title="View Level, Badges & XP Profile">
           <span class="header-level-tag" id="header-level-badge">Lvl 1</span>
@@ -832,6 +837,112 @@ const Components = {
       </div>
     </div>
 
+    <!-- 🔔 Native Notifications & Ritual Alarms Modal -->
+    <div class="modal-backdrop mobile-sheet-backdrop" id="notification-settings-modal" style="display: none;" onclick="if(event.target === this) NotificationEngine.closeModal();">
+      <div class="ritual-modal-card notif-modal-card">
+        <div class="sheet-grabber-bar" onclick="NotificationEngine.closeModal();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
+        <div class="notif-modal-header">
+          <div class="tools-title-group">
+            <div class="tools-header-badge amber"><i data-lucide="bell-ring"></i></div>
+            <div>
+              <h3 class="notif-modal-title">Ritual Alarms & Notifications</h3>
+              <p class="notif-modal-sub">Native lock-screen alerts & executive coaching prompts</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" onclick="NotificationEngine.closeModal();">&times;</button>
+        </div>
+
+        <!-- Permission Status Banner -->
+        <div class="notif-status-box">
+          <div class="notif-status-info">
+            <span class="notif-status-pill pill-default" id="notif-status-pill">
+              <i data-lucide="bell"></i> Checking Permissions...
+            </span>
+            <span class="notif-status-sub">Delivered via Android & Browser Push Notifications</span>
+          </div>
+          <label class="executive-switch" title="Toggle Notifications">
+            <input type="checkbox" id="notif-master-toggle" onchange="NotificationEngine.handleToggleMaster(event)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="notif-modal-body">
+          <!-- Morning Setup Alarm -->
+          <div class="notif-card-row">
+            <div class="notif-row-icon gold"><i data-lucide="sun"></i></div>
+            <div class="notif-row-content">
+              <div class="notif-row-title-row">
+                <span class="notif-row-title">🌅 Morning Priming Prompt</span>
+                <label class="mini-switch">
+                  <input type="checkbox" id="notif-morning-toggle" checked>
+                  <span class="mini-slider"></span>
+                </label>
+              </div>
+              <p class="notif-row-desc">Alerts you to choose your Top 3 daily priorities and command the day.</p>
+              <div class="notif-time-row">
+                <label class="notif-time-label" for="notif-morning-time">Alarm Time:</label>
+                <input type="time" id="notif-morning-time" class="notif-time-picker" value="08:00">
+              </div>
+            </div>
+          </div>
+
+          <!-- Evening Shutdown Alarm -->
+          <div class="notif-card-row">
+            <div class="notif-row-icon indigo"><i data-lucide="moon"></i></div>
+            <div class="notif-row-content">
+              <div class="notif-row-title-row">
+                <span class="notif-row-title">🌙 Evening Shutdown Reminder</span>
+                <label class="mini-switch">
+                  <input type="checkbox" id="notif-evening-toggle" checked>
+                  <span class="mini-slider"></span>
+                </label>
+              </div>
+              <p class="notif-row-desc">Prompts your evening debrief, clearing the deck and protecting your active streak.</p>
+              <div class="notif-time-row">
+                <label class="notif-time-label" for="notif-evening-time">Alarm Time:</label>
+                <input type="time" id="notif-evening-time" class="notif-time-picker" value="21:30">
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Deadline Reminders -->
+          <div class="notif-card-row">
+            <div class="notif-row-icon rose"><i data-lucide="clock"></i></div>
+            <div class="notif-row-content">
+              <div class="notif-row-title-row">
+                <span class="notif-row-title">⏰ Urgent Task Deadline Alerts</span>
+                <label class="mini-switch">
+                  <input type="checkbox" id="notif-deadline-toggle" checked>
+                  <span class="mini-slider"></span>
+                </label>
+              </div>
+              <p class="notif-row-desc">Alerts you in late afternoon if urgent daily priorities remain incomplete.</p>
+            </div>
+          </div>
+
+          <!-- Test Notification Action -->
+          <div class="notif-test-box">
+            <div class="notif-test-text">
+              <strong>Verify on your phone lock screen</strong>
+              <p>Sends an instant sample notification with vibration and tactile actions.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="NotificationEngine.sendTestNotification()">
+              <i data-lucide="send"></i> Test Alert
+            </button>
+          </div>
+        </div>
+
+        <div class="notif-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="NotificationEngine.closeModal()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="NotificationEngine.handleSaveSettings()">
+            <i data-lucide="check"></i> Save Preferences
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 📱 Mobile Tools & Executive Suite Bottom Sheet -->
     <div class="modal-backdrop mobile-sheet-backdrop" id="mobile-tools-sheet" style="display: none;" onclick="if(event.target === this) Components.closeMobileToolsSheet();">
       <div class="ritual-modal-card mobile-tools-card">
@@ -880,6 +991,10 @@ const Components = {
           <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof SyncEngine !== 'undefined') SyncEngine.openModal();">
             <div class="tool-tile-icon gold"><i data-lucide="shield-check"></i></div>
             <span class="tool-tile-label">Cloud Sync</span>
+          </button>
+          <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof NotificationEngine !== 'undefined') NotificationEngine.openModal();">
+            <div class="tool-tile-icon amber"><i data-lucide="bell-ring"></i></div>
+            <span class="tool-tile-label">Ritual Alarms</span>
           </button>
           <button class="tool-tile" onclick="if(typeof toggleTheme === 'function') toggleTheme();">
             <div class="tool-tile-icon rose"><i data-lucide="palette"></i></div>

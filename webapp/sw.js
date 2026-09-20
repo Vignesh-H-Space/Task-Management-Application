@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tesseract-pwa-v8';
+const CACHE_NAME = 'tesseract-pwa-v9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
   './report.html',
   './manifest.json',
   './css/styles.css',
+  './js/notification_engine.js',
   './js/sync_engine.js',
   './js/touch_engine.js',
   './js/app.js',
@@ -97,3 +98,45 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+
+// Native Notification Click Handler - Routes lock-screen taps to active app or opens new window
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const action = event.action || (event.notification.data && event.notification.data.action) || 'open';
+  let targetUrl = './index.html';
+
+  if (action === 'morning') {
+    targetUrl = './index.html?action=morning';
+  } else if (action === 'evening') {
+    targetUrl = './index.html?action=evening';
+  } else if (typeof action === 'string' && action.startsWith('task_')) {
+    const taskId = action.replace('task_', '');
+    targetUrl = './index.html?action=task&id=' + taskId;
+  } else if (event.notification.data && event.notification.data.id) {
+    targetUrl = './index.html?action=task&id=' + event.notification.data.id;
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // If a window is already open, focus it and navigate
+      for (let client of windowClients) {
+        if ('focus' in client) {
+          if (client.navigate) {
+            client.navigate(targetUrl);
+          }
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
+self.addEventListener('notificationclose', (event) => {
+  console.log('Tesseract notification dismissed:', event.notification.tag);
+});
+

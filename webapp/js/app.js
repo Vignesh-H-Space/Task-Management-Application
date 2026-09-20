@@ -98,6 +98,7 @@ function init() {
   if (typeof ReportEngine !== 'undefined') ReportEngine.init();
   if (typeof TouchEngine !== 'undefined') TouchEngine.init();
   if (typeof SyncEngine !== 'undefined') SyncEngine.init();
+  if (typeof NotificationEngine !== 'undefined') NotificationEngine.init();
   renderAll();
   renderStreakUI();
   lucide.createIcons();
@@ -119,6 +120,11 @@ function handleQuickActionShortcut(action, horizon) {
       RitualsEngine.openMorningModal();
     } else if (action === 'evening' && typeof RitualsEngine !== 'undefined') {
       RitualsEngine.openEveningModal();
+    } else if (action === 'task') {
+      const taskId = new URLSearchParams(window.location.search).get('id');
+      if (taskId && typeof openEditModal === 'function') {
+        openEditModal(taskId);
+      }
     }
   }, 250);
 }
