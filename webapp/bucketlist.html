@@ -21,6 +21,9 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Executive Authentication Gatekeeper -->
+  <script src="js/auth_engine.js"></script>
+  <script>if (typeof AuthEngine !== 'undefined') AuthEngine.requireAuth();</script>
 </head>
 <body>
   <div class="app-layout">

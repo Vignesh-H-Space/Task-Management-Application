@@ -276,6 +276,9 @@ const Components = {
           <img id="header-avatar-img" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
           <i data-lucide="user" class="profile-avatar-icon" id="header-avatar-fallback"></i>
         </button>
+        <button class="header-icon-btn btn-signout" onclick="if(typeof AuthEngine !== 'undefined') AuthEngine.logout();" title="Sign Out of Executive OS">
+          <i data-lucide="log-out"></i>
+        </button>
       </div>
     </header>
     `;
@@ -999,6 +1002,10 @@ const Components = {
           <button class="tool-tile" onclick="if(typeof toggleTheme === 'function') toggleTheme();">
             <div class="tool-tile-icon rose"><i data-lucide="palette"></i></div>
             <span class="tool-tile-label">Theme Mode</span>
+          </button>
+          <button class="tool-tile btn-signout" onclick="if(typeof AuthEngine !== 'undefined') AuthEngine.logout();">
+            <div class="tool-tile-icon rose"><i data-lucide="log-out"></i></div>
+            <span class="tool-tile-label">Sign Out</span>
           </button>
         </div>
       </div>
