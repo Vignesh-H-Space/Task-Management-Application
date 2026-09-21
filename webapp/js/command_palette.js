@@ -101,6 +101,14 @@ const CommandPalette = {
         action: () => { window.location.href = 'bucketlist.html'; }
       },
       {
+        id: 'nav-docket',
+        category: 'NAVIGATION',
+        title: "Today's Docket",
+        desc: 'Quick-capture daily execution agenda & immediate task board',
+        icon: 'clipboard-list',
+        action: () => { window.location.href = 'backlogs.html'; }
+      },
+      {
         id: 'nav-backlogs',
         category: 'NAVIGATION',
         title: 'Executive Backlogs',

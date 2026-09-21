@@ -446,7 +446,8 @@ const SyncEngine = {
         bucketList: (typeof BucketListEngine !== 'undefined') ? BucketListEngine.dreams : JSON.parse(localStorage.getItem('tesseract_bucketlist_data') || '[]'),
         focusSessions: (typeof FocusEngine !== 'undefined') ? FocusEngine.getSessions() : JSON.parse(localStorage.getItem('tesseract_focus_sessions') || '[]'),
         rituals: (typeof RitualsEngine !== 'undefined') ? RitualsEngine.data : JSON.parse(localStorage.getItem('tesseract_rituals_data') || '{}'),
-        backlogs: (typeof BacklogEngine !== 'undefined') ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]')
+        backlogs: (typeof BacklogEngine !== 'undefined') ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]'),
+        docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]')
       };
 
       // Encrypt with native AES-256-GCM
@@ -540,6 +541,16 @@ const SyncEngine = {
         localStorage.setItem('tesseract_backlog_data', JSON.stringify(data.backlogs));
       }
 
+      if (data.docket && Array.isArray(data.docket)) {
+        if (typeof DocketEngine !== 'undefined') {
+          DocketEngine.items = data.docket;
+          if (typeof Components !== 'undefined' && Components.getCurrentPage() === 'backlogs') {
+            DocketEngine.render();
+          }
+        }
+        localStorage.setItem('tesseract_docket_data', JSON.stringify(data.docket));
+      }
+
       // 9. Re-render UI views dynamically
       if (typeof renderAll === 'function') renderAll();
       if (typeof renderSidebarBadgeCounts === 'function') renderSidebarBadgeCounts();
@@ -549,6 +560,7 @@ const SyncEngine = {
       if (typeof HabitsEngine !== 'undefined' && typeof HabitsEngine.render === 'function') HabitsEngine.render();
       if (typeof BucketListEngine !== 'undefined' && typeof BucketListEngine.render === 'function') BucketListEngine.render();
       if (typeof RoadmapEngine !== 'undefined' && typeof RoadmapEngine.render === 'function') RoadmapEngine.render();
+      if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.render === 'function' && typeof Components !== 'undefined' && Components.getCurrentPage() === 'backlogs') DocketEngine.render();
       if (typeof lucide !== 'undefined') lucide.createIcons();
 
     } finally {

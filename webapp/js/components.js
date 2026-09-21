@@ -951,6 +951,48 @@ const Components = {
       </div>
     </div>
 
+    <!-- 🔄 Yesterday's Unfinished Docket Rollover Modal -->
+    <div class="modal-backdrop mobile-sheet-backdrop" id="docket-rollover-modal" style="display: none;" onclick="if(event.target === this) DocketEngine.closeRolloverModal();">
+      <div class="ritual-modal-card docket-rollover-card">
+        <div class="sheet-grabber-bar" onclick="DocketEngine.closeRolloverModal();">
+          <div class="sheet-grabber-pill"></div>
+        </div>
+        <div class="rollover-modal-header">
+          <div class="tools-title-group">
+            <div class="tools-header-badge amber"><i data-lucide="history"></i></div>
+            <div>
+              <div class="rollover-title-line">
+                <h3 class="rollover-modal-title">Yesterday's Unfinished Docket</h3>
+                <span class="rollover-count-badge" id="rollover-count-badge">0</span>
+              </div>
+              <p class="rollover-modal-sub" id="rollover-subtitle">Review and rollover tasks left over from previous days.</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" onclick="DocketEngine.closeRolloverModal();">&times;</button>
+        </div>
+
+        <div class="rollover-modal-body">
+          <div class="rollover-tasks-list" id="rollover-tasks-list">
+            <!-- Dynamically populated by DocketEngine.openRolloverModal() -->
+          </div>
+        </div>
+
+        <div class="rollover-modal-footer">
+          <div class="rollover-bulk-actions">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="DocketEngine.rollAllStaleToToday()">
+              <i data-lucide="calendar-plus"></i>
+              <span>Roll All to Today</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="DocketEngine.markAllStaleDone()">
+              <i data-lucide="check-check"></i>
+              <span>Mark All Done</span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="DocketEngine.dismissRollover()">Dismiss</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 📱 Mobile Tools & Executive Suite Bottom Sheet -->
     <div class="modal-backdrop mobile-sheet-backdrop" id="mobile-tools-sheet" style="display: none;" onclick="if(event.target === this) Components.closeMobileToolsSheet();">
       <div class="ritual-modal-card mobile-tools-card">

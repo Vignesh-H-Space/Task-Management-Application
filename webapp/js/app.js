@@ -100,6 +100,7 @@ function init() {
   if (typeof RitualsEngine !== 'undefined') RitualsEngine.init();
   if (typeof BucketListEngine !== 'undefined') BucketListEngine.init();
   if (typeof BacklogEngine !== 'undefined') BacklogEngine.init();
+  if (typeof DocketEngine !== 'undefined') DocketEngine.init();
   if (typeof ReportEngine !== 'undefined') ReportEngine.init();
   if (typeof TouchEngine !== 'undefined') TouchEngine.init();
   if (typeof SyncEngine !== 'undefined') SyncEngine.init();
