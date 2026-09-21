@@ -91,7 +91,8 @@ const BacklogEngine = {
   searchQuery: '',
   showInlineForm: false,
   selectedIds: new Set(),
-  pendingVanishes: {}, // { [itemId]: { timer, remaining } }
+  pendingVanishes: {}, // { [itemId]: { timer, interval, startTime } }
+  pendingDeletions: {}, // { [itemId]: { timer, interval, startTime } }
 
   init() {
     this.load();
@@ -179,6 +180,11 @@ const BacklogEngine = {
   markDoneWithCountdown(id) {
     const item = this.items.find(i => i.id === id);
     if (!item) return;
+
+    // If currently deleting, cancel deletion first
+    if (this.pendingDeletions[id]) {
+      this.cancelDelete(id);
+    }
 
     // If currently vanishing, clicking again cancels / undoes it
     if (this.pendingVanishes[id]) {
@@ -337,17 +343,115 @@ const BacklogEngine = {
     const item = this.items.find(i => i.id === id);
     if (!item) return;
 
-    if (confirm(`Permanently remove backlog objective "${item.objective}"?`)) {
-      if (this.pendingVanishes[id]) {
-        clearTimeout(this.pendingVanishes[id].timer);
-        delete this.pendingVanishes[id];
+    // If currently deleting, clicking again cancels / retrieves it
+    if (this.pendingDeletions[id]) {
+      this.cancelDelete(id);
+      return;
+    }
+
+    // Cancel completion vanish if pending
+    if (this.pendingVanishes[id]) {
+      this.cancelVanish(id);
+    }
+
+    // Start 5-second retrieval countdown with live per-second label updates
+    let remaining = 5;
+    const interval = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(interval);
+      } else {
+        const retrieveBtnText = typeof document !== 'undefined' ? document.querySelector(`.backlog-row[data-id="${id}"] .btn-retrieve-undo span`) : null;
+        if (retrieveBtnText) {
+          retrieveBtnText.textContent = `Retrieve (${remaining}s)`;
+        }
       }
+    }, 1000);
+
+    const timer = setTimeout(() => {
+      this.finalizeDelete(id);
+    }, 5000);
+
+    this.pendingDeletions[id] = {
+      timer,
+      interval,
+      startTime: Date.now()
+    };
+
+    // Update row visual state immediately
+    const row = typeof document !== 'undefined' ? document.querySelector(`.backlog-row[data-id="${id}"]`) : null;
+    if (row) {
+      row.classList.add('row-deleting');
+      const actionCell = row.querySelector('.col-actions');
+      if (actionCell) {
+        actionCell.innerHTML = `
+          <button class="btn-retrieve-undo" onclick="BacklogEngine.cancelDelete('${id}')" title="Retrieve deleted objective">
+            <i data-lucide="rotate-ccw"></i>
+            <span>Retrieve (5s)</span>
+          </button>
+        `;
+      }
+      const objCell = row.querySelector('.objective-cell');
+      if (objCell) {
+        const existingBar = objCell.querySelector('.delete-progress-bar');
+        if (!existingBar) {
+          const progressBar = document.createElement('div');
+          progressBar.className = 'vanish-progress-bar delete-progress-bar';
+          objCell.appendChild(progressBar);
+        }
+      }
+    }
+
+    if (typeof showToast === 'function') {
+      showToast('Deleting objective in 5s... Tap Retrieve to cancel.', 'warning');
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  },
+
+  cancelDelete(id) {
+    if (this.pendingDeletions[id]) {
+      clearTimeout(this.pendingDeletions[id].timer);
+      if (this.pendingDeletions[id].interval) {
+        clearInterval(this.pendingDeletions[id].interval);
+      }
+      delete this.pendingDeletions[id];
+    }
+    const item = this.items.find(i => i.id === id);
+    this.renderTable();
+    if (typeof showToast === 'function' && item) {
+      showToast('Retrieved objective: ' + item.objective, 'success');
+    }
+  },
+
+  finalizeDelete(id) {
+    const item = this.items.find(i => i.id === id);
+    if (!item) return;
+
+    if (this.pendingDeletions[id]) {
+      clearTimeout(this.pendingDeletions[id].timer);
+      if (this.pendingDeletions[id].interval) {
+        clearInterval(this.pendingDeletions[id].interval);
+      }
+      delete this.pendingDeletions[id];
+    }
+
+    const row = typeof document !== 'undefined' ? document.querySelector(`.backlog-row[data-id="${id}"]`) : null;
+    if (row) {
+      row.classList.add('row-vanished');
+      setTimeout(() => {
+        this.items = this.items.filter(i => i.id !== id);
+        this.save();
+        this.render();
+      }, 350);
+    } else {
       this.items = this.items.filter(i => i.id !== id);
       this.save();
       this.render();
-      if (typeof showToast === 'function') {
-        showToast('Objective permanently removed', 'info');
-      }
+    }
+
+    if (typeof showToast === 'function') {
+      showToast('Objective permanently deleted', 'info');
     }
   },
 
@@ -492,9 +596,10 @@ const BacklogEngine = {
       const sev = BACKLOG_SEVERITIES[item.severity] || BACKLOG_SEVERITIES.low;
       const isOverdue = !item.completed && item.dueDate && item.dueDate < today;
       const isPending = !!this.pendingVanishes[item.id];
+      const isDeleting = !!this.pendingDeletions[item.id];
 
       return `
-        <tr class="backlog-row ${item.completed ? 'row-completed' : ''} ${isPending ? 'row-completing' : ''}" data-id="${item.id}">
+        <tr class="backlog-row ${item.completed ? 'row-completed' : ''} ${isPending ? 'row-completing' : ''} ${isDeleting ? 'row-deleting' : ''}" data-id="${item.id}">
           <!-- Col 1: Done Checkbox (Starts 5s Vanish) or Restore Checkbox on Completed page -->
           <td class="col-select">
             ${isCompleted ? `
@@ -502,6 +607,7 @@ const BacklogEngine = {
                 <input type="checkbox" 
                        class="backlog-done-checkbox" 
                        checked 
+                       ${isDeleting ? 'disabled' : ''}
                        onchange="BacklogEngine.restoreItem('${item.id}')">
                 <span class="backlog-custom-box checked"></span>
               </label>
@@ -510,6 +616,7 @@ const BacklogEngine = {
                 <input type="checkbox" 
                        class="backlog-done-checkbox" 
                        ${isPending ? 'checked' : ''} 
+                       ${isDeleting ? 'disabled' : ''}
                        onchange="BacklogEngine.markDoneWithCountdown('${item.id}')">
                 <span class="backlog-custom-box"></span>
               </label>
@@ -520,13 +627,14 @@ const BacklogEngine = {
           <td class="col-objective">
             <div class="objective-cell">
               <span class="objective-text ${item.completed ? 'completed-text' : ''}" 
-                    contenteditable="${!isCompleted}"
+                    contenteditable="${!isCompleted && !isPending && !isDeleting}"
                     spellcheck="false"
                     onblur="BacklogEngine.updateField('${item.id}', 'objective', this.textContent.trim())"
                     onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">
                 ${item.objective}
               </span>
               ${isPending ? '<div class="vanish-progress-bar"></div>' : ''}
+              ${isDeleting ? '<div class="vanish-progress-bar delete-progress-bar"></div>' : ''}
             </div>
           </td>
 
@@ -544,6 +652,7 @@ const BacklogEngine = {
               <span class="sev-dot"></span>
               <select class="severity-dropdown" 
                       aria-label="Severity level"
+                      ${isDeleting ? 'disabled' : ''}
                       onchange="BacklogEngine.updateField('${item.id}', 'severity', this.value)">
                 <option value="low" ${item.severity === 'low' ? 'selected' : ''}>Low</option>
                 <option value="moderate" ${item.severity === 'moderate' ? 'selected' : ''}>Moderate</option>
@@ -559,15 +668,20 @@ const BacklogEngine = {
               <input type="date" 
                      class="due-date-input" 
                      value="${item.dueDate || ''}" 
-                     ${isCompleted ? 'disabled' : ''}
+                     ${isCompleted || isDeleting ? 'disabled' : ''}
                      onchange="BacklogEngine.updateField('${item.id}', 'dueDate', this.value)">
               ${isOverdue ? '<span class="overdue-tag" title="Past due date">Overdue</span>' : ''}
             </div>
           </td>
 
-          <!-- Col 6: Actions (Undo during countdown, Restore on archive, Delete permanently) -->
+          <!-- Col 6: Actions (Retrieve during delete countdown, Undo during vanish countdown, Restore, Delete) -->
           <td class="col-actions">
-            ${isPending ? `
+            ${isDeleting ? `
+              <button class="btn-retrieve-undo" onclick="BacklogEngine.cancelDelete('${item.id}')" title="Retrieve deleted objective">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Retrieve (5s)</span>
+              </button>
+            ` : isPending ? `
               <button class="btn-vanish-undo" onclick="BacklogEngine.cancelVanish('${item.id}')" title="Undo completion">
                 <i data-lucide="rotate-ccw"></i>
                 <span>Undo (5s)</span>
@@ -578,12 +692,12 @@ const BacklogEngine = {
                   <i data-lucide="rotate-ccw"></i>
                   <span>Restore</span>
                 </button>
-                <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete permanently">
+                <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete permanently (5s undo)">
                   <i data-lucide="trash-2"></i>
                 </button>
               </div>
             ` : `
-              <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete objective">
+              <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete objective (5s undo)">
                 <i data-lucide="trash-2"></i>
               </button>
             `}

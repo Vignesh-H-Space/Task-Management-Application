@@ -11948,7 +11948,7 @@ body {
   text-align: right;
 }
 
-/* 5-Second Vanishing Countdown Row States */
+/* 5-Second Vanishing Countdown Row States (Completion) */
 .row-completing {
   background: rgba(16, 185, 129, 0.07) !important;
   position: relative;
@@ -11996,6 +11996,50 @@ body {
 
 .btn-vanish-undo i,
 .btn-vanish-undo svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* 5-Second Deletion Countdown Row States (Retrieval) */
+.row-deleting {
+  background: rgba(239, 68, 68, 0.08) !important;
+  position: relative;
+}
+
+.row-deleting .objective-text {
+  text-decoration: line-through;
+  color: #f87171 !important;
+  opacity: 0.8;
+}
+
+.delete-progress-bar {
+  background: #ef4444 !important;
+}
+
+.btn-retrieve-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-retrieve-undo:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.btn-retrieve-undo i,
+.btn-retrieve-undo svg {
   width: 12px;
   height: 12px;
 }
