@@ -100,6 +100,7 @@ const BacklogEngine = {
     if (page === 'backlogs' || page === 'completed_backlogs') {
       this.render();
       this.bindEvents();
+      this.bindTableScroll();
     }
   },
 
@@ -107,14 +108,75 @@ const BacklogEngine = {
     const saved = localStorage.getItem(BACKLOG_STORAGE_KEY);
     if (saved) {
       try {
-        this.items = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.items = parsed.map(item => ({
+            ...item,
+            group: (item.group && BACKLOG_GROUPS[item.group]) ? item.group : 'work',
+            severity: (item.severity && BACKLOG_SEVERITIES[item.severity]) ? item.severity : 'low'
+          }));
+
+          // Merge default initial items if any were missing so previous objectives are never vanished
+          const existingIds = new Set(this.items.map(i => i.id));
+          let merged = false;
+          BACKLOG_INITIAL_DATA.forEach(initItem => {
+            if (!existingIds.has(initItem.id)) {
+              this.items.push({ ...initItem });
+              merged = true;
+            }
+          });
+
+          // If active objectives count is 0 on backlogs view, reactivate initial items
+          const activeCount = this.items.filter(i => !i.completed).length;
+          if (activeCount === 0) {
+            BACKLOG_INITIAL_DATA.forEach(initItem => {
+              const existing = this.items.find(i => i.id === initItem.id);
+              if (existing) {
+                existing.completed = false;
+                existing.completedAt = null;
+                merged = true;
+              }
+            });
+          }
+
+          if (merged) {
+            this.save();
+          }
+        } else {
+          this.items = JSON.parse(JSON.stringify(BACKLOG_INITIAL_DATA));
+          this.save();
+        }
       } catch (e) {
         console.error('Failed to parse backlog data from localStorage', e);
-        this.items = [...BACKLOG_INITIAL_DATA];
+        this.items = JSON.parse(JSON.stringify(BACKLOG_INITIAL_DATA));
       }
     } else {
-      this.items = [...BACKLOG_INITIAL_DATA];
+      this.items = JSON.parse(JSON.stringify(BACKLOG_INITIAL_DATA));
       this.save();
+    }
+  },
+
+  restoreInitialObjectives() {
+    const existingIds = new Set(this.items.map(i => i.id));
+    let restoredCount = 0;
+    BACKLOG_INITIAL_DATA.forEach(initialItem => {
+      const existing = this.items.find(i => i.id === initialItem.id);
+      if (existing) {
+        if (existing.completed) {
+          existing.completed = false;
+          existing.completedAt = null;
+          restoredCount++;
+        }
+      } else {
+        this.items.push({ ...initialItem, completed: false, completedAt: null });
+        restoredCount++;
+      }
+    });
+    this.activeGroup = 'all';
+    this.save();
+    this.render();
+    if (typeof showToast === 'function') {
+      showToast(`Restored ${restoredCount > 0 ? restoredCount : 'all'} previous objectives to active!`, 'success');
     }
   },
 
@@ -134,6 +196,7 @@ const BacklogEngine = {
       });
     }
     this.bindFilterScrollGestures();
+    this.bindTableScroll();
   },
 
   bindFilterScrollGestures() {
@@ -233,6 +296,170 @@ const BacklogEngine = {
     if (leftBtn) leftBtn.style.display = atStart ? 'none' : 'flex';
     if (rightBtn) rightBtn.style.display = atEnd ? 'none' : 'flex';
     if (typeof lucide !== 'undefined') lucide.createIcons();
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // ↔️ TABLE HORIZONTAL SCROLLBAR CONTROLLER
+  // ════════════════════════════════════════════════════════════
+
+  bindTableScroll() {
+    if (typeof document === 'undefined') return;
+    const scroller = document.getElementById('backlog-table-scroller') || document.querySelector('.backlog-table-scroller');
+    const panel = document.getElementById('backlog-scroll-bar-panel');
+    const thumb = document.getElementById('table-scroll-thumb');
+    const track = document.getElementById('table-scroll-track');
+    if (!scroller) return;
+
+    if (!scroller._hasScrollBound) {
+      scroller._hasScrollBound = true;
+
+      scroller.addEventListener('scroll', () => {
+        this.updateTableScrollIndicator();
+      }, { passive: true });
+
+      window.addEventListener('resize', () => {
+        this.updateTableScrollIndicator();
+      }, { passive: true });
+    }
+
+    if (thumb && track && !track._hasThumbBound) {
+      track._hasThumbBound = true;
+
+      // Mouse drag on thumb
+      let isDragging = false;
+      let startMouseX = 0;
+      let startScrollLeft = 0;
+
+      const onMouseDown = (e) => {
+        if (e.button !== 0) return;
+        isDragging = true;
+        startMouseX = e.clientX;
+        startScrollLeft = scroller.scrollLeft;
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - startMouseX;
+        const trackWidth = track.clientWidth;
+        const thumbWidth = thumb.clientWidth;
+        const availableTrack = Math.max(1, trackWidth - thumbWidth);
+        const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+        if (maxScroll <= 0) return;
+        const scrollDelta = (deltaX / availableTrack) * maxScroll;
+        scroller.scrollLeft = startScrollLeft + scrollDelta;
+      };
+
+      const onMouseUp = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        document.body.style.userSelect = '';
+      };
+
+      if (typeof thumb.addEventListener === 'function') {
+        thumb.addEventListener('mousedown', onMouseDown);
+        if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
+        }
+
+        // Touch drag on thumb for mobile
+        let touchStartX = 0;
+        let touchStartScrollLeft = 0;
+
+        thumb.addEventListener('touchstart', (e) => {
+          if (e.touches && e.touches.length !== 1) return;
+          touchStartX = e.touches ? e.touches[0].clientX : 0;
+          touchStartScrollLeft = scroller.scrollLeft;
+          if (e.stopPropagation) e.stopPropagation();
+        }, { passive: true });
+
+        thumb.addEventListener('touchmove', (e) => {
+          if (e.touches && e.touches.length !== 1) return;
+          const deltaX = (e.touches ? e.touches[0].clientX : 0) - touchStartX;
+          const trackWidth = track.clientWidth || 200;
+          const thumbWidth = thumb.clientWidth || 40;
+          const availableTrack = Math.max(1, trackWidth - thumbWidth);
+          const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+          if (maxScroll <= 0) return;
+          const scrollDelta = (deltaX / availableTrack) * maxScroll;
+          scroller.scrollLeft = touchStartScrollLeft + scrollDelta;
+          if (e.stopPropagation) e.stopPropagation();
+        }, { passive: true });
+      }
+    }
+
+    setTimeout(() => {
+      this.updateTableScrollIndicator();
+    }, 80);
+  },
+
+  updateTableScrollIndicator() {
+    if (typeof document === 'undefined') return;
+    const scroller = document.getElementById('backlog-table-scroller') || document.querySelector('.backlog-table-scroller');
+    const panel = document.getElementById('backlog-scroll-bar-panel');
+    const thumb = document.getElementById('table-scroll-thumb');
+    const track = document.getElementById('table-scroll-track');
+    const btnLeft = document.getElementById('btn-table-scroll-left');
+    const btnRight = document.getElementById('btn-table-scroll-right');
+
+    if (!scroller || !panel || !thumb || !track) return;
+
+    const scrollWidth = scroller.scrollWidth || 0;
+    const clientWidth = scroller.clientWidth || 0;
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll <= 4) {
+      // Content completely fits without scroll
+      if (panel.classList) panel.classList.add('is-hidden');
+      return;
+    }
+
+    if (panel.classList) panel.classList.remove('is-hidden');
+
+    const visibleRatio = clientWidth > 0 ? Math.min(1, clientWidth / scrollWidth) : 0.5;
+    const trackWidth = track.clientWidth || 200;
+    const thumbWidth = Math.max(42, Math.round(trackWidth * visibleRatio));
+    const availableTrack = Math.max(1, trackWidth - thumbWidth);
+    const scrollRatio = maxScroll > 0 ? Math.max(0, Math.min(1, (scroller.scrollLeft || 0) / maxScroll)) : 0;
+    const thumbLeft = Math.round(scrollRatio * availableTrack);
+
+    if (thumb.style) {
+      thumb.style.width = `${thumbWidth}px`;
+      thumb.style.transform = `translateX(${thumbLeft}px)`;
+    }
+
+    if (btnLeft) btnLeft.disabled = (scroller.scrollLeft || 0) <= 5;
+    if (btnRight) btnRight.disabled = (scroller.scrollLeft || 0) >= maxScroll - 5;
+  },
+
+  scrollTable(direction) {
+    if (typeof document === 'undefined') return;
+    const scroller = document.getElementById('backlog-table-scroller') || document.querySelector('.backlog-table-scroller');
+    if (!scroller) return;
+    const delta = 240;
+    scroller.scrollBy({
+      left: direction === 'left' ? -delta : delta,
+      behavior: 'smooth'
+    });
+    setTimeout(() => this.updateTableScrollIndicator(), 350);
+  },
+
+  handleScrollTrackClick(e) {
+    if (e.target && e.target.id === 'table-scroll-thumb') return;
+    const scroller = document.getElementById('backlog-table-scroller') || document.querySelector('.backlog-table-scroller');
+    const track = document.getElementById('table-scroll-track');
+    if (!scroller || !track) return;
+    const rect = track.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+    scroller.scrollTo({
+      left: ratio * maxScroll,
+      behavior: 'smooth'
+    });
+    setTimeout(() => this.updateTableScrollIndicator(), 350);
   },
 
   isCompletedView() {
@@ -596,6 +823,12 @@ const BacklogEngine = {
       setTimeout(() => {
         const input = document.getElementById('inline-add-objective');
         if (input) input.focus();
+        this.updateTableScrollIndicator();
+        const panel = document.getElementById('backlog-scroll-bar-panel');
+        if (panel) {
+          panel.classList.add('pulse-highlight');
+          setTimeout(() => panel.classList.remove('pulse-highlight'), 1800);
+        }
       }, 50);
     }
   },
@@ -638,6 +871,7 @@ const BacklogEngine = {
     this.renderStats();
     this.renderFilters();
     this.renderTable();
+    this.updateTableScrollIndicator();
     if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
@@ -722,6 +956,7 @@ const BacklogEngine = {
 
     let html = items.map((item, idx) => {
       const sev = BACKLOG_SEVERITIES[item.severity] || BACKLOG_SEVERITIES.low;
+      const groupMeta = BACKLOG_GROUPS[item.group] || BACKLOG_GROUPS.work;
       const isOverdue = !item.completed && item.dueDate && item.dueDate < today;
       const isPending = !!this.pendingVanishes[item.id];
       const isDeleting = !!this.pendingDeletions[item.id];
@@ -917,6 +1152,7 @@ const BacklogEngine = {
     }
 
     tbody.innerHTML = html;
+    this.updateTableScrollIndicator();
   },
 
   submitInlineAdd() {

@@ -100,7 +100,7 @@
 
         <!-- Notion-Style Table View (Completed Archive) -->
         <div class="backlog-table-container">
-          <div class="backlog-table-scroller">
+          <div class="backlog-table-scroller" id="backlog-table-scroller">
             <table class="backlog-notion-table" id="backlog-table">
               <thead>
                 <tr>
@@ -117,6 +117,23 @@
                 <!-- Dynamically populated by BacklogEngine.renderTable() -->
               </tbody>
             </table>
+          </div>
+
+          <!-- Prominent Horizontal Scroll Bar / Controller at Table Bottom -->
+          <div class="backlog-scroll-bar-panel" id="backlog-scroll-bar-panel">
+            <button class="table-scroll-btn scroll-btn-left" id="btn-table-scroll-left" onclick="BacklogEngine.scrollTable('left')" title="Scroll table left" aria-label="Scroll table left">
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <div class="table-scroll-track" id="table-scroll-track" onclick="BacklogEngine.handleScrollTrackClick(event)" title="Click or drag to scroll columns">
+              <div class="table-scroll-thumb" id="table-scroll-thumb"></div>
+            </div>
+            <button class="table-scroll-btn scroll-btn-right" id="btn-table-scroll-right" onclick="BacklogEngine.scrollTable('right')" title="Scroll table right" aria-label="Scroll table right">
+              <i data-lucide="chevron-right"></i>
+            </button>
+            <span class="table-scroll-hint-text">
+              <i data-lucide="move-horizontal"></i>
+              <span>Scroll horizontally to view Group, Severity, Due Date &amp; Actions</span>
+            </span>
           </div>
 
           <!-- Empty State -->
