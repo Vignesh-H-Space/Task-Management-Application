@@ -11526,26 +11526,77 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   flex-wrap: wrap;
 }
 
+/* Horizontal Scroll Wrapper for Group Filters */
+.backlog-filter-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .backlog-filter-scroll {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  cursor: grab;
+  padding: 4px 2px 8px 2px;
+  /* Thin sleek scrollbar for visibility */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.backlog-filter-scroll.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+  scroll-behavior: auto;
 }
 
 .backlog-filter-scroll::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+
+.backlog-filter-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+.backlog-filter-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+}
+
+.backlog-filter-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .backlog-pills-row {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
+  width: max-content;
+  min-width: 100%;
+  touch-action: pan-x;
 }
 
 .backlog-pill {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -11559,6 +11610,53 @@ body {
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-x;
+}
+
+/* Scroll Chevrons for Mobile / Overflowing Tablets */
+.filter-scroll-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(18, 18, 24, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--text-primary, #ffffff);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.filter-scroll-arrow:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: scale(1.08);
+}
+
+.filter-scroll-arrow:active {
+  transform: scale(0.92);
+}
+
+.filter-scroll-arrow i,
+.filter-scroll-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+.filter-scroll-left {
+  margin-right: 6px;
+}
+
+.filter-scroll-right {
+  margin-left: 6px;
 }
 
 .backlog-pill:hover {
@@ -12341,6 +12439,39 @@ body {
   .backlog-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .backlog-filter-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .backlog-filter-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .backlog-pills-row {
+    padding-bottom: 6px;
+  }
+
+  .backlog-pill {
+    padding: 8px 14px;
+    min-height: 38px;
+    font-size: 0.82rem;
+  }
+
+  .filter-scroll-arrow {
+    display: flex;
   }
 
   .backlog-toolbar-actions {

@@ -71,10 +71,18 @@
 
         <!-- Controls Toolbar: Group Filter Pills & Search -->
         <div class="backlog-toolbar">
-          <div class="backlog-filter-scroll">
-            <div class="backlog-pills-row" id="backlog-filter-pills">
-              <!-- Dynamically populated by BacklogEngine.renderFilters() -->
+          <div class="backlog-filter-wrapper">
+            <button class="filter-scroll-arrow filter-scroll-left" id="btn-filter-scroll-left" onclick="BacklogEngine.scrollFilters('left')" title="Scroll groups left" aria-label="Scroll groups left">
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <div class="backlog-filter-scroll" id="backlog-filter-scroll-container">
+              <div class="backlog-pills-row" id="backlog-filter-pills">
+                <!-- Dynamically populated by BacklogEngine.renderFilters() -->
+              </div>
             </div>
+            <button class="filter-scroll-arrow filter-scroll-right" id="btn-filter-scroll-right" onclick="BacklogEngine.scrollFilters('right')" title="Scroll groups right" aria-label="Scroll groups right">
+              <i data-lucide="chevron-right"></i>
+            </button>
           </div>
 
           <div class="backlog-toolbar-actions">

@@ -397,7 +397,7 @@ const TouchEngine = {
   isInteractiveElement(el) {
     if (!el || !(el instanceof Element)) return false;
     return !!el.closest(
-      'input, textarea, select, button, .modal-card, .command-palette-card, .touch-dragging, .dragging, .action-btn'
+      'input, textarea, select, button, .modal-card, .command-palette-card, .touch-dragging, .dragging, .action-btn, .backlog-filter-scroll, .backlog-filter-wrapper, .backlog-pills-row'
     );
   },
 
@@ -407,7 +407,7 @@ const TouchEngine = {
   isInHorizontalScrollContainer(el) {
     if (!el || !(el instanceof Element)) return false;
     return !!el.closest(
-      '.kanban-board-container, .kanban-board, .kanban-column-body, .timeline-matrix-container, .heatmap-matrix-table, .progress-summary-grid'
+      '.kanban-board-container, .kanban-board, .kanban-column-body, .timeline-matrix-container, .heatmap-matrix-table, .progress-summary-grid, .backlog-filter-scroll, .backlog-filter-wrapper, .backlog-pills-row, .backlog-table-scroller, .docket-tasks-list'
     );
   },
 

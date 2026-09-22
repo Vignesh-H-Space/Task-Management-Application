@@ -133,6 +133,106 @@ const BacklogEngine = {
         this.renderTable();
       });
     }
+    this.bindFilterScrollGestures();
+  },
+
+  bindFilterScrollGestures() {
+    if (typeof document === 'undefined') return;
+    const container = document.getElementById('backlog-filter-scroll-container') || document.querySelector('.backlog-filter-scroll');
+    if (!container || container._hasFilterScrollBound) return;
+    container._hasFilterScrollBound = true;
+
+    // Listen to scroll to update chevron visibility
+    container.addEventListener('scroll', () => {
+      this.updateFilterScrollArrows();
+    }, { passive: true });
+
+    // Listen to window resize & orientation
+    window.addEventListener('resize', () => {
+      this.updateFilterScrollArrows();
+    }, { passive: true });
+
+    // Mouse / Desktop Click-and-Drag to Scroll
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let hasMoved = false;
+
+    container.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      isDown = true;
+      hasMoved = false;
+      container.classList.add('is-dragging');
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!isDown) return;
+      isDown = false;
+      container.classList.remove('is-dragging');
+      setTimeout(() => { hasMoved = false; }, 40);
+    });
+
+    container.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      if (Math.abs(x - startX) > 5) {
+        hasMoved = true;
+      }
+      container.scrollLeft = scrollLeft - walk;
+    });
+
+    // Prevent accidental pill click when user was dragging
+    container.addEventListener('click', (e) => {
+      if (hasMoved) {
+        e.preventDefault();
+        e.stopPropagation();
+        hasMoved = false;
+      }
+    }, true);
+
+    // Initial arrow check
+    setTimeout(() => {
+      this.updateFilterScrollArrows();
+    }, 100);
+  },
+
+  scrollFilters(direction) {
+    if (typeof document === 'undefined') return;
+    const container = document.getElementById('backlog-filter-scroll-container') || document.querySelector('.backlog-filter-scroll');
+    if (!container) return;
+    const scrollAmount = 220;
+    if (direction === 'left') {
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+    setTimeout(() => this.updateFilterScrollArrows(), 350);
+  },
+
+  updateFilterScrollArrows() {
+    if (typeof document === 'undefined') return;
+    const container = document.getElementById('backlog-filter-scroll-container') || document.querySelector('.backlog-filter-scroll');
+    const leftBtn = document.getElementById('btn-filter-scroll-left');
+    const rightBtn = document.getElementById('btn-filter-scroll-right');
+    if (!container) return;
+
+    const canScroll = container.scrollWidth > container.clientWidth + 4;
+    if (!canScroll) {
+      if (leftBtn) leftBtn.style.display = 'none';
+      if (rightBtn) rightBtn.style.display = 'none';
+      return;
+    }
+
+    const atStart = container.scrollLeft <= 5;
+    const atEnd = container.scrollLeft >= (container.scrollWidth - container.clientWidth - 5);
+
+    if (leftBtn) leftBtn.style.display = atStart ? 'none' : 'flex';
+    if (rightBtn) rightBtn.style.display = atEnd ? 'none' : 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
   isCompletedView() {
@@ -171,6 +271,15 @@ const BacklogEngine = {
     this.activeGroup = groupKey;
     this.selectedIds.clear();
     this.render();
+
+    // Auto-scroll selected pill into view smoothly
+    setTimeout(() => {
+      const activePill = typeof document !== 'undefined' ? document.querySelector(`.backlog-pill[data-group="${groupKey}"]`) : null;
+      if (activePill && typeof activePill.scrollIntoView === 'function') {
+        activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+      this.updateFilterScrollArrows();
+    }, 60);
   },
 
   // ════════════════════════════════════════════════════════════
@@ -573,6 +682,12 @@ const BacklogEngine = {
         </button>
       `;
     }).join('');
+
+    // Update scroll arrows and bind gestures if not yet done
+    this.bindFilterScrollGestures();
+    setTimeout(() => {
+      this.updateFilterScrollArrows();
+    }, 50);
   },
 
   renderTable() {
