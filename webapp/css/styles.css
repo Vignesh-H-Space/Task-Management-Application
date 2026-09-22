@@ -11910,7 +11910,73 @@ body {
   box-shadow: 0 0 0 1px #3b82f6;
 }
 
-/* Col 3: Created Date */
+/* Col 3: Group Dropdown Pill */
+.col-group {
+  min-width: 145px;
+}
+
+.group-select-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 10px;
+  border-radius: 20px;
+  background: var(--group-bg, rgba(59, 130, 246, 0.12));
+  border: 1px solid var(--group-color, rgba(59, 130, 246, 0.35));
+  color: var(--group-color, #3b82f6);
+  font-size: 0.82rem;
+  font-weight: 700;
+  position: relative;
+  transition: all 0.15s ease;
+  min-height: 34px;
+}
+
+.group-select-pill:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.group-dropdown {
+  background: transparent;
+  border: none;
+  color: var(--group-color, #3b82f6);
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  padding: 2px 18px 2px 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.group-dropdown option {
+  background: #18181f;
+  color: #ffffff;
+  padding: 6px 10px;
+}
+
+.group-arrow-icon,
+.group-select-pill svg {
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  right: 8px;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.group-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--group-color, #3b82f6);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--group-color, #3b82f6);
+}
+
+/* Col 4: Created Date */
 .col-created {
   min-width: 125px;
 }
@@ -12490,18 +12556,20 @@ body {
   }
 
   .backlog-notion-table {
-    min-width: 680px;
+    min-width: 820px;
   }
 
   .backlog-table-scroller {
     -webkit-overflow-scrolling: touch;
   }
 
+  .group-select-pill,
   .severity-select-pill {
     min-height: 38px;
     padding: 4px 12px;
   }
 
+  .group-dropdown,
   .severity-dropdown {
     font-size: 0.88rem;
   }

@@ -574,6 +574,19 @@ const BacklogEngine = {
       const sevMeta = BACKLOG_SEVERITIES[value] || BACKLOG_SEVERITIES.low;
       showToast(`Severity updated to ${sevMeta.label}`, 'info');
     }
+    if (field === 'group' && typeof showToast === 'function') {
+      const groupMeta = BACKLOG_GROUPS[value] || { label: value };
+      showToast(`Moved to ${groupMeta.label} group`, 'info');
+    }
+  },
+
+  updateInlineGroupPill(groupKey) {
+    const pill = document.getElementById('inline-group-pill');
+    const meta = BACKLOG_GROUPS[groupKey];
+    if (pill && meta) {
+      pill.style.setProperty('--group-color', meta.color);
+      pill.style.setProperty('--group-bg', meta.bg);
+    }
   },
 
   toggleInlineForm(force) {
@@ -753,7 +766,23 @@ const BacklogEngine = {
             </div>
           </td>
 
-          <!-- Col 3: Created / Completed Date -->
+          <!-- Col 3: Group Dropdown Pill -->
+          <td class="col-group">
+            <div class="group-select-pill" style="--group-color: ${groupMeta ? groupMeta.color : '#3b82f6'}; --group-bg: ${groupMeta ? groupMeta.bg : 'rgba(59, 130, 246, 0.12)'};">
+              <span class="group-dot"></span>
+              <select class="group-dropdown" 
+                      aria-label="Objective group"
+                      ${isDeleting ? 'disabled' : ''}
+                      onchange="BacklogEngine.updateField('${item.id}', 'group', this.value)">
+                ${Object.values(BACKLOG_GROUPS).map(g => `
+                  <option value="${g.key}" ${item.group === g.key ? 'selected' : ''}>${g.label}</option>
+                `).join('')}
+              </select>
+              <i data-lucide="chevron-down" class="group-arrow-icon"></i>
+            </div>
+          </td>
+
+          <!-- Col 4: Created / Completed Date -->
           <td class="col-created">
             <span class="date-chip created-chip" title="${isCompleted ? 'Completed date' : 'Created date'}">
               <i data-lucide="${isCompleted ? 'check-circle' : 'calendar'}" class="date-chip-icon"></i>
@@ -824,6 +853,8 @@ const BacklogEngine = {
     // Inline Creation Row (Active Page only)
     if (this.showInlineForm && !isCompleted) {
       const today = new Date().toISOString().split('T')[0];
+      const defaultGroupKey = this.activeGroup !== 'all' ? this.activeGroup : 'work';
+      const defaultGroupMeta = BACKLOG_GROUPS[defaultGroupKey] || BACKLOG_GROUPS.work;
 
       html += `
         <tr class="backlog-inline-add-row" id="inline-add-row">
@@ -838,6 +869,19 @@ const BacklogEngine = {
                    autocomplete="off"
                    onkeydown="if(event.key==='Enter') BacklogEngine.submitInlineAdd(); if(event.key==='Escape') BacklogEngine.toggleInlineForm(false);">
           </td>
+          <td class="col-group">
+            <div class="group-select-pill" id="inline-group-pill" style="--group-color: ${defaultGroupMeta.color}; --group-bg: ${defaultGroupMeta.bg};">
+              <span class="group-dot"></span>
+              <select id="inline-add-group" class="group-dropdown" aria-label="Select objective group" onchange="BacklogEngine.updateInlineGroupPill(this.value)">
+                ${Object.values(BACKLOG_GROUPS).map(g => `
+                  <option value="${g.key}" ${defaultGroupKey === g.key ? 'selected' : ''}>
+                    ${g.label}
+                  </option>
+                `).join('')}
+              </select>
+              <i data-lucide="chevron-down" class="group-arrow-icon"></i>
+            </div>
+          </td>
           <td class="col-created">
             <span class="date-chip created-chip">
               <i data-lucide="calendar" class="date-chip-icon"></i>
@@ -845,11 +889,15 @@ const BacklogEngine = {
             </span>
           </td>
           <td class="col-severity">
-            <select id="inline-add-severity" class="inline-select-sev">
-              <option value="low" selected>🟢 Low</option>
-              <option value="moderate">🟡 Moderate</option>
-              <option value="high">🔴 High</option>
-            </select>
+            <div class="severity-select-pill sev-low" style="--sev-color: #10b981; --sev-bg: rgba(16, 185, 129, 0.14); --sev-border: rgba(16, 185, 129, 0.28);">
+              <span class="sev-dot"></span>
+              <select id="inline-add-severity" class="severity-dropdown" aria-label="Severity level">
+                <option value="low" selected>Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+              </select>
+              <i data-lucide="chevron-down" class="sev-arrow-icon"></i>
+            </div>
           </td>
           <td class="col-due">
             <input type="date" id="inline-add-due" class="due-date-input">
@@ -873,6 +921,7 @@ const BacklogEngine = {
 
   submitInlineAdd() {
     const input = document.getElementById('inline-add-objective');
+    const groupSelect = document.getElementById('inline-add-group');
     const sevSelect = document.getElementById('inline-add-severity');
     const dueInput = document.getElementById('inline-add-due');
 
@@ -882,14 +931,19 @@ const BacklogEngine = {
       return;
     }
 
-    const assignedGroup = this.activeGroup !== 'all' ? this.activeGroup : 'work';
+    const assignedGroup = groupSelect && groupSelect.value ? groupSelect.value : (this.activeGroup !== 'all' ? this.activeGroup : 'work');
 
-    this.addItem({
+    const newItem = this.addItem({
       objective: input.value,
       group: assignedGroup,
       severity: sevSelect ? sevSelect.value : 'low',
       dueDate: dueInput && dueInput.value ? dueInput.value : null
     });
+
+    if (newItem) {
+      // Automatically land on the assigned group's page as requested
+      this.setGroupFilter(assignedGroup);
+    }
   }
 };
 
