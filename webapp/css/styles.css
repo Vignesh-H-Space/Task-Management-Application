@@ -11864,55 +11864,73 @@ body {
 
 /* Sortable Column Headers */
 .backlog-notion-table thead th.sortable-th {
-  cursor: pointer;
+  padding: 0 !important;
   user-select: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.th-sort-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #71717a);
+  cursor: pointer;
+  text-align: left;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.backlog-notion-table thead th.sortable-th:hover {
-  background: rgba(255, 255, 255, 0.055) !important;
-  color: var(--text-primary, #ffffff) !important;
-}
-
-.th-sort-wrapper {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  vertical-align: middle;
-}
-
-.sort-icon-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-}
-
-.sort-icon {
-  width: 13px;
-  height: 13px;
-  opacity: 0.35;
-  transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
-}
-
-.sortable-th:hover .sort-icon {
-  opacity: 0.8;
+.th-sort-btn:hover {
   color: var(--text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.backlog-notion-table thead th.th-sorted-asc,
-.backlog-notion-table thead th.th-sorted-desc {
-  color: #93c5fd !important;
-  background: rgba(59, 130, 246, 0.09) !important;
-  border-bottom: 2px solid #3b82f6 !important;
+.th-sort-label {
+  white-space: nowrap;
 }
 
-.th-sorted-asc .sort-icon,
-.th-sorted-desc .sort-icon,
-.active-sort-icon {
-  opacity: 1 !important;
-  color: #3b82f6 !important;
+/* Prominent Ordered Highlight */
+.backlog-notion-table thead th.sortable-th.is-sorted {
+  background: rgba(59, 130, 246, 0.16) !important;
+  border-bottom: 2.5px solid #3b82f6 !important;
+}
+
+.backlog-notion-table thead th.sortable-th.is-sorted .th-sort-btn {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+.th-order-tag {
+  display: none;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.55);
+  white-space: nowrap;
+}
+
+.backlog-notion-table thead th.sortable-th.is-sorted .th-order-tag {
+  display: inline-flex;
 }
 
 .backlog-notion-table tbody tr {
