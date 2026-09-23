@@ -13082,8 +13082,8 @@ body {
 
 .docket-input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #141419;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
   padding: 9px 12px 9px 38px;
   color: var(--text-primary, #ffffff);
@@ -13095,7 +13095,7 @@ body {
 .docket-input:focus {
   outline: none;
   border-color: rgba(245, 158, 11, 0.5);
-  background: rgba(0, 0, 0, 0.55);
+  background: #101014;
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
 }
 
@@ -13106,20 +13106,41 @@ body {
 }
 
 .docket-severity-select {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #141419;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
-  padding: 8px 10px;
-  color: var(--text-primary, #ffffff);
+  padding: 8px 30px 8px 12px;
+  color: #ffffff;
   font-size: 0.82rem;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.docket-severity-select:hover {
+  border-color: rgba(245, 158, 11, 0.45);
 }
 
 .docket-severity-select:focus {
   outline: none;
-  border-color: rgba(245, 158, 11, 0.5);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.docket-severity-select option {
+  background: #18181f !important;
+  color: #ffffff !important;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .docket-add-btn {
