@@ -105,11 +105,36 @@
               <thead>
                 <tr>
                   <th class="col-select" title="Status">Done</th>
-                  <th class="col-objective">Objective Name</th>
-                  <th class="col-group">Group</th>
-                  <th class="col-created">Completed Date</th>
-                  <th class="col-severity">Severity</th>
-                  <th class="col-due">Estimated End Date</th>
+                  <th class="col-objective sortable-th" data-sort-col="objective" data-sort-name="Objective Name" onclick="BacklogEngine.toggleSort('objective')" title="Click to sort by Objective Name">
+                    <span class="th-sort-wrapper">
+                      <span>Objective Name</span>
+                      <span class="sort-icon-box" id="sort-icon-objective"><i data-lucide="chevrons-up-down" class="sort-icon"></i></span>
+                    </span>
+                  </th>
+                  <th class="col-group sortable-th" data-sort-col="group" data-sort-name="Group" onclick="BacklogEngine.toggleSort('group')" title="Click to sort by Group">
+                    <span class="th-sort-wrapper">
+                      <span>Group</span>
+                      <span class="sort-icon-box" id="sort-icon-group"><i data-lucide="chevrons-up-down" class="sort-icon"></i></span>
+                    </span>
+                  </th>
+                  <th class="col-created sortable-th" data-sort-col="createdAt" data-sort-name="Completed Date" onclick="BacklogEngine.toggleSort('createdAt')" title="Click to sort by Completed Date">
+                    <span class="th-sort-wrapper">
+                      <span>Completed Date</span>
+                      <span class="sort-icon-box" id="sort-icon-createdAt"><i data-lucide="chevrons-up-down" class="sort-icon"></i></span>
+                    </span>
+                  </th>
+                  <th class="col-severity sortable-th" data-sort-col="severity" data-sort-name="Severity" onclick="BacklogEngine.toggleSort('severity')" title="Click to sort by Severity">
+                    <span class="th-sort-wrapper">
+                      <span>Severity</span>
+                      <span class="sort-icon-box" id="sort-icon-severity"><i data-lucide="chevrons-up-down" class="sort-icon"></i></span>
+                    </span>
+                  </th>
+                  <th class="col-due sortable-th" data-sort-col="dueDate" data-sort-name="Estimated End Date" onclick="BacklogEngine.toggleSort('dueDate')" title="Click to sort by Estimated End Date">
+                    <span class="th-sort-wrapper">
+                      <span>Estimated End Date</span>
+                      <span class="sort-icon-box" id="sort-icon-dueDate"><i data-lucide="chevrons-up-down" class="sort-icon"></i></span>
+                    </span>
+                  </th>
                   <th class="col-actions">Actions</th>
                 </tr>
               </thead>
@@ -147,6 +172,17 @@
               <i data-lucide="arrow-left"></i>
               <span>Go to Active Backlogs</span>
             </a>
+          </div>
+
+          <!-- Bottom Bar with Active Sort Badge -->
+          <div class="backlog-table-bottom-bar">
+            <div class="bottom-bar-left">
+              <div id="backlog-active-sort-badge" class="active-sort-badge" style="display: none;"></div>
+            </div>
+            <span class="backlog-tip-text">
+              <i data-lucide="info"></i>
+              Tip: Click any column header to sort (Ascending &rarr; Descending &rarr; Clear).
+            </span>
           </div>
         </div>
       </section>

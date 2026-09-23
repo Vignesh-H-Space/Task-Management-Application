@@ -89,6 +89,8 @@ const BacklogEngine = {
   items: [],
   activeGroup: 'all',
   searchQuery: '',
+  sortColumn: null,
+  sortDirection: 'asc',
   showInlineForm: false,
   selectedIds: new Set(),
   pendingVanishes: {}, // { [itemId]: { timer, interval, startTime } }
@@ -494,6 +496,197 @@ const BacklogEngine = {
     });
   },
 
+  // ════════════════════════════════════════════════════════════
+  // 🔃 COLUMN SORTING (ASCENDING / DESCENDING / RESET)
+  // ════════════════════════════════════════════════════════════
+
+  getSortedAndFilteredItems() {
+    const items = this.getFilteredItems();
+    if (!this.sortColumn) {
+      return items;
+    }
+
+    const col = this.sortColumn;
+    const isAsc = this.sortDirection === 'asc';
+    const mult = isAsc ? 1 : -1;
+
+    return [...items].sort((a, b) => {
+      if (col === 'objective') {
+        const titleA = (a.objective || '').trim().toLowerCase();
+        const titleB = (b.objective || '').trim().toLowerCase();
+        return titleA.localeCompare(titleB) * mult;
+      }
+
+      if (col === 'group') {
+        const labelA = (BACKLOG_GROUPS[a.group]?.label || a.group || '').toLowerCase();
+        const labelB = (BACKLOG_GROUPS[b.group]?.label || b.group || '').toLowerCase();
+        return labelA.localeCompare(labelB) * mult;
+      }
+
+      if (col === 'severity') {
+        const SEV_WEIGHT = { low: 1, moderate: 2, high: 3 };
+        const weightA = SEV_WEIGHT[a.severity] || 0;
+        const weightB = SEV_WEIGHT[b.severity] || 0;
+        if (weightA !== weightB) {
+          return (weightA - weightB) * mult;
+        }
+        return (a.objective || '').localeCompare(b.objective || '');
+      }
+
+      if (col === 'createdAt') {
+        const dateA = a.completed ? (a.completedAt || a.createdAt || '') : (a.createdAt || '');
+        const dateB = b.completed ? (b.completedAt || b.createdAt || '') : (b.createdAt || '');
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateA.localeCompare(dateB) * mult;
+      }
+
+      if (col === 'dueDate') {
+        const dueA = a.dueDate || '';
+        const dueB = b.dueDate || '';
+        if (!dueA && !dueB) return 0;
+        if (!dueA) return 1;
+        if (!dueB) return -1;
+        return dueA.localeCompare(dueB) * mult;
+      }
+
+      return 0;
+    });
+  },
+
+  toggleSort(columnKey) {
+    if (this.sortColumn !== columnKey) {
+      this.sortColumn = columnKey;
+      this.sortDirection = 'asc';
+    } else {
+      if (this.sortDirection === 'asc') {
+        this.sortDirection = 'desc';
+      } else {
+        // Reset to default natural order
+        this.sortColumn = null;
+        this.sortDirection = 'asc';
+      }
+    }
+
+    this.renderTable();
+    this.updateHeaderSortIndicators();
+    this.renderSortBadge();
+
+    if (typeof showToast === 'function') {
+      const colNames = {
+        objective: 'Objective Name',
+        group: 'Group',
+        createdAt: this.isCompletedView() ? 'Completed Date' : 'Created Date',
+        severity: 'Severity',
+        dueDate: 'Estimated End Date'
+      };
+      if (this.sortColumn) {
+        let dirLabel = '';
+        if (this.sortColumn === 'severity') {
+          dirLabel = this.sortDirection === 'asc' ? 'Low → High' : 'High → Low';
+        } else if (this.sortColumn === 'createdAt' || this.sortColumn === 'dueDate') {
+          dirLabel = this.sortDirection === 'asc' ? 'Earliest first' : 'Latest first';
+        } else {
+          dirLabel = this.sortDirection === 'asc' ? 'A → Z' : 'Z → A';
+        }
+        showToast(`Sorted by ${colNames[columnKey] || columnKey} (${dirLabel})`, 'info');
+      } else {
+        showToast('Sort reset to default order', 'info');
+      }
+    }
+  },
+
+  clearSort() {
+    this.sortColumn = null;
+    this.sortDirection = 'asc';
+    this.renderTable();
+    this.updateHeaderSortIndicators();
+    this.renderSortBadge();
+    if (typeof showToast === 'function') {
+      showToast('Sort reset to default order', 'info');
+    }
+  },
+
+  updateHeaderSortIndicators() {
+    if (typeof document === 'undefined') return;
+    const headers = document.querySelectorAll('th.sortable-th');
+    if (!headers || headers.length === 0) return;
+
+    headers.forEach(th => {
+      const col = th.getAttribute('data-sort-col');
+      if (!col) return;
+
+      const isCurrent = this.sortColumn === col;
+      th.classList.remove('th-sorted-asc', 'th-sorted-desc');
+
+      const iconBox = th.querySelector('.sort-icon-box') || document.getElementById(`sort-icon-${col}`);
+
+      if (isCurrent) {
+        const isAsc = this.sortDirection === 'asc';
+        th.classList.add(isAsc ? 'th-sorted-asc' : 'th-sorted-desc');
+        th.setAttribute('aria-sort', isAsc ? 'ascending' : 'descending');
+        th.setAttribute('title', `Sorted ${isAsc ? 'Ascending' : 'Descending'}. Click to ${isAsc ? 'sort Descending' : 'clear sort'}.`);
+        if (iconBox) {
+          iconBox.innerHTML = `<i data-lucide="${isAsc ? 'arrow-up' : 'arrow-down'}" class="sort-icon active-sort-icon"></i>`;
+        }
+      } else {
+        th.removeAttribute('aria-sort');
+        const colName = th.getAttribute('data-sort-name') || col;
+        th.setAttribute('title', `Click to sort by ${colName}`);
+        if (iconBox) {
+          iconBox.innerHTML = `<i data-lucide="chevrons-up-down" class="sort-icon"></i>`;
+        }
+      }
+    });
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  },
+
+  renderSortBadge() {
+    if (typeof document === 'undefined') return;
+    const badge = document.getElementById('backlog-active-sort-badge');
+    if (!badge) return;
+
+    if (!this.sortColumn) {
+      badge.style.display = 'none';
+      badge.innerHTML = '';
+      return;
+    }
+
+    const colNames = {
+      objective: 'Objective Name',
+      group: 'Group',
+      createdAt: this.isCompletedView() ? 'Completed Date' : 'Created Date',
+      severity: 'Severity',
+      dueDate: 'Estimated End Date'
+    };
+
+    let dirLabel = '';
+    if (this.sortColumn === 'severity') {
+      dirLabel = this.sortDirection === 'asc' ? 'Low → High' : 'High → Low';
+    } else if (this.sortColumn === 'createdAt' || this.sortColumn === 'dueDate') {
+      dirLabel = this.sortDirection === 'asc' ? 'Earliest first' : 'Latest first';
+    } else {
+      dirLabel = this.sortDirection === 'asc' ? 'A → Z' : 'Z → A';
+    }
+
+    badge.style.display = 'inline-flex';
+    badge.innerHTML = `
+      <i data-lucide="arrow-down-up" class="sort-badge-icon"></i>
+      <span class="sort-badge-text">Sorted by: <strong>${colNames[this.sortColumn] || this.sortColumn}</strong> (${dirLabel})</span>
+      <button class="sort-badge-clear" onclick="BacklogEngine.clearSort()" title="Clear sort (Reset to default)">
+        <i data-lucide="x"></i>
+      </button>
+    `;
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  },
+
   setGroupFilter(groupKey) {
     this.activeGroup = groupKey;
     this.selectedIds.clear();
@@ -871,6 +1064,8 @@ const BacklogEngine = {
     this.renderStats();
     this.renderFilters();
     this.renderTable();
+    this.updateHeaderSortIndicators();
+    this.renderSortBadge();
     this.updateTableScrollIndicator();
     if (typeof lucide !== 'undefined') lucide.createIcons();
   },
@@ -942,7 +1137,7 @@ const BacklogEngine = {
     const emptyState = document.getElementById('backlog-empty-state');
     if (!tbody) return;
 
-    const items = this.getFilteredItems();
+    const items = this.getSortedAndFilteredItems();
     const today = new Date().toISOString().split('T')[0];
     const isCompleted = this.isCompletedView();
 
@@ -1152,6 +1347,8 @@ const BacklogEngine = {
     }
 
     tbody.innerHTML = html;
+    this.updateHeaderSortIndicators();
+    this.renderSortBadge();
     this.updateTableScrollIndicator();
   },
 

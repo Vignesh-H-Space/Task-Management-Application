@@ -11862,6 +11862,59 @@ body {
   white-space: nowrap;
 }
 
+/* Sortable Column Headers */
+.backlog-notion-table thead th.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.backlog-notion-table thead th.sortable-th:hover {
+  background: rgba(255, 255, 255, 0.055) !important;
+  color: var(--text-primary, #ffffff) !important;
+}
+
+.th-sort-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.sort-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.sort-icon {
+  width: 13px;
+  height: 13px;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.sortable-th:hover .sort-icon {
+  opacity: 0.8;
+  color: var(--text-primary, #ffffff);
+}
+
+.backlog-notion-table thead th.th-sorted-asc,
+.backlog-notion-table thead th.th-sorted-desc {
+  color: #93c5fd !important;
+  background: rgba(59, 130, 246, 0.09) !important;
+  border-bottom: 2px solid #3b82f6 !important;
+}
+
+.th-sorted-asc .sort-icon,
+.th-sorted-desc .sort-icon,
+.active-sort-icon {
+  opacity: 1 !important;
+  color: #3b82f6 !important;
+}
+
 .backlog-notion-table tbody tr {
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   transition: background 0.15s ease;
@@ -12540,6 +12593,63 @@ body {
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.015);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bottom-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.active-sort-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.76rem;
+  color: #93c5fd;
+  animation: fadeIn 0.2s ease;
+}
+
+.active-sort-badge strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sort-badge-icon {
+  width: 12px;
+  height: 12px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.sort-badge-clear {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 3px;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+  line-height: 1;
+}
+
+.sort-badge-clear:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.sort-badge-clear i {
+  width: 11px;
+  height: 11px;
 }
 
 .backlog-add-row-btn {
