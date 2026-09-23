@@ -199,6 +199,7 @@ const BacklogEngine = {
     }
     this.bindFilterScrollGestures();
     this.bindTableScroll();
+    this.bindSortHeaders();
   },
 
   bindFilterScrollGestures() {
@@ -497,8 +498,33 @@ const BacklogEngine = {
   },
 
   // ════════════════════════════════════════════════════════════
-  // 🔃 COLUMN SORTING (ASCENDING / DESCENDING / RESET)
+  // 🔃 COLUMN SORTING & HIGHLIGHT CONTROLLER
   // ════════════════════════════════════════════════════════════
+
+  bindSortHeaders() {
+    if (typeof document === 'undefined') return;
+    const table = document.getElementById('backlog-table');
+    if (!table || table._hasSortHeadersBound) return;
+    table._hasSortHeadersBound = true;
+
+    // Delegated click handler on thead as a safeguard for touches anywhere in the th cell
+    const thead = table.querySelector('thead');
+    if (thead) {
+      thead.addEventListener('click', (e) => {
+        // If click was directly inside the .th-sort-btn, the button's inline onclick handles it
+        if (e.target.closest('.th-sort-btn')) return;
+
+        const th = e.target.closest('th.sortable-th');
+        if (th) {
+          const col = th.getAttribute('data-sort-col');
+          if (col) {
+            e.preventDefault();
+            this.toggleSort(col);
+          }
+        }
+      });
+    }
+  },
 
   getSortedAndFilteredItems() {
     const items = this.getFilteredItems();
@@ -511,47 +537,59 @@ const BacklogEngine = {
     const mult = isAsc ? 1 : -1;
 
     return [...items].sort((a, b) => {
+      let primaryDiff = 0;
+
       if (col === 'objective') {
         const titleA = (a.objective || '').trim().toLowerCase();
         const titleB = (b.objective || '').trim().toLowerCase();
-        return titleA.localeCompare(titleB) * mult;
-      }
-
-      if (col === 'group') {
+        primaryDiff = titleA.localeCompare(titleB);
+      } else if (col === 'group') {
         const labelA = (BACKLOG_GROUPS[a.group]?.label || a.group || '').toLowerCase();
         const labelB = (BACKLOG_GROUPS[b.group]?.label || b.group || '').toLowerCase();
-        return labelA.localeCompare(labelB) * mult;
-      }
-
-      if (col === 'severity') {
+        primaryDiff = labelA.localeCompare(labelB);
+      } else if (col === 'severity') {
         const SEV_WEIGHT = { low: 1, moderate: 2, high: 3 };
         const weightA = SEV_WEIGHT[a.severity] || 0;
         const weightB = SEV_WEIGHT[b.severity] || 0;
-        if (weightA !== weightB) {
-          return (weightA - weightB) * mult;
-        }
-        return (a.objective || '').localeCompare(b.objective || '');
-      }
-
-      if (col === 'createdAt') {
+        primaryDiff = weightA - weightB;
+      } else if (col === 'createdAt') {
         const dateA = a.completed ? (a.completedAt || a.createdAt || '') : (a.createdAt || '');
         const dateB = b.completed ? (b.completedAt || b.createdAt || '') : (b.createdAt || '');
-        if (!dateA && !dateB) return 0;
-        if (!dateA) return 1;
-        if (!dateB) return -1;
-        return dateA.localeCompare(dateB) * mult;
-      }
-
-      if (col === 'dueDate') {
+        if (!dateA && !dateB) primaryDiff = 0;
+        else if (!dateA) primaryDiff = 1;
+        else if (!dateB) primaryDiff = -1;
+        else primaryDiff = dateA.localeCompare(dateB);
+      } else if (col === 'dueDate') {
         const dueA = a.dueDate || '';
         const dueB = b.dueDate || '';
-        if (!dueA && !dueB) return 0;
-        if (!dueA) return 1;
-        if (!dueB) return -1;
-        return dueA.localeCompare(dueB) * mult;
+        if (!dueA && !dueB) primaryDiff = 0;
+        else if (!dueA) primaryDiff = 1;
+        else if (!dueB) primaryDiff = -1;
+        else primaryDiff = dueA.localeCompare(dueB);
       }
 
-      return 0;
+      if (primaryDiff !== 0) {
+        return primaryDiff * mult;
+      }
+
+      // Secondary Tiebreaker 1: Objective title (multiplied by mult so descending visibly reverses order even when primary values match)
+      const secObjA = (a.objective || '').trim().toLowerCase();
+      const secObjB = (b.objective || '').trim().toLowerCase();
+      const objDiff = secObjA.localeCompare(secObjB);
+      if (objDiff !== 0) {
+        return objDiff * mult;
+      }
+
+      // Secondary Tiebreaker 2: Created Date
+      const dateA = a.createdAt || '';
+      const dateB = b.createdAt || '';
+      const dateDiff = dateA.localeCompare(dateB);
+      if (dateDiff !== 0) {
+        return dateDiff * mult;
+      }
+
+      // Tertiary Tiebreaker: Item ID
+      return ((a.id || '').localeCompare(b.id || '')) * mult;
     });
   },
 
@@ -590,9 +628,9 @@ const BacklogEngine = {
         } else {
           dirLabel = this.sortDirection === 'asc' ? 'A → Z' : 'Z → A';
         }
-        showToast(`Sorted by ${colNames[columnKey] || columnKey} (${dirLabel})`, 'info');
+        showToast(`Ordered by ${colNames[columnKey] || columnKey} (${dirLabel})`, 'info');
       } else {
-        showToast('Sort reset to default order', 'info');
+        showToast('Order reset to default', 'info');
       }
     }
   },
@@ -604,7 +642,7 @@ const BacklogEngine = {
     this.updateHeaderSortIndicators();
     this.renderSortBadge();
     if (typeof showToast === 'function') {
-      showToast('Sort reset to default order', 'info');
+      showToast('Order reset to default', 'info');
     }
   },
 
@@ -618,24 +656,37 @@ const BacklogEngine = {
       if (!col) return;
 
       const isCurrent = this.sortColumn === col;
-      th.classList.remove('th-sorted-asc', 'th-sorted-desc');
-
-      const iconBox = th.querySelector('.sort-icon-box') || document.getElementById(`sort-icon-${col}`);
+      const orderTag = th.querySelector('.th-order-tag') || document.getElementById(`order-tag-${col}`);
 
       if (isCurrent) {
         const isAsc = this.sortDirection === 'asc';
-        th.classList.add(isAsc ? 'th-sorted-asc' : 'th-sorted-desc');
+        th.classList.add('is-sorted');
         th.setAttribute('aria-sort', isAsc ? 'ascending' : 'descending');
-        th.setAttribute('title', `Sorted ${isAsc ? 'Ascending' : 'Descending'}. Click to ${isAsc ? 'sort Descending' : 'clear sort'}.`);
-        if (iconBox) {
-          iconBox.innerHTML = `<i data-lucide="${isAsc ? 'arrow-up' : 'arrow-down'}" class="sort-icon active-sort-icon"></i>`;
+
+        let dirText = '';
+        if (col === 'severity') {
+          dirText = isAsc ? 'LOW → HIGH' : 'HIGH → LOW';
+        } else if (col === 'createdAt' || col === 'dueDate') {
+          dirText = isAsc ? 'EARLIEST' : 'LATEST';
+        } else {
+          dirText = isAsc ? 'A → Z' : 'Z → A';
         }
+
+        if (orderTag) {
+          orderTag.textContent = `ORDERED • ${dirText}`;
+          orderTag.style.display = 'inline-flex';
+        }
+
+        th.setAttribute('title', `Active sort: ${dirText}. Click to ${isAsc ? 'reverse order' : 'reset to default'}.`);
       } else {
+        th.classList.remove('is-sorted');
         th.removeAttribute('aria-sort');
         const colName = th.getAttribute('data-sort-name') || col;
-        th.setAttribute('title', `Click to sort by ${colName}`);
-        if (iconBox) {
-          iconBox.innerHTML = `<i data-lucide="chevrons-up-down" class="sort-icon"></i>`;
+        th.setAttribute('title', `Click to order by ${colName}`);
+
+        if (orderTag) {
+          orderTag.textContent = '';
+          orderTag.style.display = 'none';
         }
       }
     });
@@ -675,9 +726,9 @@ const BacklogEngine = {
 
     badge.style.display = 'inline-flex';
     badge.innerHTML = `
-      <i data-lucide="arrow-down-up" class="sort-badge-icon"></i>
-      <span class="sort-badge-text">Sorted by: <strong>${colNames[this.sortColumn] || this.sortColumn}</strong> (${dirLabel})</span>
-      <button class="sort-badge-clear" onclick="BacklogEngine.clearSort()" title="Clear sort (Reset to default)">
+      <i data-lucide="check" class="sort-badge-icon"></i>
+      <span class="sort-badge-text">Ordered by: <strong>${colNames[this.sortColumn] || this.sortColumn}</strong> (${dirLabel})</span>
+      <button class="sort-badge-clear" onclick="BacklogEngine.clearSort()" title="Clear order (Reset to default)">
         <i data-lucide="x"></i>
       </button>
     `;

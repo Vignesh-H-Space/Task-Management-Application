@@ -397,7 +397,7 @@ const TouchEngine = {
   isInteractiveElement(el) {
     if (!el || !(el instanceof Element)) return false;
     return !!el.closest(
-      'input, textarea, select, button, .modal-card, .command-palette-card, .touch-dragging, .dragging, .action-btn, .backlog-filter-scroll, .backlog-filter-wrapper, .backlog-pills-row'
+      'input, textarea, select, button, .modal-card, .command-palette-card, .touch-dragging, .dragging, .action-btn, .backlog-filter-scroll, .backlog-filter-wrapper, .backlog-pills-row, .th-sort-btn, th.sortable-th, .backlog-notion-table th'
     );
   },
 
