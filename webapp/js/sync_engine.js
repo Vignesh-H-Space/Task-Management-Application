@@ -446,7 +446,12 @@ const SyncEngine = {
         bucketList: (typeof BucketListEngine !== 'undefined') ? BucketListEngine.dreams : JSON.parse(localStorage.getItem('tesseract_bucketlist_data') || '[]'),
         focusSessions: (typeof FocusEngine !== 'undefined') ? FocusEngine.getSessions() : JSON.parse(localStorage.getItem('tesseract_focus_sessions') || '[]'),
         rituals: (typeof RitualsEngine !== 'undefined') ? RitualsEngine.data : JSON.parse(localStorage.getItem('tesseract_rituals_data') || '{}'),
-        backlogs: (typeof BacklogEngine !== 'undefined') ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]'),
+        backlogs: ((typeof BacklogEngine !== 'undefined') ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]')).filter(i => {
+          if (!i) return false;
+          if (['bkl_01', 'bkl_02', 'bkl_03', 'bkl_04', 'bkl_05', 'bkl_06'].includes(i.id)) return false;
+          const t = (i.objective || '').trim().toLowerCase();
+          return !['refactor core architecture & clean codebase', 'upgrade home network & server backup strategy', 'full mobility & functional strength assessment routine', 'tesseract native push engine & real-time sync pipeline', 'tax & annual corporate document organization', 'drop off dry cleaning & pick up courier package'].includes(t);
+        }),
         docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]')
       };
 
@@ -531,14 +536,25 @@ const SyncEngine = {
       }
 
       // 9. Backlogs
-      if (data.backlogs) {
+      if (data.backlogs && Array.isArray(data.backlogs)) {
+        const rawCount = data.backlogs.length;
+        const cleanedBacklogs = data.backlogs.filter(i => {
+          if (!i) return false;
+          if (['bkl_01', 'bkl_02', 'bkl_03', 'bkl_04', 'bkl_05', 'bkl_06'].includes(i.id)) return false;
+          const t = (i.objective || '').trim().toLowerCase();
+          return !['refactor core architecture & clean codebase', 'upgrade home network & server backup strategy', 'full mobility & functional strength assessment routine', 'tesseract native push engine & real-time sync pipeline', 'tax & annual corporate document organization', 'drop off dry cleaning & pick up courier package'].includes(t);
+        });
+
         if (typeof BacklogEngine !== 'undefined') {
-          BacklogEngine.items = data.backlogs;
-          if (typeof Components !== 'undefined' && Components.getCurrentPage() === 'backlogs') {
+          BacklogEngine.items = cleanedBacklogs;
+          if (typeof Components !== 'undefined' && (Components.getCurrentPage() === 'backlogs' || Components.getCurrentPage() === 'completed_backlogs')) {
             BacklogEngine.render();
           }
         }
-        localStorage.setItem('tesseract_backlog_data', JSON.stringify(data.backlogs));
+        localStorage.setItem('tesseract_backlog_data', JSON.stringify(cleanedBacklogs));
+        if (cleanedBacklogs.length !== rawCount) {
+          this.queuePush();
+        }
       }
 
       if (data.docket && Array.isArray(data.docket)) {

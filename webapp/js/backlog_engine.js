@@ -22,68 +22,24 @@ const BACKLOG_SEVERITIES = {
   high: { key: 'high', label: 'High', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.14)', border: 'rgba(239, 68, 68, 0.28)' }
 };
 
-const BACKLOG_INITIAL_DATA = [
-  {
-    id: 'bkl_01',
-    objective: 'Refactor Core Architecture & Clean Codebase',
-    group: 'work',
-    severity: 'high',
-    createdAt: '2026-03-01',
-    dueDate: '2026-04-15',
-    completed: false,
-    completedAt: null
-  },
-  {
-    id: 'bkl_02',
-    objective: 'Upgrade Home Network & Server Backup Strategy',
-    group: 'household',
-    severity: 'moderate',
-    createdAt: '2026-03-05',
-    dueDate: '2026-04-30',
-    completed: false,
-    completedAt: null
-  },
-  {
-    id: 'bkl_03',
-    objective: 'Full Mobility & Functional Strength Assessment Routine',
-    group: 'physical',
-    severity: 'low',
-    createdAt: '2026-03-10',
-    dueDate: '2026-05-01',
-    completed: false,
-    completedAt: null
-  },
-  {
-    id: 'bkl_04',
-    objective: 'Tesseract Native Push Engine & Real-Time Sync Pipeline',
-    group: 'tesseract',
-    severity: 'high',
-    createdAt: '2026-03-12',
-    dueDate: '2026-04-10',
-    completed: false,
-    completedAt: null
-  },
-  {
-    id: 'bkl_05',
-    objective: 'Tax & Annual Corporate Document Organization',
-    group: 'other',
-    severity: 'moderate',
-    createdAt: '2026-03-15',
-    dueDate: '2026-05-15',
-    completed: false,
-    completedAt: null
-  },
-  {
-    id: 'bkl_06',
-    objective: 'Drop Off Dry Cleaning & Pick Up Courier Package',
-    group: 'petty',
-    severity: 'low',
-    createdAt: '2026-03-18',
-    dueDate: '2026-03-22',
-    completed: false,
-    completedAt: null
-  }
-];
+const DUMMY_BACKLOG_IDS = new Set(['bkl_01', 'bkl_02', 'bkl_03', 'bkl_04', 'bkl_05', 'bkl_06']);
+const DUMMY_BACKLOG_TITLES = new Set([
+  'refactor core architecture & clean codebase',
+  'upgrade home network & server backup strategy',
+  'full mobility & functional strength assessment routine',
+  'tesseract native push engine & real-time sync pipeline',
+  'tax & annual corporate document organization',
+  'drop off dry cleaning & pick up courier package'
+]);
+
+function isDummyBacklogItem(item) {
+  if (!item) return false;
+  if (item.id && DUMMY_BACKLOG_IDS.has(item.id)) return true;
+  const title = (item.objective || '').trim().toLowerCase();
+  return DUMMY_BACKLOG_TITLES.has(title);
+}
+
+const BACKLOG_INITIAL_DATA = [];
 
 const BacklogEngine = {
   items: [],
@@ -111,74 +67,37 @@ const BacklogEngine = {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.items = parsed.map(item => ({
-            ...item,
-            group: (item.group && BACKLOG_GROUPS[item.group]) ? item.group : 'work',
-            severity: (item.severity && BACKLOG_SEVERITIES[item.severity]) ? item.severity : 'low'
-          }));
+        if (Array.isArray(parsed)) {
+          // Permanently purge any legacy dummy objectives
+          this.items = parsed
+            .filter(item => !isDummyBacklogItem(item))
+            .map(item => ({
+              ...item,
+              group: (item.group && BACKLOG_GROUPS[item.group]) ? item.group : 'work',
+              severity: (item.severity && BACKLOG_SEVERITIES[item.severity]) ? item.severity : 'low'
+            }));
 
-          // Merge default initial items if any were missing so previous objectives are never vanished
-          const existingIds = new Set(this.items.map(i => i.id));
-          let merged = false;
-          BACKLOG_INITIAL_DATA.forEach(initItem => {
-            if (!existingIds.has(initItem.id)) {
-              this.items.push({ ...initItem });
-              merged = true;
-            }
-          });
-
-          // If active objectives count is 0 on backlogs view, reactivate initial items
-          const activeCount = this.items.filter(i => !i.completed).length;
-          if (activeCount === 0) {
-            BACKLOG_INITIAL_DATA.forEach(initItem => {
-              const existing = this.items.find(i => i.id === initItem.id);
-              if (existing) {
-                existing.completed = false;
-                existing.completedAt = null;
-                merged = true;
-              }
-            });
-          }
-
-          if (merged) {
+          // If dummy items were purged, save the cleaned dataset immediately and trigger cloud sync
+          if (parsed.length !== this.items.length) {
             this.save();
           }
         } else {
-          this.items = JSON.parse(JSON.stringify(BACKLOG_INITIAL_DATA));
+          this.items = [];
           this.save();
         }
       } catch (e) {
         console.error('Failed to parse backlog data from localStorage', e);
-        this.items = JSON.parse(JSON.stringify(BACKLOG_INITIAL_DATA));
+        this.items = [];
       }
     } else {
-      this.items = JSON.parse(JSON.stringify(BACKLOG_INITIAL_DATA));
+      this.items = [];
       this.save();
     }
   },
 
   restoreInitialObjectives() {
-    const existingIds = new Set(this.items.map(i => i.id));
-    let restoredCount = 0;
-    BACKLOG_INITIAL_DATA.forEach(initialItem => {
-      const existing = this.items.find(i => i.id === initialItem.id);
-      if (existing) {
-        if (existing.completed) {
-          existing.completed = false;
-          existing.completedAt = null;
-          restoredCount++;
-        }
-      } else {
-        this.items.push({ ...initialItem, completed: false, completedAt: null });
-        restoredCount++;
-      }
-    });
-    this.activeGroup = 'all';
-    this.save();
-    this.render();
     if (typeof showToast === 'function') {
-      showToast(`Restored ${restoredCount > 0 ? restoredCount : 'all'} previous objectives to active!`, 'success');
+      showToast('Sample data removed. Create a new objective to get started!', 'info');
     }
   },
 
