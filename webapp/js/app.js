@@ -24,7 +24,7 @@ const STREAK_BADGES = [
 ];
 
 const TIERS = [
-  { id: 'daily', name: 'Daily Tasks', emoji: '🌅', color: '#f59e0b', desc: "Today's high-leverage execution items" },
+  { id: 'daily', name: 'Daily Tasks', emoji: '🌅', color: '#3b82f6', desc: "Today's high-leverage execution items" },
   { id: 'weekly', name: 'Weekly Milestones', emoji: '📅', color: '#8b5cf6', desc: 'Tactical milestones for this week' },
   { id: 'monthly', name: 'Monthly Goals', emoji: '🗓️', color: '#10b981', desc: 'Deliverables and focus areas for this month' },
   { id: 'quarterly', name: 'Quarterly Goals', emoji: '🎯', color: '#06b6d4', desc: '90-day objectives & key strategic results' },
@@ -341,9 +341,15 @@ function renderStreakUI() {
 }
 
 // ── Theme Switcher ──────────────────────────────────────────
+const ACCENT_KEY = 'horizon_accent';
+
 function loadTheme() {
   const saved = localStorage.getItem(THEME_KEY) || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
+  const savedAccent = localStorage.getItem(ACCENT_KEY);
+  if (savedAccent) {
+    document.documentElement.setAttribute('data-accent', savedAccent);
+  }
 }
 
 function toggleTheme() {
@@ -351,6 +357,16 @@ function toggleTheme() {
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem(THEME_KEY, next);
+}
+
+function setAccent(accent) {
+  if (accent) {
+    document.documentElement.setAttribute('data-accent', accent);
+    localStorage.setItem(ACCENT_KEY, accent);
+  } else {
+    document.documentElement.removeAttribute('data-accent');
+    localStorage.removeItem(ACCENT_KEY);
+  }
 }
 
 // Horizon Navigation
