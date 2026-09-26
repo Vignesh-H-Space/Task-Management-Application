@@ -48,6 +48,8 @@ const DocketEngine = {
 
   init() {
     this.load();
+    // Auto-sync backlogs due today into Today's Docket
+    this.syncBacklogsDueToday();
     const page = typeof Components !== 'undefined' ? Components.getCurrentPage() : '';
     if (page === 'backlogs') {
       this.render();
@@ -136,6 +138,82 @@ const DocketEngine = {
     return this.items.filter(item => item.date < today && !item.completed);
   },
 
+  syncBacklogsDueToday() {
+    if (typeof BacklogEngine === 'undefined' || !Array.isArray(BacklogEngine.items)) return;
+
+    const todayStr = this.getTodayStr();
+    let hasChanges = false;
+    const activeBacklogIds = new Set();
+
+    BacklogEngine.items.forEach(bkl => {
+      activeBacklogIds.add(bkl.id);
+      if (bkl.completed) {
+        // If backlog item is completed, ensure any linked docket task is completed as well
+        const existing = this.items.find(d => d.backlogId === bkl.id || d.id === 'dkt_bkl_' + bkl.id);
+        if (existing && !existing.completed) {
+          existing.completed = true;
+          existing.completedAt = bkl.completedAt || new Date().toISOString();
+          hasChanges = true;
+        }
+        return;
+      }
+
+      if (bkl.dueDate === todayStr) {
+        // Backlog is active and due today!
+        const existing = this.items.find(d => d.backlogId === bkl.id || d.id === 'dkt_bkl_' + bkl.id);
+        if (!existing) {
+          this.items.unshift({
+            id: 'dkt_bkl_' + bkl.id,
+            task: bkl.objective,
+            date: todayStr,
+            severity: bkl.severity || 'low',
+            completed: false,
+            completedAt: null,
+            createdAt: new Date().toISOString(),
+            backlogId: bkl.id
+          });
+          hasChanges = true;
+        } else {
+          // If already in docket, sync properties
+          if (existing.task !== bkl.objective) {
+            existing.task = bkl.objective;
+            hasChanges = true;
+          }
+          if (existing.severity !== bkl.severity) {
+            existing.severity = bkl.severity;
+            hasChanges = true;
+          }
+          if (existing.date !== todayStr && !existing.completed) {
+            existing.date = todayStr;
+            hasChanges = true;
+          }
+        }
+      } else {
+        // Due date is not today: remove uncompleted docket task if it was bridged from this backlog
+        const existing = this.items.find(d => (d.backlogId === bkl.id || d.id === 'dkt_bkl_' + bkl.id) && !d.completed);
+        if (existing) {
+          this.items = this.items.filter(d => d.id !== existing.id);
+          hasChanges = true;
+        }
+      }
+    });
+
+    // Remove any docket items whose backlog was completely deleted
+    const prevLen = this.items.length;
+    this.items = this.items.filter(d => !d.backlogId || activeBacklogIds.has(d.backlogId));
+    if (this.items.length !== prevLen) {
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      this.save();
+      const page = typeof Components !== 'undefined' ? Components.getCurrentPage() : '';
+      if (page === 'backlogs') {
+        this.render();
+      }
+    }
+  },
+
   addItem(taskText, severity = 'low') {
     if (!taskText || !taskText.trim()) {
       if (typeof showToast === 'function') showToast('Please enter a task description', 'error');
@@ -187,7 +265,7 @@ const DocketEngine = {
   // ⚡ 5-SECOND VANISHING COMPLETION FLOW
   // ════════════════════════════════════════════════════════════
 
-  markDoneWithCountdown(id) {
+  markDoneWithCountdown(id, isSync = false) {
     const item = this.items.find(i => i.id === id);
     if (!item) return;
 
@@ -198,7 +276,7 @@ const DocketEngine = {
 
     // If currently vanishing, clicking again cancels / undoes it
     if (this.pendingVanishes[id]) {
-      this.cancelVanish(id);
+      this.cancelVanish(id, isSync);
       return;
     }
 
@@ -250,6 +328,14 @@ const DocketEngine = {
       }
     }
 
+    // Two-way sync: If item came from a Backlog objective, mark done in Backlogs too!
+    if (!isSync && item.backlogId && typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
+      const bklItem = BacklogEngine.items.find(b => b.id === item.backlogId);
+      if (bklItem && !bklItem.completed && !BacklogEngine.pendingVanishes[bklItem.id]) {
+        BacklogEngine.markDoneWithCountdown(bklItem.id, true);
+      }
+    }
+
     if (typeof showToast === 'function') {
       showToast('Task complete! Vanishing in 5s... Tap Undo to cancel.', 'info');
     }
@@ -257,7 +343,7 @@ const DocketEngine = {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
-  cancelVanish(id) {
+  cancelVanish(id, isSync = false) {
     if (this.pendingVanishes[id]) {
       clearTimeout(this.pendingVanishes[id].timer);
       if (this.pendingVanishes[id].interval) {
@@ -270,12 +356,18 @@ const DocketEngine = {
       item.completed = false;
     }
     this.render();
+
+    // Two-way sync: If item came from Backlog, cancel vanish in Backlogs too
+    if (!isSync && item && item.backlogId && typeof BacklogEngine !== 'undefined') {
+      BacklogEngine.cancelVanish(item.backlogId, true);
+    }
+
     if (typeof showToast === 'function') {
       showToast('Restored task to today\'s docket', 'info');
     }
   },
 
-  finalizeVanish(id) {
+  finalizeVanish(id, isSync = false) {
     const item = this.items.find(i => i.id === id);
     if (!item) return;
 
@@ -290,6 +382,11 @@ const DocketEngine = {
     item.completed = true;
     item.completedAt = new Date().toISOString();
     this.save();
+
+    // Two-way sync: If item came from Backlog, finalize vanish in Backlogs too!
+    if (!isSync && item.backlogId && typeof BacklogEngine !== 'undefined') {
+      BacklogEngine.finalizeVanish(item.backlogId, true);
+    }
 
     // Award XP if XPEngine is loaded
     if (typeof XPEngine !== 'undefined' && typeof XPEngine.addXP === 'function') {
@@ -396,7 +493,10 @@ const DocketEngine = {
     }
   },
 
-  finalizeDelete(id) {
+  finalizeDelete(id, isSync = false) {
+    const item = this.items.find(i => i.id === id);
+    if (!item) return;
+
     if (this.pendingDeletions[id]) {
       clearTimeout(this.pendingDeletions[id].timer);
       if (this.pendingDeletions[id].interval) {
@@ -405,6 +505,8 @@ const DocketEngine = {
       delete this.pendingDeletions[id];
     }
 
+    const backlogId = item.backlogId;
+
     const row = typeof document !== 'undefined' ? document.querySelector(`.docket-task-row[data-id="${id}"]`) : null;
     if (row) {
       row.classList.add('row-vanished');
@@ -412,17 +514,20 @@ const DocketEngine = {
         this.items = this.items.filter(i => i.id !== id);
         this.save();
         this.render();
-        if (typeof showToast === 'function') {
-          showToast('Task permanently deleted', 'info');
-        }
       }, 350);
     } else {
       this.items = this.items.filter(i => i.id !== id);
       this.save();
       this.render();
-      if (typeof showToast === 'function') {
-        showToast('Task permanently deleted', 'info');
-      }
+    }
+
+    // Two-way sync: If item was linked from Backlog, also delete from Backlogs
+    if (!isSync && backlogId && typeof BacklogEngine !== 'undefined') {
+      BacklogEngine.finalizeDelete(backlogId, true);
+    }
+
+    if (typeof showToast === 'function') {
+      showToast('Task permanently deleted', 'info');
     }
   },
 
@@ -437,6 +542,16 @@ const DocketEngine = {
     this.save();
     this.render();
 
+    // Two-way sync: If item came from Backlog, update severity in Backlogs too!
+    if (item.backlogId && typeof BacklogEngine !== 'undefined') {
+      const bkl = BacklogEngine.items.find(b => b.id === item.backlogId);
+      if (bkl) {
+        bkl.severity = item.severity;
+        BacklogEngine.save();
+        BacklogEngine.renderTable();
+      }
+    }
+
     if (typeof showToast === 'function') {
       const sevMeta = DOCKET_SEVERITIES[item.severity];
       showToast(`Docket task severity set to ${sevMeta.label}`, 'info');
@@ -449,6 +564,16 @@ const DocketEngine = {
     if (item) {
       item.task = newText.trim();
       this.save();
+
+      // Two-way sync: If item came from Backlog, update objective in Backlogs too!
+      if (item.backlogId && typeof BacklogEngine !== 'undefined') {
+        const bkl = BacklogEngine.items.find(b => b.id === item.backlogId);
+        if (bkl) {
+          bkl.objective = item.task;
+          BacklogEngine.save();
+          BacklogEngine.renderTable();
+        }
+      }
     }
   },
 
@@ -735,6 +860,7 @@ const DocketEngine = {
               <span class="docket-task-title ${item.completed ? 'completed-strikethrough' : ''}" contenteditable="true" spellcheck="false" onblur="DocketEngine.updateTaskText('${item.id}', this.innerText)" title="Click to edit inline">
                 ${this.escapeHTML(item.task)}
               </span>
+              ${item.backlogId ? '<span class="docket-backlog-tag" title="Auto-synced from Backlog (Due Today)"><i data-lucide="layers"></i> Backlog</span>' : ''}
               ${isCompleting ? '<div class="vanish-progress-bar"></div>' : ''}
               ${isDeleting ? '<div class="vanish-progress-bar delete-progress-bar"></div>' : ''}
             </div>
