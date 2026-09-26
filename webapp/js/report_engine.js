@@ -279,8 +279,7 @@ const ReportEngine = {
       ? Math.round((actualHabitChecks / totalPossibleHabitChecks) * 100)
       : 92;
 
-    // 5. Category Breakdown
-    const categories = ['Product', 'Engineering', 'Career', 'Finance', 'Health', 'Personal'];
+    // 5. Category Breakdown — Merges cascade tasks + backlog objectives
     const categoryColors = {
       Product: '#38bdf8',
       Engineering: '#818cf8',
@@ -288,21 +287,66 @@ const ReportEngine = {
       Finance: '#34d399',
       Health: '#f43f5e',
       Personal: '#ec4899',
-      General: '#a855f7'
+      General: '#a855f7',
+      // Backlog group colors
+      Work: '#3b82f6',
+      Household: '#8b5cf6',
+      Physical: '#10b981',
+      Tesseract: '#f43f5e',
+      Other: '#64748b',
+      'Petty Errands': '#06b6d4'
     };
 
-    const categoryStats = categories.map(cat => {
+    // Unified category map to accumulate both cascade tasks and backlog items
+    const catMap = {};
+
+    // a) Cascade task categories
+    const cascadeCategories = ['Product', 'Engineering', 'Career', 'Finance', 'Health', 'Personal'];
+    cascadeCategories.forEach(cat => {
       const catCompleted = completedTasks.filter(t => (t.category || 'Product') === cat).length;
       const catActive = activeTasks.filter(t => (t.category || 'Product') === cat).length;
       const total = catCompleted + catActive;
-      return {
-        name: cat,
-        color: categoryColors[cat] || '#f59e0b',
-        completed: catCompleted,
-        active: catActive,
-        total
-      };
+      if (total > 0) {
+        catMap[cat] = { name: cat, color: categoryColors[cat] || '#f59e0b', completed: catCompleted, active: catActive, total };
+      }
     });
+
+    // b) Backlog group distribution
+    if (typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
+      const backlogGroupMeta = (typeof BACKLOG_GROUPS !== 'undefined') ? BACKLOG_GROUPS : {};
+      const bklItems = BacklogEngine.items;
+      const bklCompleted = (typeof BacklogEngine.completedItems !== 'undefined' && Array.isArray(BacklogEngine.completedItems))
+        ? BacklogEngine.completedItems : [];
+
+      // Active backlogs
+      bklItems.filter(b => !b.completed).forEach(b => {
+        const groupKey = b.group || 'work';
+        const meta = backlogGroupMeta[groupKey];
+        const label = meta ? meta.label : groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
+        if (!catMap[label]) catMap[label] = { name: label, color: categoryColors[label] || (meta ? meta.color : '#94a3b8'), completed: 0, active: 0, total: 0 };
+        catMap[label].active++;
+        catMap[label].total++;
+      });
+
+      // Completed backlogs in range
+      bklCompleted.forEach(b => {
+        if (b.completedAt) {
+          const cTime = new Date(b.completedAt).getTime();
+          if (cTime < startTime || cTime > endTime) return;
+        }
+        const groupKey = b.group || 'work';
+        const meta = backlogGroupMeta[groupKey];
+        const label = meta ? meta.label : groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
+        if (!catMap[label]) catMap[label] = { name: label, color: categoryColors[label] || (meta ? meta.color : '#94a3b8'), completed: 0, active: 0, total: 0 };
+        catMap[label].completed++;
+        catMap[label].total++;
+      });
+    }
+
+    // Convert to sorted array, descending by total count, filter out zero-total entries
+    const categoryStats = Object.values(catMap)
+      .filter(c => c.total > 0)
+      .sort((a, b) => b.total - a.total);
 
     // 6. Strategic Alignment
     const tacticalTasks = tasks.filter(t => ['daily', 'weekly'].includes(t.tier) && !t.completed);
@@ -610,35 +654,52 @@ const ReportEngine = {
   },
 
   renderCategoryDonutSVG(data) {
-    const stats = data.categoryStats;
+    const stats = data.categoryStats.filter(s => s.total > 0);
     const total = stats.reduce((sum, s) => sum + s.total, 0) || 1;
     const size = 180;
     const center = size / 2;
     const radius = 62;
     const strokeWidth = 20;
     const circumference = 2 * Math.PI * radius;
+    const sliceGap = stats.length > 1 ? 3 : 0; // small visual gap between slices
+    const totalGap = sliceGap * stats.length;
+    const usableCirc = circumference - totalGap;
 
-    let accumulatedPct = 0;
+    let accumulated = 0;
     let circleSlices = '';
 
-    stats.forEach(cat => {
+    stats.forEach((cat, idx) => {
       const pct = cat.total / total;
-      const strokeDash = pct * circumference;
-      const offset = circumference - (accumulatedPct * circumference);
-      accumulatedPct += pct;
+      const sliceLen = pct * usableCirc;
+      const gapBefore = idx * sliceGap;
+      const dashOffset = -(accumulated + gapBefore);
 
-      if (cat.total > 0) {
-        circleSlices += `
-          <circle cx="${center}" cy="${center}" r="${radius}" fill="transparent"
-                  stroke="${cat.color}" stroke-width="${strokeWidth}"
-                  stroke-dasharray="${strokeDash.toFixed(2)} ${circumference.toFixed(2)}"
-                  stroke-dashoffset="${offset.toFixed(2)}"
-                  stroke-linecap="round" class="donut-slice">
-            <title>${cat.name}: ${cat.total} items (${Math.round(pct * 100)}%)</title>
-          </circle>
-        `;
-      }
+      circleSlices += `
+        <circle cx="${center}" cy="${center}" r="${radius}" fill="transparent"
+                stroke="${cat.color}" stroke-width="${strokeWidth}"
+                stroke-dasharray="${sliceLen.toFixed(2)} ${(circumference - sliceLen).toFixed(2)}"
+                stroke-dashoffset="${dashOffset.toFixed(2)}"
+                class="donut-slice">
+          <title>${cat.name}: ${cat.total} items (${Math.round(pct * 100)}%)</title>
+        </circle>
+      `;
+      accumulated += sliceLen;
     });
+
+    // If no data at all, show a placeholder message inside the donut
+    if (stats.length === 0) {
+      return `
+        <div class="donut-container-flex">
+          <svg viewBox="0 0 ${size} ${size}" class="report-donut-svg">
+            <circle cx="${center}" cy="${center}" r="${radius}" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="${strokeWidth}" />
+            <text x="${center}" y="${center}" fill="#64748b" font-family="Plus Jakarta Sans" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">No Data</text>
+          </svg>
+          <div class="donut-legend-column">
+            <div class="donut-legend-item"><span class="legend-name" style="color: var(--text-muted);">No objectives recorded in this period.</span></div>
+          </div>
+        </div>
+      `;
+    }
 
     const legendHTML = stats.map(cat => {
       const pct = Math.round((cat.total / total) * 100);
@@ -655,7 +716,9 @@ const ReportEngine = {
       <div class="donut-container-flex">
         <svg viewBox="0 0 ${size} ${size}" class="report-donut-svg">
           <circle cx="${center}" cy="${center}" r="${radius}" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="${strokeWidth}" />
-          ${circleSlices}
+          <g transform="rotate(-90 ${center} ${center})">
+            ${circleSlices}
+          </g>
           <text x="${center}" y="${center - 4}" fill="#ffffff" font-family="Outfit" font-size="20" font-weight="800" text-anchor="middle">${total}</text>
           <text x="${center}" y="${center + 14}" fill="#94a3b8" font-family="Plus Jakarta Sans" font-size="9" font-weight="700" text-anchor="middle">TOTAL GOALS</text>
         </svg>
