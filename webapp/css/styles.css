@@ -13269,6 +13269,29 @@ body {
   color: var(--text-muted, #71717a);
 }
 
+.docket-backlog-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  color: #60a5fa;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.docket-backlog-tag svg,
+.docket-backlog-tag i {
+  width: 10px;
+  height: 10px;
+}
+
 .docket-sev-wrap {
   flex-shrink: 0;
 }
