@@ -52,6 +52,14 @@ const BacklogEngine = {
   pendingVanishes: {}, // { [itemId]: { timer, interval, startTime } }
   pendingDeletions: {}, // { [itemId]: { timer, interval, startTime } }
 
+  getTodayStr() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
   init() {
     this.load();
     const page = typeof Components !== 'undefined' ? Components.getCurrentPage() : '';
@@ -59,6 +67,9 @@ const BacklogEngine = {
       this.render();
       this.bindEvents();
       this.bindTableScroll();
+      if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
+        DocketEngine.syncBacklogsDueToday();
+      }
     }
   },
 
@@ -676,7 +687,7 @@ const BacklogEngine = {
   // ⚡ 5-SECOND VANISHING COMPLETION FLOW
   // ════════════════════════════════════════════════════════════
 
-  markDoneWithCountdown(id) {
+  markDoneWithCountdown(id, isSync = false) {
     const item = this.items.find(i => i.id === id);
     if (!item) return;
 
@@ -687,7 +698,7 @@ const BacklogEngine = {
 
     // If currently vanishing, clicking again cancels / undoes it
     if (this.pendingVanishes[id]) {
-      this.cancelVanish(id);
+      this.cancelVanish(id, isSync);
       return;
     }
 
@@ -739,6 +750,14 @@ const BacklogEngine = {
       }
     }
 
+    // Two-way sync: If this backlog item is in Today's Docket, mark done in Docket too!
+    if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
+      const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
+      if (linkedDocket && !linkedDocket.completed && !DocketEngine.pendingVanishes[linkedDocket.id]) {
+        DocketEngine.markDoneWithCountdown(linkedDocket.id, true);
+      }
+    }
+
     if (typeof showToast === 'function') {
       showToast('Done! Moving to Completed Backlogs in 5s... Tap Undo to cancel.', 'info');
     }
@@ -746,7 +765,7 @@ const BacklogEngine = {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
-  cancelVanish(id) {
+  cancelVanish(id, isSync = false) {
     if (this.pendingVanishes[id]) {
       clearTimeout(this.pendingVanishes[id].timer);
       if (this.pendingVanishes[id].interval) {
@@ -759,12 +778,21 @@ const BacklogEngine = {
       item.completed = false;
     }
     this.renderTable();
+
+    // Two-way sync: Cancel vanish in Docket too
+    if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
+      const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
+      if (linkedDocket) {
+        DocketEngine.cancelVanish(linkedDocket.id, true);
+      }
+    }
+
     if (typeof showToast === 'function') {
       showToast('Restored objective to active backlogs', 'info');
     }
   },
 
-  finalizeVanish(id) {
+  finalizeVanish(id, isSync = false) {
     const item = this.items.find(i => i.id === id);
     if (!item) return;
 
@@ -779,6 +807,14 @@ const BacklogEngine = {
     item.completed = true;
     item.completedAt = new Date().toISOString();
     this.save();
+
+    // Two-way sync: Finalize vanish in Docket too!
+    if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
+      const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
+      if (linkedDocket && !linkedDocket.completed) {
+        DocketEngine.finalizeVanish(linkedDocket.id, true);
+      }
+    }
 
     const row = typeof document !== 'undefined' ? document.querySelector(`.backlog-row[data-id="${id}"]`) : null;
     if (row) {
@@ -798,6 +834,12 @@ const BacklogEngine = {
     item.completedAt = null;
     this.save();
     this.render();
+
+    // If due today, restore in Today's Docket as well
+    if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
+      DocketEngine.syncBacklogsDueToday();
+    }
+
     if (typeof showToast === 'function') {
       showToast('Moved back to Active Backlogs: ' + item.objective, 'success');
     }
@@ -813,7 +855,7 @@ const BacklogEngine = {
       return null;
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = this.getTodayStr();
     const assignedGroup = group && BACKLOG_GROUPS[group] ? group : (this.activeGroup !== 'all' ? this.activeGroup : 'work');
 
     const newItem = {
@@ -832,8 +874,17 @@ const BacklogEngine = {
     this.showInlineForm = false;
     this.render();
 
+    // If due date is today, automatically sync into Today's Docket
+    if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
+      DocketEngine.syncBacklogsDueToday();
+    }
+
     if (typeof showToast === 'function') {
-      showToast('Added to backlogs: ' + newItem.objective, 'success');
+      if (newItem.dueDate === todayStr) {
+        showToast('Added to backlogs & Today\'s Docket: ' + newItem.objective, 'success');
+      } else {
+        showToast('Added to backlogs: ' + newItem.objective, 'success');
+      }
     }
     return newItem;
   },
@@ -923,7 +974,7 @@ const BacklogEngine = {
     }
   },
 
-  finalizeDelete(id) {
+  finalizeDelete(id, isSync = false) {
     const item = this.items.find(i => i.id === id);
     if (!item) return;
 
@@ -949,6 +1000,14 @@ const BacklogEngine = {
       this.render();
     }
 
+    // Two-way sync: If linked docket task exists, delete it too!
+    if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
+      const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
+      if (linkedDocket) {
+        DocketEngine.finalizeDelete(linkedDocket.id, true);
+      }
+    }
+
     if (typeof showToast === 'function') {
       showToast('Objective permanently deleted', 'info');
     }
@@ -960,6 +1019,12 @@ const BacklogEngine = {
     item[field] = value;
     this.save();
     this.render();
+
+    // Two-way sync: Sync with Today's Docket if dueDate, objective, or severity changed
+    if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
+      DocketEngine.syncBacklogsDueToday();
+    }
+
     if (field === 'severity' && typeof showToast === 'function') {
       const sevMeta = BACKLOG_SEVERITIES[value] || BACKLOG_SEVERITIES.low;
       showToast(`Severity updated to ${sevMeta.label}`, 'info');
@@ -967,6 +1032,12 @@ const BacklogEngine = {
     if (field === 'group' && typeof showToast === 'function') {
       const groupMeta = BACKLOG_GROUPS[value] || { label: value };
       showToast(`Moved to ${groupMeta.label} group`, 'info');
+    }
+    if (field === 'dueDate' && typeof showToast === 'function') {
+      const todayStr = this.getTodayStr();
+      if (value === todayStr) {
+        showToast('Due today! Automatically added to Today\'s Docket 🌅', 'success');
+      }
     }
   },
 
