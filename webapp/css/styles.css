@@ -198,6 +198,163 @@ body {
   height: 100vh;
   overflow-y: auto;
   z-index: 10;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+/* ── Sidebar Collapse Toggle Button ────────────────────────────── */
+.sidebar-collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 0;
+  margin-top: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+}
+
+.sidebar-collapse-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-subtle);
+}
+
+.sidebar-collapse-toggle svg,
+.sidebar-collapse-toggle i {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.25s ease;
+}
+
+/* ── Collapsed Sidebar State ───────────────────────────────────── */
+.sidebar.sidebar-collapsed {
+  width: 64px;
+  padding: 16px 8px;
+  overflow-x: hidden;
+}
+
+/* Brand: only show icon, hide text */
+.sidebar.sidebar-collapsed .brand-logo > div:last-child {
+  display: none;
+}
+
+.sidebar.sidebar-collapsed .brand-icon-mesh {
+  width: 38px;
+  height: 38px;
+}
+
+.sidebar.sidebar-collapsed .brand-container {
+  padding: 4px 0 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.sidebar.sidebar-collapsed .brand-logo {
+  gap: 0;
+  justify-content: center;
+}
+
+/* Section titles: hide */
+.sidebar.sidebar-collapsed .sidebar-section-title {
+  display: none;
+}
+
+/* Nav items: icon-only, centered */
+.sidebar.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding: 10px;
+  position: relative;
+}
+
+.sidebar.sidebar-collapsed .nav-item span {
+  display: none;
+}
+
+.sidebar.sidebar-collapsed .nav-item .badge {
+  display: none;
+}
+
+.sidebar.sidebar-collapsed .nav-item i,
+.sidebar.sidebar-collapsed .nav-item svg,
+.sidebar.sidebar-collapsed .nav-item .nav-emoji {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sidebar.sidebar-collapsed .nav-item:hover {
+  transform: none;
+}
+
+/* Active indicator: use bottom border instead of left since items are compact */
+.sidebar.sidebar-collapsed .nav-item.active {
+  border-left: none;
+  border-color: transparent;
+  background: var(--accent-subtle-hover);
+  border: 1px solid var(--accent-border);
+}
+
+/* Hover tooltip on collapsed nav items */
+.sidebar.sidebar-collapsed .nav-item::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar.sidebar-collapsed .nav-item:hover::after {
+  opacity: 1;
+}
+
+/* Streak card: hide entirely */
+.sidebar.sidebar-collapsed .streak-card {
+  display: none;
+}
+
+/* User controls: stack vertically, centered */
+.sidebar.sidebar-collapsed .user-controls {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar.sidebar-collapsed .user-controls .icon-btn {
+  width: 36px;
+  height: 36px;
+}
+
+/* Toggle icon: flip when collapsed */
+.sidebar.sidebar-collapsed .sidebar-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Hide toggle on mobile (already uses drawer pattern) */
+@media (max-width: 768px) {
+  .sidebar-collapse-toggle {
+    display: none;
+  }
 }
 
 .brand-container {
