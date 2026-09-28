@@ -240,8 +240,9 @@ body {
 /* ── Sidebar Collapse Toggle Button (Border Positioned) ──────────── */
 .sidebar-collapse-toggle {
   position: absolute;
-  top: 26px;
+  top: 50%;
   right: -13px;
+  transform: translateY(-50%);
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -262,7 +263,7 @@ body {
   color: var(--text-primary);
   border-color: var(--accent-primary);
   background: var(--bg-card-hover);
-  transform: scale(1.15);
+  transform: translateY(-50%) scale(1.15);
   box-shadow: 0 0 12px var(--accent-subtle-hover), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
@@ -393,7 +394,7 @@ body {
 }
 
 .sidebar.sidebar-collapsed .sidebar-collapse-toggle:hover {
-  transform: scale(1.15);
+  transform: translateY(-50%) scale(1.15);
 }
 
 /* Hide toggle on mobile (already uses drawer pattern) */
