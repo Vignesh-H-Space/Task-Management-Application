@@ -14003,6 +14003,47 @@ body {
   }
 }
 
+/* ════════════════════════════════════════════════════════════
+   🔁 RECURRING BACKLOGS STYLING
+   ════════════════════════════════════════════════════════════ */
+
+.backlog-recurrence-select {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition);
+  color: var(--text-muted);
+}
+
+.backlog-recurrence-select:hover,
+.backlog-recurrence-select:focus {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.backlog-recurrence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.backlog-recurrence-badge i {
+  width: 12px;
+  height: 12px;
+}
+
+
 
 
 
