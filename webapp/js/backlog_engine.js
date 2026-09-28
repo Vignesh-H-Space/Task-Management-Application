@@ -22,6 +22,15 @@ const BACKLOG_SEVERITIES = {
   high: { key: 'high', label: 'High', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.14)', border: 'rgba(239, 68, 68, 0.28)' }
 };
 
+const BACKLOG_RECURRENCES = {
+  none: { key: 'none', label: 'One-Time', color: '#64748b' },
+  daily: { key: 'daily', label: 'Daily', color: '#3b82f6' },
+  weekly: { key: 'weekly', label: 'Weekly', color: '#8b5cf6' },
+  monthly: { key: 'monthly', label: 'Monthly', color: '#10b981' },
+  quarterly: { key: 'quarterly', label: 'Quarterly', color: '#f59e0b' },
+  annually: { key: 'annually', label: 'Annually', color: '#ec4899' }
+};
+
 const DUMMY_BACKLOG_IDS = new Set(['bkl_01', 'bkl_02', 'bkl_03', 'bkl_04', 'bkl_05', 'bkl_06']);
 const DUMMY_BACKLOG_TITLES = new Set([
   'refactor core architecture & clean codebase',
@@ -58,6 +67,23 @@ const BacklogEngine = {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  },
+
+  getNextOccurrenceDate(recurrence, fromDate) {
+    const from = fromDate ? new Date(fromDate + 'T00:00:00') : new Date();
+    const next = new Date(from);
+    switch (recurrence) {
+      case 'daily': next.setDate(next.getDate() + 1); break;
+      case 'weekly': next.setDate(next.getDate() + 7); break;
+      case 'monthly': next.setMonth(next.getMonth() + 1); break;
+      case 'quarterly': next.setMonth(next.getMonth() + 3); break;
+      case 'annually': next.setFullYear(next.getFullYear() + 1); break;
+      default: return null;
+    }
+    const y = next.getFullYear();
+    const m = String(next.getMonth() + 1).padStart(2, '0');
+    const d = String(next.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   },
 
   init() {
@@ -804,15 +830,40 @@ const BacklogEngine = {
       delete this.pendingVanishes[id];
     }
 
-    item.completed = true;
-    item.completedAt = new Date().toISOString();
-    this.save();
+    // Handle recurring tasks: reset for next occurrence instead of completing
+    if (item.recurrence && item.recurrence !== 'none') {
+      item.lastCompletedAt = new Date().toISOString();
+      item.completionCount = (item.completionCount || 0) + 1;
+      item.completed = false;
+      item.completedAt = null;
+      const todayStr = this.getTodayStr();
+      item.dueDate = this.getNextOccurrenceDate(item.recurrence, todayStr);
+      this.save();
 
-    // Two-way sync: Finalize vanish in Docket too!
-    if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
-      const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
-      if (linkedDocket && !linkedDocket.completed) {
-        DocketEngine.finalizeVanish(linkedDocket.id, true);
+      // Remove the linked docket item (will re-appear on next due date)
+      if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
+        const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
+        if (linkedDocket) {
+          DocketEngine.items = DocketEngine.items.filter(d => d.id !== linkedDocket.id);
+          DocketEngine.save();
+        }
+      }
+
+      if (typeof showToast === 'function') {
+        const recMeta = BACKLOG_RECURRENCES[item.recurrence];
+        showToast('🔁 ' + (recMeta ? recMeta.label : item.recurrence) + ' task done (×' + item.completionCount + ')! Next: ' + this.formatDate(item.dueDate), 'success');
+      }
+    } else {
+      item.completed = true;
+      item.completedAt = new Date().toISOString();
+      this.save();
+
+      // Two-way sync: Finalize vanish in Docket too!
+      if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
+        const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
+        if (linkedDocket && !linkedDocket.completed) {
+          DocketEngine.finalizeVanish(linkedDocket.id, true);
+        }
       }
     }
 
@@ -849,7 +900,7 @@ const BacklogEngine = {
   // 📋 CRUD & SEVERITY DROPDOWN
   // ════════════════════════════════════════════════════════════
 
-  addItem({ objective, group, severity, dueDate }) {
+  addItem({ objective, group, severity, dueDate, recurrence }) {
     if (!objective || !objective.trim()) {
       if (typeof showToast === 'function') showToast('Objective name cannot be empty', 'error');
       return null;
@@ -857,6 +908,7 @@ const BacklogEngine = {
 
     const todayStr = this.getTodayStr();
     const assignedGroup = group && BACKLOG_GROUPS[group] ? group : (this.activeGroup !== 'all' ? this.activeGroup : 'work');
+    const assignedRecurrence = recurrence && BACKLOG_RECURRENCES[recurrence] ? recurrence : 'none';
 
     const newItem = {
       id: 'bkl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
@@ -864,9 +916,12 @@ const BacklogEngine = {
       group: assignedGroup,
       severity: severity && BACKLOG_SEVERITIES[severity] ? severity : 'low',
       createdAt: todayStr,
-      dueDate: dueDate || null,
+      dueDate: dueDate || (assignedRecurrence !== 'none' ? todayStr : null),
       completed: false,
-      completedAt: null
+      completedAt: null,
+      recurrence: assignedRecurrence,
+      lastCompletedAt: null,
+      completionCount: 0
     };
 
     this.items.unshift(newItem);
@@ -880,10 +935,11 @@ const BacklogEngine = {
     }
 
     if (typeof showToast === 'function') {
+      const recLabel = assignedRecurrence !== 'none' ? (' (🔁 ' + (BACKLOG_RECURRENCES[assignedRecurrence] ? BACKLOG_RECURRENCES[assignedRecurrence].label : assignedRecurrence) + ')') : '';
       if (newItem.dueDate === todayStr) {
-        showToast('Added to backlogs & Today\'s Docket: ' + newItem.objective, 'success');
+        showToast('Added to backlogs & Today\'s Docket' + recLabel + ': ' + newItem.objective, 'success');
       } else {
-        showToast('Added to backlogs: ' + newItem.objective, 'success');
+        showToast('Added to backlogs' + recLabel + ': ' + newItem.objective, 'success');
       }
     }
     return newItem;
@@ -1037,6 +1093,23 @@ const BacklogEngine = {
       const todayStr = this.getTodayStr();
       if (value === todayStr) {
         showToast('Due today! Automatically added to Today\'s Docket 🌅', 'success');
+      }
+    }
+    if (field === 'recurrence') {
+      if (value && value !== 'none' && !item.dueDate) {
+        item.dueDate = this.getTodayStr();
+        this.save();
+      }
+      if (typeof showToast === 'function') {
+        if (value && value !== 'none') {
+          const recMeta = BACKLOG_RECURRENCES[value];
+          showToast('🔁 Set to recurring: ' + (recMeta ? recMeta.label : value), 'info');
+        } else {
+          showToast('Changed to one-time task', 'info');
+        }
+      }
+      if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
+        DocketEngine.syncBacklogsDueToday();
       }
     }
   },
@@ -1277,7 +1350,7 @@ const BacklogEngine = {
             </div>
           </td>
 
-          <!-- Col 5: Estimated End Date -->
+          <!-- Col 5: Estimated End Date & Recurrence -->
           <td class="col-due">
             <div class="due-cell ${isOverdue ? 'is-overdue' : ''}">
               <input type="date" 
@@ -1287,6 +1360,26 @@ const BacklogEngine = {
                      onchange="BacklogEngine.updateField('${item.id}', 'dueDate', this.value)">
               ${isOverdue ? '<span class="overdue-tag" title="Past due date">Overdue</span>' : ''}
             </div>
+            ${!isCompleted ? `
+              <div class="recurrence-cell">
+                <select class="recurrence-select ${(item.recurrence || 'none') !== 'none' ? 'has-recurrence' : ''}"
+                        ${isDeleting ? 'disabled' : ''}
+                        onchange="BacklogEngine.updateField('${item.id}', 'recurrence', this.value)">
+                  <option value="none" ${(!item.recurrence || item.recurrence === 'none') ? 'selected' : ''}>One-Time</option>
+                  <option value="daily" ${item.recurrence === 'daily' ? 'selected' : ''}>🔁 Daily</option>
+                  <option value="weekly" ${item.recurrence === 'weekly' ? 'selected' : ''}>🔁 Weekly</option>
+                  <option value="monthly" ${item.recurrence === 'monthly' ? 'selected' : ''}>🔁 Monthly</option>
+                  <option value="quarterly" ${item.recurrence === 'quarterly' ? 'selected' : ''}>🔁 Quarterly</option>
+                  <option value="annually" ${item.recurrence === 'annually' ? 'selected' : ''}>🔁 Annually</option>
+                </select>
+                ${item.completionCount ? '<span class="recurrence-count" title="Completed ' + item.completionCount + ' times">×' + item.completionCount + '</span>' : ''}
+              </div>
+            ` : (item.recurrence && item.recurrence !== 'none' ? `
+              <div class="recurrence-cell">
+                <span class="recurrence-badge-static">🔁 ${(BACKLOG_RECURRENCES[item.recurrence] || {}).label || item.recurrence}</span>
+                ${item.completionCount ? '<span class="recurrence-count">×' + item.completionCount + '</span>' : ''}
+              </div>
+            ` : '')}
           </td>
 
           <!-- Col 6: Actions (Retrieve during delete countdown, Undo during vanish countdown, Restore, Delete) -->
@@ -1372,6 +1465,16 @@ const BacklogEngine = {
           </td>
           <td class="col-due">
             <input type="date" id="inline-add-due" class="due-date-input">
+            <div class="recurrence-cell">
+              <select id="inline-add-recurrence" class="recurrence-select" aria-label="Recurrence">
+                <option value="none" selected>One-Time</option>
+                <option value="daily">🔁 Daily</option>
+                <option value="weekly">🔁 Weekly</option>
+                <option value="monthly">🔁 Monthly</option>
+                <option value="quarterly">🔁 Quarterly</option>
+                <option value="annually">🔁 Annually</option>
+              </select>
+            </div>
           </td>
           <td class="col-actions">
             <div class="inline-actions-btns">
@@ -1407,11 +1510,13 @@ const BacklogEngine = {
 
     const assignedGroup = groupSelect && groupSelect.value ? groupSelect.value : (this.activeGroup !== 'all' ? this.activeGroup : 'work');
 
+    const recSelect = document.getElementById('inline-add-recurrence');
     const newItem = this.addItem({
       objective: input.value,
       group: assignedGroup,
       severity: sevSelect ? sevSelect.value : 'low',
-      dueDate: dueInput && dueInput.value ? dueInput.value : null
+      dueDate: dueInput && dueInput.value ? dueInput.value : null,
+      recurrence: recSelect ? recSelect.value : 'none'
     });
 
     if (newItem) {
@@ -1426,6 +1531,7 @@ if (typeof window !== 'undefined') {
   window.BacklogEngine = BacklogEngine;
   window.BACKLOG_GROUPS = BACKLOG_GROUPS;
   window.BACKLOG_SEVERITIES = BACKLOG_SEVERITIES;
+  window.BACKLOG_RECURRENCES = BACKLOG_RECURRENCES;
 }
 
 // Auto-initialize when DOM ready
