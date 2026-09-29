@@ -452,7 +452,8 @@ const SyncEngine = {
           const t = (i.objective || '').trim().toLowerCase();
           return !['refactor core architecture & clean codebase', 'upgrade home network & server backup strategy', 'full mobility & functional strength assessment routine', 'tesseract native push engine & real-time sync pipeline', 'tax & annual corporate document organization', 'drop off dry cleaning & pick up courier package'].includes(t);
         }),
-        docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]')
+        docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]'),
+        pulse: (typeof PulseEngine !== 'undefined') ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]')
       };
 
       // Encrypt with native AES-256-GCM
@@ -567,6 +568,17 @@ const SyncEngine = {
         localStorage.setItem('tesseract_docket_data', JSON.stringify(data.docket));
       }
 
+      // 10. Pulse
+      if (data.pulse && Array.isArray(data.pulse)) {
+        if (typeof PulseEngine !== 'undefined') {
+          PulseEngine.entries = data.pulse;
+          if (typeof Components !== 'undefined' && Components.getCurrentPage() === 'pulse') {
+            PulseEngine.render();
+          }
+        }
+        localStorage.setItem('tesseract_pulse_data', JSON.stringify(data.pulse));
+      }
+
       // 9. Re-render UI views dynamically
       if (typeof renderAll === 'function') renderAll();
       if (typeof renderSidebarBadgeCounts === 'function') renderSidebarBadgeCounts();
@@ -577,6 +589,7 @@ const SyncEngine = {
       if (typeof BucketListEngine !== 'undefined' && typeof BucketListEngine.render === 'function') BucketListEngine.render();
       if (typeof RoadmapEngine !== 'undefined' && typeof RoadmapEngine.render === 'function') RoadmapEngine.render();
       if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.render === 'function' && typeof Components !== 'undefined' && Components.getCurrentPage() === 'backlogs') DocketEngine.render();
+      if (typeof PulseEngine !== 'undefined' && typeof PulseEngine.render === 'function' && typeof Components !== 'undefined' && Components.getCurrentPage() === 'pulse') PulseEngine.render();
       if (typeof lucide !== 'undefined') lucide.createIcons();
 
     } finally {

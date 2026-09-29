@@ -117,6 +117,14 @@ const CommandPalette = {
         action: () => { window.location.href = 'backlogs.html'; }
       },
       {
+        id: 'nav-pulse',
+        category: 'NAVIGATION',
+        title: 'Executive Pulse',
+        desc: 'Ultra-fast micro-reflections, career observations, and daily life signals',
+        icon: 'activity',
+        action: () => { window.location.href = 'pulse.html'; }
+      },
+      {
         id: 'nav-report',
         category: 'NAVIGATION',
         title: 'Executive Intelligence & Reports',

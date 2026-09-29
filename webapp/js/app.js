@@ -83,6 +83,8 @@ function init() {
       headerConfig = { title: 'Executive Backlogs', subtitle: 'Notion-style grouped matrix for cross-functional objectives, severities, and target schedules.', showSearch: false };
     } else if (page === 'completed_backlogs') {
       headerConfig = { title: 'Completed Backlogs', subtitle: 'Executive archive of finished objectives, executed milestones, and accomplishments.', showSearch: false };
+    } else if (page === 'pulse') {
+      headerConfig = { title: 'Executive Pulse', subtitle: 'Ultra-fast micro-reflections, career observations, and daily life signals.', showSearch: false };
     } else if (page === 'report') {
       headerConfig = { title: 'Executive Intelligence & Reports', subtitle: 'Multi-cadence debriefs, SVG velocity charts, habit heatmaps, and strategic synthesis.', showSearch: false };
     } else if (page === 'profile') {

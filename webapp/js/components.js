@@ -25,6 +25,7 @@ const Components = {
     const isRoadmap = page === 'roadmap';
     const isBucketlist = page === 'bucketlist';
     const isBacklogs = page === 'backlogs' || page === 'completed_backlogs';
+    const isPulse = page === 'pulse';
     const isReport = page === 'report';
 
     const sidebarHTML = `
@@ -110,6 +111,10 @@ const Components = {
           <button class="nav-item ${isBacklogs ? 'active' : ''}" id="btn-view-backlogs" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='backlogs') window.location.href='backlogs.html';" title="Backlogs">
             <i data-lucide="list-checks"></i>
             <span>Backlogs</span>
+          </button>
+          <button class="nav-item ${isPulse ? 'active' : ''}" id="btn-view-pulse" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='pulse') window.location.href='pulse.html';" title="Pulse">
+            <i data-lucide="activity"></i>
+            <span>Pulse</span>
           </button>
           <button class="nav-item ${isAnalytics ? 'active' : ''}" id="btn-view-analytics" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='analytics') window.location.href='analytics.html';" title="Productivity Metrics">
             <i data-lucide="bar-chart-3"></i>
@@ -1054,6 +1059,10 @@ const Components = {
             <div class="tool-tile-icon cyan"><i data-lucide="list-checks"></i></div>
             <span class="tool-tile-label">Backlogs</span>
           </button>
+          <button class="tool-tile ${page === 'pulse' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='pulse.html';">
+            <div class="tool-tile-icon rose"><i data-lucide="activity"></i></div>
+            <span class="tool-tile-label">Pulse</span>
+          </button>
           ${(() => {
             try {
               const raw = localStorage.getItem('tesseract_backlog_data');
@@ -1126,7 +1135,7 @@ const Components = {
         <i data-lucide="file-text"></i>
         <span>Reports</span>
       </button>
-      <button class="bottom-nav-item ${['analytics', 'cascade', 'bucketlist', 'profile', 'backlogs', 'completed_backlogs'].includes(page) ? 'active' : ''}" onclick="Components.toggleMobileToolsSheet()" aria-label="Tools">
+      <button class="bottom-nav-item ${['analytics', 'cascade', 'bucketlist', 'profile', 'backlogs', 'completed_backlogs', 'pulse'].includes(page) ? 'active' : ''}" onclick="Components.toggleMobileToolsSheet()" aria-label="Tools">
         <i data-lucide="grid"></i>
         <span>Tools</span>
       </button>
