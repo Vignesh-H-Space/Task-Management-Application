@@ -13444,25 +13444,39 @@ body {
 }
 
 .docket-add-btn {
-  padding: 8px 14px;
-  font-size: 0.84rem;
-  font-weight: 600;
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: var(--accent-subtle);
-  border: 1px solid var(--accent-border);
-  color: #000000;
+  gap: 6px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff !important;
   border-radius: 10px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.docket-add-btn i,
+.docket-add-btn svg {
+  stroke: #ffffff !important;
+  width: 15px;
+  height: 15px;
 }
 
 .docket-add-btn:hover {
-  background: var(--accent-primary-hover);
-  box-shadow: 0 4px 14px var(--accent-subtle-hover);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+  transform: translateY(-1.5px);
+}
+
+.docket-add-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 /* Tasks List */
