@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Executive Pulse | Tesseract</title>
+  <meta name="description" content="Tesseract Executive Pulse - Ultra-fast micro-reflections, career observations, and daily life signals.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Executive Authentication Gatekeeper -->
+  <script src="js/auth_engine.js"></script>
+  <script>if (typeof AuthEngine !== 'undefined') AuthEngine.requireAuth();</script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- 📋 Today's Docket Section (Pinned Daily Execution Board) -->
+      <section class="docket-section" id="docket-section"></section>
+
+      <!-- Executive Pulse View -->
+      <section class="pulse-view" id="pulse-view-container">
+        <!-- Hero Header & Stats Card -->
+        <div class="pulse-hero-card">
+          <div class="pulse-hero-main">
+            <div class="pulse-hero-tag">
+              <i data-lucide="activity"></i>
+              <span>EXECUTIVE PULSE & REFLECTIONS</span>
+            </div>
+            <h2 class="pulse-hero-title">Executive Pulse</h2>
+            <p class="pulse-hero-subtitle">
+              Ultra-fast micro-reflections, career observations, and daily life signals. No lengthy journaling — just raw, authentic 1-2 liners as they unfold.
+            </p>
+          </div>
+
+          <!-- Stats Ribbon -->
+          <div class="pulse-stats-grid">
+            <div class="pulse-stat-box">
+              <span class="pulse-stat-val" id="pulse-stat-total">0</span>
+              <span class="pulse-stat-lbl">Total Pulses</span>
+            </div>
+            <div class="pulse-stat-box accent-blue">
+              <span class="pulse-stat-val" id="pulse-stat-career">0</span>
+              <span class="pulse-stat-lbl">Career & Work</span>
+            </div>
+            <div class="pulse-stat-box accent-emerald">
+              <span class="pulse-stat-val" id="pulse-stat-personal">0</span>
+              <span class="pulse-stat-lbl">Personal & Life</span>
+            </div>
+            <div class="pulse-stat-box accent-amber">
+              <span class="pulse-stat-val" id="pulse-stat-pinned">0</span>
+              <span class="pulse-stat-lbl">Pinned</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Capture Console Card -->
+        <div class="pulse-capture-card">
+          <div class="pulse-capture-header">
+            <div class="pulse-capture-title-wrap">
+              <div class="pulse-capture-indicator">
+                <i data-lucide="activity" class="pulse-icon-heartbeat"></i>
+              </div>
+              <div>
+                <h3 class="pulse-capture-heading">Log Instant Pulse</h3>
+                <span class="pulse-capture-sub">Type one-liner, select category, hit Enter</span>
+              </div>
+            </div>
+            <!-- Category Switcher Tabs -->
+            <div class="pulse-cat-tabs" id="pulse-cat-tabs">
+              <!-- Dynamically rendered by PulseEngine.renderCaptureConsole() -->
+            </div>
+          </div>
+
+          <!-- Subcategory Filter Pills for Quick Capture -->
+          <div class="pulse-subcat-wrapper">
+            <span class="pulse-subcat-label">Tag:</span>
+            <div class="pulse-subcat-pills" id="pulse-subcat-pills">
+              <!-- Dynamically populated by PulseEngine.renderCaptureConsole() -->
+            </div>
+          </div>
+
+          <!-- Main Input Row -->
+          <div class="pulse-input-row">
+            <div class="pulse-input-field-wrap">
+              <i data-lucide="pen-tool" class="pulse-input-icon"></i>
+              <input type="text" id="pulse-text-input" class="pulse-text-input" placeholder="What just happened? A lesson, small win, feedback, or observation..." autocomplete="off">
+            </div>
+            <button type="button" class="btn pulse-submit-btn" id="btn-submit-pulse" onclick="PulseEngine.submitPulse()">
+              <i data-lucide="activity"></i>
+              <span>Pulse (+10 XP)</span>
+            </button>
+          </div>
+          <div class="pulse-input-footer">
+            <span class="pulse-hint-text">
+              <i data-lucide="corner-down-left"></i>
+              Tip: Press <kbd>Enter</kbd> to record instantly.
+            </span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="pulse-toolbar">
+          <div class="pulse-pills-row" id="pulse-filter-pills">
+            <!-- Dynamically populated by PulseEngine.renderFilters() -->
+          </div>
+
+          <div class="pulse-search-wrap">
+            <i data-lucide="search" class="pulse-search-icon"></i>
+            <input type="text" id="pulse-search-input" class="pulse-search-input" placeholder="Search pulses, tags, observations..." autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Timeline Stream Container -->
+        <div class="pulse-timeline-container" id="pulse-timeline-container">
+          <!-- Injected dynamically by PulseEngine.renderTimeline() -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Core Scripts -->
+  <!-- Firebase Compat v10 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- E2EE Sync Engine -->
+  <script src="js/sync_engine.js"></script>
+  <script src="js/notification_engine.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/drag_drop.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/backlog_engine.js"></script>
+  <script src="js/docket_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/touch_engine.js"></script>
+  <script src="js/pulse_engine.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
