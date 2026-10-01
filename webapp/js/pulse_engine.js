@@ -117,6 +117,9 @@ const PulseEngine = {
     const subKeys = Object.keys(PULSE_CATEGORIES[categoryKey].subcategories);
     this.selectedSubcategory = subKeys[0] || 'observation';
     this.renderCaptureConsole();
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
+    }
   },
 
   /**
@@ -126,7 +129,18 @@ const PulseEngine = {
     const cat = PULSE_CATEGORIES[this.selectedCategory];
     if (cat && cat.subcategories[subKey]) {
       this.selectedSubcategory = subKey;
-      this.renderCaptureConsole();
+      // Update DOM classes directly to preserve existing SVG icons and prevent them from disappearing
+      const pills = document.querySelectorAll('.pulse-subcat-pill');
+      if (pills && pills.length > 0) {
+        pills.forEach(p => {
+          p.classList.remove('active', 'career', 'personal');
+          if (p.getAttribute('data-sub') === subKey || (p.getAttribute('onclick') && p.getAttribute('onclick').includes(`'${subKey}'`))) {
+            p.classList.add('active', this.selectedCategory);
+          }
+        });
+      } else {
+        this.renderCaptureConsole();
+      }
     }
   },
 
@@ -330,13 +344,17 @@ const PulseEngine = {
         subContainer.innerHTML = Object.values(activeCat.subcategories).map(sub => {
           const isSelected = this.selectedSubcategory === sub.key;
           return `
-            <button type="button" class="pulse-subcat-pill ${isSelected ? 'active ' + this.selectedCategory : ''}" onclick="PulseEngine.setCaptureSubcategory('${sub.key}')">
+            <button type="button" class="pulse-subcat-pill ${isSelected ? 'active ' + this.selectedCategory : ''}" data-sub="${sub.key}" onclick="PulseEngine.setCaptureSubcategory('${sub.key}')">
               <i data-lucide="${sub.icon}"></i>
               <span>${sub.label}</span>
             </button>
           `;
         }).join('');
       }
+    }
+
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
     }
   },
 
@@ -373,6 +391,10 @@ const PulseEngine = {
         <span class="pulse-filter-count">${pinnedCount}</span>
       </button>
     `;
+
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
+    }
   },
 
   /**
