@@ -490,14 +490,16 @@ const PulseEngine = {
     sortedDates.forEach(dateStr => {
       let dateLabel = dateStr;
       if (dateStr === todayStr) {
-        dateLabel = 'Today';
+        const fullToday = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        dateLabel = `Today · ${fullToday}`;
       } else if (dateStr === yesterdayStr) {
-        dateLabel = 'Yesterday';
+        const fullYesterday = yesterdayDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        dateLabel = `Yesterday · ${fullYesterday}`;
       } else {
         try {
           const parts = dateStr.split('-');
           const d = new Date(parts[0], parts[1] - 1, parts[2]);
-          dateLabel = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+          dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
         } catch (e) {
           dateLabel = dateStr;
         }
@@ -525,6 +527,69 @@ const PulseEngine = {
   },
 
   /**
+   * Format pulse timestamp into structured date, time, and relative strings
+   */
+  formatPulseDateTime(pulse) {
+    if (!pulse) return { dateStr: '', timeStr: '', fullStr: '', fullDetailedStr: '', relativeStr: '' };
+    
+    let d;
+    if (pulse.createdAt) {
+      d = new Date(pulse.createdAt);
+    } else if (pulse.date) {
+      d = new Date(pulse.date + 'T12:00:00');
+    } else {
+      d = new Date();
+    }
+    
+    if (isNaN(d.getTime())) d = new Date();
+
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    
+    let dateStr = '';
+    if (isToday) {
+      dateStr = 'Today';
+    } else if (isYesterday) {
+      dateStr = 'Yesterday';
+    } else {
+      dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    const fullCalendarDate = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    const fullDetailedStr = `${fullCalendarDate} at ${timeStr}`;
+
+    // Relative elapsed time
+    const elapsedSeconds = Math.max(0, Math.floor((now.getTime() - d.getTime()) / 1000));
+    let relativeStr = '';
+    if (elapsedSeconds < 60) {
+      relativeStr = 'Just now';
+    } else if (elapsedSeconds < 3600) {
+      const mins = Math.floor(elapsedSeconds / 60);
+      relativeStr = `${mins}m ago`;
+    } else if (elapsedSeconds < 86400) {
+      const hrs = Math.floor(elapsedSeconds / 3600);
+      relativeStr = `${hrs}h ago`;
+    } else {
+      const days = Math.floor(elapsedSeconds / 86400);
+      relativeStr = `${days}d ago`;
+    }
+
+    return {
+      dateStr,
+      timeStr,
+      fullStr: `${dateStr} · ${timeStr}`,
+      fullDetailedStr,
+      relativeStr
+    };
+  },
+
+  /**
    * Render individual Pulse card HTML
    */
   renderPulseCard(pulse) {
@@ -532,7 +597,7 @@ const PulseEngine = {
     const cat = PULSE_CATEGORIES[pulse.category] || PULSE_CATEGORIES.career;
     const sub = cat.subcategories[pulse.subcategory] || { label: pulse.subcategory || 'Note', icon: 'tag', color: '#94a3b8' };
     
-    const timeFormatted = new Date(pulse.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dt = this.formatPulseDateTime(pulse);
 
     if (isEditing) {
       return `
@@ -578,7 +643,12 @@ const PulseEngine = {
             ` : ''}
           </div>
           <div class="pulse-card-meta">
-            <span class="pulse-timestamp">${timeFormatted}</span>
+            <!-- Dedicated prominent Date & Time chip -->
+            <div class="pulse-time-pill" title="Recorded: ${dt.fullDetailedStr}">
+              <i data-lucide="clock"></i>
+              <span class="pulse-time-text">${dt.fullStr}</span>
+              <span class="pulse-rel-tag">${dt.relativeStr}</span>
+            </div>
             <div class="pulse-action-buttons">
               <button class="pulse-icon-btn ${pulse.pinned ? 'active' : ''}" onclick="PulseEngine.togglePin('${pulse.id}')" title="${pulse.pinned ? 'Unpin' : 'Pin to top'}">
                 <i data-lucide="pin"></i>
@@ -595,9 +665,18 @@ const PulseEngine = {
         <div class="pulse-card-body">
           <p class="pulse-text">${this.escapeHTML(pulse.text)}</p>
         </div>
+        <!-- Bottom Date/Time Info Strip -->
+        <div class="pulse-card-footer">
+          <span class="pulse-footer-datetime">
+            <i data-lucide="calendar"></i>
+            <span>Logged on ${dt.fullDetailedStr}</span>
+          </span>
+          <span class="pulse-footer-rel">${dt.relativeStr}</span>
+        </div>
       </div>
     `;
   },
+
 
   /**
    * Escape HTML to prevent XSS
