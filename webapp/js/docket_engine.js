@@ -8,6 +8,7 @@
 
 const DOCKET_STORAGE_KEY = 'tesseract_docket_data';
 const DOCKET_COLLAPSED_KEY = 'tesseract_docket_collapsed';
+const DOCKET_RADAR_ACKS_KEY = 'tesseract_docket_radar_acks';
 
 const DOCKET_SEVERITIES = {
   low: { key: 'low', label: 'Low', color: '#10b981', bg: 'rgba(16, 185, 129, 0.14)', border: 'rgba(16, 185, 129, 0.28)' },
@@ -158,8 +159,12 @@ const DocketEngine = {
         return;
       }
 
-      if (bkl.dueDate === todayStr) {
-        // Backlog is active and due today!
+      // Check if it's a cadence milestone (weekly, monthly, quarterly, annually)
+      // Cadence milestones are isolated to the bottom Cadence Radar section
+      const hasCadence = bkl.recurrence && ['weekly', 'monthly', 'quarterly', 'annually'].includes(bkl.recurrence);
+
+      if (bkl.dueDate === todayStr && !hasCadence) {
+        // Pure single-day backlog active and due today -> sync to immediate top agenda!
         const existing = this.items.find(d => d.backlogId === bkl.id || d.id === 'dkt_bkl_' + bkl.id);
         if (!existing) {
           this.items.unshift({
@@ -189,9 +194,10 @@ const DocketEngine = {
           }
         }
       } else {
-        // Due date is not today: remove uncompleted docket task if it was bridged from this backlog
+        // Due date is not today, or it's a cadence item (managed in the bottom radar group):
+        // remove uncompleted docket task from top agenda if previously bridged
         const existing = this.items.find(d => (d.backlogId === bkl.id || d.id === 'dkt_bkl_' + bkl.id) && !d.completed);
-        if (existing) {
+        if (existing && (hasCadence || bkl.dueDate !== todayStr)) {
           this.items = this.items.filter(d => d.id !== existing.id);
           hasChanges = true;
         }
@@ -213,6 +219,429 @@ const DocketEngine = {
       }
     }
   },
+
+  // ════════════════════════════════════════════════════════════
+  // 📡 CADENCE RADAR & ADVANCE REMINDERS ENGINE
+  // ════════════════════════════════════════════════════════════
+
+  getRadarAcks() {
+    try {
+      const raw = localStorage.getItem(DOCKET_RADAR_ACKS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  },
+
+  isRadarAcknowledged(id) {
+    const today = this.getTodayStr();
+    const acks = this.getRadarAcks();
+    return !!(acks[today] && acks[today][id]);
+  },
+
+  acknowledgeRadarItem(id) {
+    const today = this.getTodayStr();
+    const acks = this.getRadarAcks();
+    if (!acks[today]) acks[today] = {};
+    acks[today][id] = true;
+
+    // Prune older dates (retain only last 7 days)
+    const dates = Object.keys(acks);
+    if (dates.length > 7) {
+      dates.sort();
+      while (dates.length > 7) {
+        delete acks[dates.shift()];
+      }
+    }
+
+    try {
+      localStorage.setItem(DOCKET_RADAR_ACKS_KEY, JSON.stringify(acks));
+    } catch (e) {}
+
+    const row = (typeof document !== 'undefined' && typeof document.querySelector === 'function') ? document.querySelector(`.docket-radar-row[data-id="${id}"]`) : null;
+    if (row) {
+      row.classList.add('row-acknowledged');
+      setTimeout(() => {
+        this.render();
+      }, 300);
+    } else {
+      this.render();
+    }
+
+    if (typeof showToast === 'function') {
+      showToast('Cadence Radar acknowledged for today ✨', 'info');
+    }
+  },
+
+  evalCadenceRadar(item, todayStr) {
+    if (!item || item.completed) return null;
+    const dueDate = item.dueDate || item.date;
+    if (!dueDate) return null;
+
+    let cadence = (item.recurrence && item.recurrence !== 'none') ? item.recurrence : (item.tier || null);
+    if (!cadence || cadence === 'daily') return null;
+    if (cadence === 'annual') cadence = 'annually';
+
+    const today = new Date(todayStr + 'T00:00:00');
+    const target = new Date(dueDate + 'T00:00:00');
+    const diffTime = target.getTime() - today.getTime();
+    const daysLeft = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (daysLeft < 0) return null;
+
+    const dayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon, ..., 3 = Wed, 5 = Fri, 6 = Sat
+
+    // 1. QUARTERLY (90 days / 3 months)
+    if (cadence === 'quarterly') {
+      if (daysLeft === 30) {
+        return {
+          isTriggered: true,
+          cadence: 'quarterly',
+          stage: 'checkpoint',
+          badgeText: '🎯 Quarterly Radar · T-30d',
+          daysLeft: 30,
+          color: '#06b6d4',
+          bg: 'rgba(6, 182, 212, 0.14)',
+          border: 'rgba(6, 182, 212, 0.35)'
+        };
+      }
+      if (daysLeft === 15) {
+        return {
+          isTriggered: true,
+          cadence: 'quarterly',
+          stage: 'checkpoint',
+          badgeText: '🎯 Quarterly Check-In · T-15d',
+          daysLeft: 15,
+          color: '#f59e0b',
+          bg: 'rgba(245, 158, 11, 0.14)',
+          border: 'rgba(245, 158, 11, 0.35)'
+        };
+      }
+      if (daysLeft <= 7 && daysLeft >= 0) {
+        const text = daysLeft === 0 
+          ? '🎯 Quarterly Sprint · Due Today' 
+          : (daysLeft === 1 ? '🎯 Quarterly Sprint · Due Tomorrow' : `🎯 Quarterly Sprint · ${daysLeft}d left`);
+        return {
+          isTriggered: true,
+          cadence: 'quarterly',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#06b6d4',
+          bg: 'rgba(6, 182, 212, 0.2)',
+          border: 'rgba(6, 182, 212, 0.45)'
+        };
+      }
+    }
+
+    // 2. ANNUALLY / YEARLY (365 days)
+    if (cadence === 'annually') {
+      if (daysLeft === 60) {
+        return {
+          isTriggered: true,
+          cadence: 'annually',
+          stage: 'checkpoint',
+          badgeText: '🏆 Annual Radar · T-60d',
+          daysLeft: 60,
+          color: '#ec4899',
+          bg: 'rgba(236, 72, 153, 0.14)',
+          border: 'rgba(236, 72, 153, 0.35)'
+        };
+      }
+      if (daysLeft === 30) {
+        return {
+          isTriggered: true,
+          cadence: 'annually',
+          stage: 'checkpoint',
+          badgeText: '🏆 Annual Milestone · T-30d',
+          daysLeft: 30,
+          color: '#ec4899',
+          bg: 'rgba(236, 72, 153, 0.14)',
+          border: 'rgba(236, 72, 153, 0.35)'
+        };
+      }
+      if (daysLeft === 15) {
+        return {
+          isTriggered: true,
+          cadence: 'annually',
+          stage: 'checkpoint',
+          badgeText: '🏆 Annual Countdown · T-15d',
+          daysLeft: 15,
+          color: '#f59e0b',
+          bg: 'rgba(245, 158, 11, 0.14)',
+          border: 'rgba(245, 158, 11, 0.35)'
+        };
+      }
+      if (daysLeft <= 7 && daysLeft >= 0) {
+        const text = daysLeft === 0 
+          ? '🏆 Annual Vision · Due Today' 
+          : (daysLeft === 1 ? '🏆 Annual Vision · Due Tomorrow' : `🏆 Annual Sprint · ${daysLeft}d left`);
+        return {
+          isTriggered: true,
+          cadence: 'annually',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#ec4899',
+          bg: 'rgba(236, 72, 153, 0.2)',
+          border: 'rgba(236, 72, 153, 0.45)'
+        };
+      }
+    }
+
+    // 3. MONTHLY (30 days)
+    if (cadence === 'monthly') {
+      if (daysLeft === 7) {
+        return {
+          isTriggered: true,
+          cadence: 'monthly',
+          stage: 'checkpoint',
+          badgeText: '🗓️ Monthly Notice · T-7d',
+          daysLeft: 7,
+          color: '#10b981',
+          bg: 'rgba(16, 185, 129, 0.14)',
+          border: 'rgba(16, 185, 129, 0.35)'
+        };
+      }
+      if (daysLeft <= 3 && daysLeft >= 0) {
+        const text = daysLeft === 0 
+          ? '🗓️ Monthly Target · Due Today' 
+          : (daysLeft === 1 ? '🗓️ Monthly Closing · Due Tomorrow' : `🗓️ Monthly Sprint · ${daysLeft}d left`);
+        return {
+          isTriggered: true,
+          cadence: 'monthly',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#10b981',
+          bg: 'rgba(16, 185, 129, 0.2)',
+          border: 'rgba(16, 185, 129, 0.45)'
+        };
+      }
+    }
+
+    // 4. WEEKLY (7 days)
+    if (cadence === 'weekly') {
+      if (dayOfWeek === 3 && daysLeft > 2) {
+        return {
+          isTriggered: true,
+          cadence: 'weekly',
+          stage: 'checkpoint',
+          badgeText: '📅 Weekly · Mid-Week Check',
+          daysLeft: daysLeft,
+          color: '#8b5cf6',
+          bg: 'rgba(139, 92, 246, 0.14)',
+          border: 'rgba(139, 92, 246, 0.35)'
+        };
+      }
+      if (([5, 6, 0].includes(dayOfWeek) || daysLeft <= 2) && daysLeft >= 0) {
+        const text = daysLeft === 0 
+          ? '📅 Weekly Goal · Due Today' 
+          : (daysLeft === 1 ? '📅 Weekly Sprint · Due Tomorrow' : '📅 Weekly · Weekend Sprint');
+        return {
+          isTriggered: true,
+          cadence: 'weekly',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#8b5cf6',
+          bg: 'rgba(139, 92, 246, 0.2)',
+          border: 'rgba(139, 92, 246, 0.45)'
+        };
+      }
+    }
+
+    return null;
+  },
+
+  getRadarItems() {
+    const todayStr = this.getTodayStr();
+    const radarList = [];
+    const seenIds = new Set();
+
+    // 1. Scan Backlogs for Cadence items
+    if (typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
+      BacklogEngine.items.forEach(bkl => {
+        if (!bkl || bkl.completed) return;
+        if (seenIds.has(bkl.id)) return;
+
+        const radarMeta = this.evalCadenceRadar(bkl, todayStr);
+        if (radarMeta && radarMeta.isTriggered) {
+          if (!this.isRadarAcknowledged(bkl.id)) {
+            radarList.push({
+              id: bkl.id,
+              source: 'backlog',
+              title: bkl.objective,
+              dueDate: bkl.dueDate,
+              severity: bkl.severity || 'low',
+              group: (typeof BACKLOG_GROUPS !== 'undefined' && BACKLOG_GROUPS[bkl.group]) ? BACKLOG_GROUPS[bkl.group].label : bkl.group,
+              completed: false,
+              radar: radarMeta
+            });
+            seenIds.add(bkl.id);
+          }
+        }
+      });
+    }
+
+    // 2. Scan Horizon Goals/Tasks (Quarterly, Annual, Monthly, Weekly) from state / storage
+    let generalTasks = [];
+    if (typeof window !== 'undefined' && window.state && Array.isArray(window.state.tasks)) {
+      generalTasks = window.state.tasks;
+    } else {
+      try {
+        const raw = localStorage.getItem('tesseract_goals_tasks_data');
+        if (raw) generalTasks = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    if (Array.isArray(generalTasks)) {
+      generalTasks.forEach(task => {
+        if (!task || task.completed) return;
+        if (seenIds.has(task.id)) return;
+
+        const radarMeta = this.evalCadenceRadar(task, todayStr);
+        if (radarMeta && radarMeta.isTriggered) {
+          if (!this.isRadarAcknowledged(task.id)) {
+            radarList.push({
+              id: task.id,
+              source: 'task',
+              title: task.title,
+              dueDate: task.dueDate,
+              severity: task.priority || task.severity || 'low',
+              group: task.category || task.tier,
+              completed: false,
+              radar: radarMeta
+            });
+            seenIds.add(task.id);
+          }
+        }
+      });
+    }
+
+    radarList.sort((a, b) => a.radar.daysLeft - b.radar.daysLeft);
+    return radarList;
+  },
+
+  completeRadarItem(id, source) {
+    if (source === 'backlog' && typeof BacklogEngine !== 'undefined') {
+      BacklogEngine.markDoneWithCountdown(id);
+      setTimeout(() => {
+        this.render();
+      }, 100);
+    } else if (source === 'task') {
+      if (typeof window !== 'undefined' && typeof toggleTaskStatus === 'function') {
+        toggleTaskStatus(id);
+      } else {
+        try {
+          const raw = localStorage.getItem('tesseract_goals_tasks_data');
+          if (raw) {
+            const list = JSON.parse(raw);
+            const t = list.find(x => x.id === id);
+            if (t) {
+              t.completed = true;
+              t.completedAt = new Date().toISOString();
+              localStorage.setItem('tesseract_goals_tasks_data', JSON.stringify(list));
+            }
+          }
+        } catch (e) {}
+      }
+      this.render();
+      if (typeof showToast === 'function') {
+        showToast('Strategic deliverable completed! 🏆', 'success');
+      }
+    }
+  },
+
+  renderRadarSection() {
+    const radarItems = this.getRadarItems();
+    if (!radarItems || radarItems.length === 0) {
+      return '';
+    }
+
+    let html = `
+      <div class="docket-radar-section" id="docket-radar-section">
+        <div class="docket-radar-header">
+          <div class="docket-radar-title-group">
+            <div class="radar-pulse-wrap">
+              <i data-lucide="radio" class="radar-pulse-icon"></i>
+            </div>
+            <div>
+              <div class="docket-radar-title-line">
+                <span class="docket-radar-title">Cadence Radar & Active Sprints</span>
+                <span class="docket-radar-count-badge">${radarItems.length} Active</span>
+              </div>
+              <p class="docket-radar-sub">High-cadence milestones in active sprint window or advance checkpoints.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="docket-radar-list">
+    `;
+
+    radarItems.forEach(item => {
+      const isCompleting = (typeof BacklogEngine !== 'undefined' && BacklogEngine.pendingVanishes && BacklogEngine.pendingVanishes[item.id]);
+      const sevMeta = DOCKET_SEVERITIES[item.severity] || DOCKET_SEVERITIES.low;
+      const targetDateFormatted = this.formatHeadingDate(item.dueDate);
+
+      html += `
+        <div class="docket-radar-row ${isCompleting ? 'row-completing' : ''}" data-id="${item.id}" style="border-left-color: ${item.radar.color};">
+          <!-- Checkbox: Complete Deliverable -->
+          <label class="docket-check-wrap" title="Mark deliverable complete (calculates next recurrence)">
+            <input type="checkbox" class="docket-checkbox" ${item.completed ? 'checked disabled' : ''} onchange="DocketEngine.completeRadarItem('${item.id}', '${item.source}')">
+            <span class="docket-custom-check">
+              <i data-lucide="check"></i>
+            </span>
+          </label>
+
+          <!-- Title and Radar Badges -->
+          <div class="docket-task-text-wrap">
+            <div class="docket-radar-text-row">
+              <span class="docket-task-title ${item.completed ? 'completed-strikethrough' : ''}">
+                ${this.escapeHTML(item.title)}
+              </span>
+            </div>
+            <div class="docket-radar-meta-row">
+              <span class="docket-radar-badge" style="color:${item.radar.color}; background:${item.radar.bg}; border:1px solid ${item.radar.border};">
+                <i data-lucide="${item.radar.stage === 'sprint_window' ? 'zap' : 'bell'}"></i>
+                <span>${item.radar.badgeText}</span>
+              </span>
+              ${item.group ? `<span class="docket-radar-group-tag">${this.escapeHTML(item.group)}</span>` : ''}
+              <span class="docket-radar-target-date">
+                <i data-lucide="calendar"></i>
+                <span>Target: ${targetDateFormatted}</span>
+              </span>
+            </div>
+            ${isCompleting ? '<div class="vanish-progress-bar"></div>' : ''}
+          </div>
+
+          <!-- Severity Badge -->
+          <div class="docket-sev-wrap">
+            <span class="docket-sev-pill sev-${item.severity}" style="color:${sevMeta.color}; background:${sevMeta.bg}; border-color:${sevMeta.border};">
+              <span class="sev-dot" style="background:${sevMeta.color};"></span>
+              <span class="sev-label">${sevMeta.label}</span>
+            </span>
+          </div>
+
+          <!-- Dual Action: Acknowledge Today -->
+          <div class="docket-radar-actions">
+            <button type="button" class="btn-radar-acknowledge" onclick="DocketEngine.acknowledgeRadarItem('${item.id}')" title="Acknowledge for today (clears today's notice without marking project complete)">
+              <i data-lucide="eye-off"></i>
+              <span>Acknowledge Today</span>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+
+    return html;
+  },
+
 
   addItem(taskText, severity = 'low') {
     if (!taskText || !taskText.trim()) {
@@ -823,6 +1252,15 @@ const DocketEngine = {
             </div>
           </form>
 
+          <!-- Top Section: Immediate Daily Agenda Header -->
+          <div class="docket-agenda-header">
+            <div class="docket-agenda-title-wrap">
+              <i data-lucide="sun" class="docket-agenda-icon"></i>
+              <span class="docket-agenda-title">TODAY'S EXECUTION AGENDA</span>
+            </div>
+            <span class="docket-agenda-count">${activeCount} active · ${doneCount} completed</span>
+          </div>
+
           <!-- Tasks List -->
           <div class="docket-tasks-list" id="docket-tasks-list">
     `;
@@ -898,6 +1336,9 @@ const DocketEngine = {
 
     html += `
           </div>
+
+          <!-- Bottom Section: Cadence Radar & Active Sprints Sub-Group -->
+          ${this.renderRadarSection()}
 
           <!-- Progress Footer -->
           <div class="docket-footer">

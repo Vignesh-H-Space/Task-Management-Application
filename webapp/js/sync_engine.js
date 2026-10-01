@@ -453,7 +453,8 @@ const SyncEngine = {
           return !['refactor core architecture & clean codebase', 'upgrade home network & server backup strategy', 'full mobility & functional strength assessment routine', 'tesseract native push engine & real-time sync pipeline', 'tax & annual corporate document organization', 'drop off dry cleaning & pick up courier package'].includes(t);
         }),
         docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]'),
-        pulse: (typeof PulseEngine !== 'undefined') ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]')
+        pulse: (typeof PulseEngine !== 'undefined') ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]'),
+        radarAcks: JSON.parse(localStorage.getItem('tesseract_docket_radar_acks') || '{}')
       };
 
       // Encrypt with native AES-256-GCM
@@ -577,6 +578,11 @@ const SyncEngine = {
           }
         }
         localStorage.setItem('tesseract_pulse_data', JSON.stringify(data.pulse));
+      }
+
+      // 11. Docket Radar Acks
+      if (data.radarAcks && typeof data.radarAcks === 'object') {
+        localStorage.setItem('tesseract_docket_radar_acks', JSON.stringify(data.radarAcks));
       }
 
       // 9. Re-render UI views dynamically
