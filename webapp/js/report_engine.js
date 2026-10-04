@@ -522,7 +522,7 @@ const ReportEngine = {
           <div class="chart-card-header">
             <div>
               <h3 class="chart-title"><i data-lucide="layers"></i> Horizon Altitude Waterfall</h3>
-              <p class="chart-subtitle">Breakdown of accomplishments rolling up from daily execution to annual vision.</p>
+              <p class="chart-subtitle">Breakdown of accomplishments rolling up from daily execution to annual goals.</p>
             </div>
           </div>
           <div class="altitude-waterfall-list">
@@ -767,7 +767,7 @@ const ReportEngine = {
 
   renderAltitudeWaterfall(data) {
     const tiers = (typeof TIERS !== 'undefined') ? TIERS : [
-      { id: 'annual', name: 'Annual Vision', emoji: '🏆', color: '#f43f5e' },
+      { id: 'annual', name: 'Annual Goals', emoji: '🏆', color: '#f43f5e' },
       { id: 'quarterly', name: 'Quarterly Objectives', emoji: '🎯', color: '#06b6d4' },
       { id: 'monthly', name: 'Monthly Deliverables', emoji: '🗓️', color: '#10b981' },
       { id: 'weekly', name: 'Weekly Milestones', emoji: '📅', color: '#8b5cf6' },

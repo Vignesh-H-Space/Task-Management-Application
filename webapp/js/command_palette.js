@@ -373,7 +373,7 @@ const CommandPalette = {
       weekly: '📅 Weekly Milestone',
       monthly: '🗓️ Monthly Goal',
       quarterly: '🎯 Quarterly OKR',
-      annual: '🏆 Annual Vision'
+      annual: '🏆 Annual Goal'
     };
 
     allTasks.forEach(task => {

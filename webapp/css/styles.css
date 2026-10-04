@@ -12147,7 +12147,7 @@ body {
   border-collapse: collapse;
   text-align: left;
   font-size: 0.88rem;
-  min-width: 760px;
+  min-width: 900px;
 }
 
 .backlog-notion-table thead th {
@@ -12501,6 +12501,118 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.25);
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+/* Col: Reminder Date (Manual Date Field) */
+.col-reminder {
+  min-width: 175px;
+}
+
+.reminder-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reminder-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  padding: 3px 8px;
+  transition: all 0.15s ease;
+}
+
+.reminder-input-wrap:focus-within {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+}
+
+.reminder-input-wrap.has-reminder {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.reminder-bell-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--text-muted, #71717a);
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.reminder-input-wrap.has-reminder .reminder-bell-icon {
+  color: #f59e0b;
+}
+
+.reminder-date-input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #ffffff);
+  font-size: 0.8rem;
+  padding: 1px 0;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  outline: none;
+  width: 110px;
+}
+
+.reminder-date-input:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-clear-reminder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted, #71717a);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-clear-reminder:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+}
+
+.btn-clear-reminder i,
+.btn-clear-reminder svg {
+  width: 11px;
+  height: 11px;
+}
+
+.reminder-auto-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #64748b);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.date-chip.has-reminder {
+  color: #f59e0b;
+}
+
+.date-chip.has-reminder .date-chip-icon {
+  color: #f59e0b;
+  opacity: 0.9;
 }
 
 /* Col 6: Actions */

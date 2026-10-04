@@ -28,7 +28,7 @@ const TIERS = [
   { id: 'weekly', name: 'Weekly Milestones', emoji: '📅', color: '#8b5cf6', desc: 'Tactical milestones for this week' },
   { id: 'monthly', name: 'Monthly Goals', emoji: '🗓️', color: '#10b981', desc: 'Deliverables and focus areas for this month' },
   { id: 'quarterly', name: 'Quarterly Goals', emoji: '🎯', color: '#06b6d4', desc: '90-day objectives & key strategic results' },
-  { id: 'annual', name: 'Annual Vision', emoji: '🏆', color: '#f43f5e', desc: 'North star pillars & yearly ambitions' }
+  { id: 'annual', name: 'Annual Goals', emoji: '🏆', color: '#f43f5e', desc: 'North star pillars & yearly targets' }
 ];
 
 let state = {
@@ -72,7 +72,7 @@ function init() {
     
     let headerConfig = { title: 'Executive Command Center', subtitle: 'Unified multi-horizon cockpit & execution launchpad.', showSearch: true };
     if (page === 'cascade') {
-      headerConfig = { title: 'Strategic Goal Cascade', subtitle: 'Multi-horizon vertical alignment linking daily actions to annual vision.', showSearch: false };
+      headerConfig = { title: 'Strategic Goal Cascade', subtitle: 'Multi-horizon vertical alignment linking daily actions to annual goals.', showSearch: false };
     } else if (page === 'analytics') {
       headerConfig = { title: 'Productivity & Goal Analytics', subtitle: 'Comprehensive metric tracking and horizon performance.', showSearch: false };
     } else if (page === 'roadmap') {
@@ -1015,7 +1015,7 @@ const EXECUTIVE_PRINCIPLES = [
   {
     category: "NORTH STAR ALIGNMENT",
     emoji: "🧭",
-    quote: "If a daily action doesn't bridge toward your Annual Vision or Quarterly summit, question why it exists on your agenda.",
+    quote: "If a daily action doesn't bridge toward your Annual Goals or Quarterly summit, question why it exists on your agenda.",
     author: "Tesseract Operating Creed"
   },
   {
@@ -1820,7 +1820,7 @@ function createTaskCardElement(task) {
           <i data-lucide="alert-triangle"></i>
           <span>Tactical Busywork Alert: Unlinked to any higher horizon</span>
         </div>
-        <button class="btn-link-parent" onclick="if(typeof AlignmentEngine!=='undefined') AlignmentEngine.openLinkModal('${task.id}', event);" title="Connect to an Annual Vision or Quarterly Objective">
+        <button class="btn-link-parent" onclick="if(typeof AlignmentEngine!=='undefined') AlignmentEngine.openLinkModal('${task.id}', event);" title="Connect to an Annual Goal or Quarterly Objective">
           <i data-lucide="link"></i>
           <span>Link Parent Goal</span>
         </button>

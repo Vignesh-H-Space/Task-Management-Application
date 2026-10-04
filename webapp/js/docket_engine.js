@@ -279,7 +279,7 @@ const DocketEngine = {
     if (!dueDate) return null;
 
     let cadence = (item.recurrence && item.recurrence !== 'none') ? item.recurrence : (item.tier || null);
-    if (!cadence || cadence === 'daily') return null;
+    if (cadence === 'daily') return null;
     if (cadence === 'annual') cadence = 'annually';
 
     const today = new Date(todayStr + 'T00:00:00');
@@ -288,6 +288,38 @@ const DocketEngine = {
     const daysLeft = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
     if (daysLeft < 0) return null;
+
+    // ── 🔔 MANUAL REMINDER DATE OVERRIDE ──
+    // Allows user to manually set a trigger date (e.g. at 8 months for an annual task)
+    if (item.reminderDate) {
+      if (todayStr >= item.reminderDate) {
+        const capCadence = cadence ? (cadence.charAt(0).toUpperCase() + cadence.slice(1)) : 'Backlog';
+        const text = daysLeft === 0 
+          ? `🔔 ${capCadence} Reminder · Due Today` 
+          : (daysLeft === 1 ? `🔔 ${capCadence} Reminder · Due Tomorrow` : `🔔 ${capCadence} Reminder · ${daysLeft}d left`);
+        return {
+          isTriggered: true,
+          isManual: true,
+          cadence: cadence || 'manual',
+          stage: daysLeft <= 7 ? 'sprint_window' : 'checkpoint',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#f59e0b',
+          bg: 'rgba(245, 158, 11, 0.16)',
+          border: 'rgba(245, 158, 11, 0.45)'
+        };
+      } else {
+        // Manual reminder date is still in the future.
+        // If it enters the active sprint window (T-7 to T-0), still trigger to protect deadline
+        if (cadence && daysLeft <= 7) {
+          // fall through to sprint window logic below
+        } else {
+          return null; // Awaiting the manual reminder date
+        }
+      }
+    }
+
+    if (!cadence) return null;
 
     const dayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon, ..., 3 = Wed, 5 = Fri, 6 = Sat
 
@@ -374,8 +406,8 @@ const DocketEngine = {
       }
       if (daysLeft <= 7 && daysLeft >= 0) {
         const text = daysLeft === 0 
-          ? '🏆 Annual Vision · Due Today' 
-          : (daysLeft === 1 ? '🏆 Annual Vision · Due Tomorrow' : `🏆 Annual Sprint · ${daysLeft}d left`);
+          ? '🏆 Annual Goal · Due Today' 
+          : (daysLeft === 1 ? '🏆 Annual Goal · Due Tomorrow' : `🏆 Annual Sprint · ${daysLeft}d left`);
         return {
           isTriggered: true,
           cadence: 'annually',
@@ -473,6 +505,7 @@ const DocketEngine = {
               source: 'backlog',
               title: bkl.objective,
               dueDate: bkl.dueDate,
+              reminderDate: bkl.reminderDate || null,
               severity: bkl.severity || 'low',
               group: (typeof BACKLOG_GROUPS !== 'undefined' && BACKLOG_GROUPS[bkl.group]) ? BACKLOG_GROUPS[bkl.group].label : bkl.group,
               completed: false,

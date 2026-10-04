@@ -111,7 +111,8 @@ const BacklogEngine = {
             .map(item => ({
               ...item,
               group: (item.group && BACKLOG_GROUPS[item.group]) ? item.group : 'work',
-              severity: (item.severity && BACKLOG_SEVERITIES[item.severity]) ? item.severity : 'low'
+              severity: (item.severity && BACKLOG_SEVERITIES[item.severity]) ? item.severity : 'low',
+              reminderDate: item.reminderDate || null
             }));
 
           // If dummy items were purged, save the cleaned dataset immediately and trigger cloud sync
@@ -522,6 +523,13 @@ const BacklogEngine = {
         else if (!dueA) primaryDiff = 1;
         else if (!dueB) primaryDiff = -1;
         else primaryDiff = dueA.localeCompare(dueB);
+      } else if (col === 'reminderDate') {
+        const remA = a.reminderDate || '';
+        const remB = b.reminderDate || '';
+        if (!remA && !remB) primaryDiff = 0;
+        else if (!remA) primaryDiff = 1;
+        else if (!remB) primaryDiff = -1;
+        else primaryDiff = remA.localeCompare(remB);
       }
 
       if (primaryDiff !== 0) {
@@ -573,13 +581,14 @@ const BacklogEngine = {
         group: 'Group',
         createdAt: this.isCompletedView() ? 'Completed Date' : 'Created Date',
         severity: 'Severity',
-        dueDate: 'Estimated End Date'
+        dueDate: 'Estimated End Date',
+        reminderDate: 'Reminder Date'
       };
       if (this.sortColumn) {
         let dirLabel = '';
         if (this.sortColumn === 'severity') {
           dirLabel = this.sortDirection === 'asc' ? 'Low → High' : 'High → Low';
-        } else if (this.sortColumn === 'createdAt' || this.sortColumn === 'dueDate') {
+        } else if (this.sortColumn === 'createdAt' || this.sortColumn === 'dueDate' || this.sortColumn === 'reminderDate') {
           dirLabel = this.sortDirection === 'asc' ? 'Earliest first' : 'Latest first';
         } else {
           dirLabel = this.sortDirection === 'asc' ? 'A → Z' : 'Z → A';
@@ -622,7 +631,7 @@ const BacklogEngine = {
         let dirText = '';
         if (col === 'severity') {
           dirText = isAsc ? 'LOW → HIGH' : 'HIGH → LOW';
-        } else if (col === 'createdAt' || col === 'dueDate') {
+        } else if (col === 'createdAt' || col === 'dueDate' || col === 'reminderDate') {
           dirText = isAsc ? 'EARLIEST' : 'LATEST';
         } else {
           dirText = isAsc ? 'A → Z' : 'Z → A';
@@ -668,13 +677,14 @@ const BacklogEngine = {
       group: 'Group',
       createdAt: this.isCompletedView() ? 'Completed Date' : 'Created Date',
       severity: 'Severity',
-      dueDate: 'Estimated End Date'
+      dueDate: 'Estimated End Date',
+      reminderDate: 'Reminder Date'
     };
 
     let dirLabel = '';
     if (this.sortColumn === 'severity') {
       dirLabel = this.sortDirection === 'asc' ? 'Low → High' : 'High → Low';
-    } else if (this.sortColumn === 'createdAt' || this.sortColumn === 'dueDate') {
+    } else if (this.sortColumn === 'createdAt' || this.sortColumn === 'dueDate' || this.sortColumn === 'reminderDate') {
       dirLabel = this.sortDirection === 'asc' ? 'Earliest first' : 'Latest first';
     } else {
       dirLabel = this.sortDirection === 'asc' ? 'A → Z' : 'Z → A';
@@ -838,6 +848,9 @@ const BacklogEngine = {
       item.completedAt = null;
       const todayStr = this.getTodayStr();
       item.dueDate = this.getNextOccurrenceDate(item.recurrence, todayStr);
+      if (item.reminderDate) {
+        item.reminderDate = this.getNextOccurrenceDate(item.recurrence, item.reminderDate);
+      }
       this.save();
 
       // Remove the linked docket item (will re-appear on next due date)
@@ -857,6 +870,11 @@ const BacklogEngine = {
       item.completed = true;
       item.completedAt = new Date().toISOString();
       this.save();
+
+      // Two-way sync: Sync with Time Horizons
+      if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncBacklogItemToState === 'function') {
+        HorizonBridge.syncBacklogItemToState(item);
+      }
 
       // Two-way sync: Finalize vanish in Docket too!
       if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
@@ -886,6 +904,11 @@ const BacklogEngine = {
     this.save();
     this.render();
 
+    // Two-way sync: Sync with Time Horizons
+    if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncBacklogItemToState === 'function') {
+      HorizonBridge.syncBacklogItemToState(item);
+    }
+
     // If due today, restore in Today's Docket as well
     if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
       DocketEngine.syncBacklogsDueToday();
@@ -900,7 +923,7 @@ const BacklogEngine = {
   // 📋 CRUD & SEVERITY DROPDOWN
   // ════════════════════════════════════════════════════════════
 
-  addItem({ objective, group, severity, dueDate, recurrence }) {
+  addItem({ objective, group, severity, dueDate, recurrence, reminderDate }) {
     if (!objective || !objective.trim()) {
       if (typeof showToast === 'function') showToast('Objective name cannot be empty', 'error');
       return null;
@@ -917,6 +940,7 @@ const BacklogEngine = {
       severity: severity && BACKLOG_SEVERITIES[severity] ? severity : 'low',
       createdAt: todayStr,
       dueDate: dueDate || (assignedRecurrence !== 'none' ? todayStr : null),
+      reminderDate: reminderDate || null,
       completed: false,
       completedAt: null,
       recurrence: assignedRecurrence,
@@ -928,6 +952,11 @@ const BacklogEngine = {
     this.save();
     this.showInlineForm = false;
     this.render();
+
+    // Two-way sync: Sync with Time Horizons
+    if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncBacklogItemToState === 'function') {
+      HorizonBridge.syncBacklogItemToState(newItem);
+    }
 
     // If due date is today, automatically sync into Today's Docket
     if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
@@ -1056,6 +1085,11 @@ const BacklogEngine = {
       this.render();
     }
 
+    // Two-way sync: Remove from Time Horizons if linked
+    if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.onBacklogItemDeleted === 'function') {
+      HorizonBridge.onBacklogItemDeleted(id);
+    }
+
     // Two-way sync: If linked docket task exists, delete it too!
     if (!isSync && typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
       const linkedDocket = DocketEngine.items.find(d => d.backlogId === id || d.id === 'dkt_bkl_' + id);
@@ -1076,6 +1110,11 @@ const BacklogEngine = {
     this.save();
     this.render();
 
+    // Two-way sync: Sync with Time Horizons
+    if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncBacklogItemToState === 'function') {
+      HorizonBridge.syncBacklogItemToState(item);
+    }
+
     // Two-way sync: Sync with Today's Docket if dueDate, objective, or severity changed
     if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
       DocketEngine.syncBacklogsDueToday();
@@ -1093,6 +1132,18 @@ const BacklogEngine = {
       const todayStr = this.getTodayStr();
       if (value === todayStr) {
         showToast('Due today! Automatically added to Today\'s Docket 🌅', 'success');
+      }
+    }
+    if (field === 'reminderDate') {
+      if (typeof showToast === 'function') {
+        if (value) {
+          showToast(`Manual reminder set for ${this.formatDate(value)} 🔔`, 'info');
+        } else {
+          showToast('Manual reminder cleared (switched to Auto Radar)', 'info');
+        }
+      }
+      if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.syncBacklogsDueToday === 'function') {
+        DocketEngine.syncBacklogsDueToday();
       }
     }
     if (field === 'recurrence') {
@@ -1382,6 +1433,39 @@ const BacklogEngine = {
             ` : '')}
           </td>
 
+          <!-- Col 6: Reminder Date (Manual Date Field) -->
+          <td class="col-reminder">
+            ${isCompleted ? `
+              <span class="date-chip ${item.reminderDate ? 'has-reminder' : ''}" title="${item.reminderDate ? 'Reminder was set for ' + this.formatDate(item.reminderDate) : 'No manual reminder'}">
+                <i data-lucide="bell" class="date-chip-icon"></i>
+                ${item.reminderDate ? this.formatDate(item.reminderDate) : '—'}
+              </span>
+            ` : `
+              <div class="reminder-cell">
+                <div class="reminder-input-wrap ${item.reminderDate ? 'has-reminder' : ''}">
+                  <i data-lucide="bell" class="reminder-bell-icon"></i>
+                  <input type="date" 
+                         class="reminder-date-input" 
+                         value="${item.reminderDate || ''}" 
+                         ${isDeleting ? 'disabled' : ''}
+                         title="${item.reminderDate ? 'Manual reminder set: ' + this.formatDate(item.reminderDate) : 'Set manual reminder date'}"
+                         onchange="BacklogEngine.updateField('${item.id}', 'reminderDate', this.value)">
+                </div>
+                ${item.reminderDate ? `
+                  <button class="btn-clear-reminder" 
+                          type="button"
+                          title="Clear reminder (revert to automated radar)" 
+                          ${isDeleting ? 'disabled' : ''}
+                          onclick="BacklogEngine.updateField('${item.id}', 'reminderDate', null)">
+                    <i data-lucide="x"></i>
+                  </button>
+                ` : `
+                  <span class="reminder-auto-tag" title="Automated Cadence Radar schedule">Auto</span>
+                `}
+              </div>
+            `}
+          </td>
+
           <!-- Col 6: Actions (Retrieve during delete countdown, Undo during vanish countdown, Restore, Delete) -->
           <td class="col-actions">
             ${isDeleting ? `
@@ -1476,6 +1560,16 @@ const BacklogEngine = {
               </select>
             </div>
           </td>
+          <td class="col-reminder">
+            <div class="reminder-input-wrap">
+              <i data-lucide="bell" class="reminder-bell-icon"></i>
+              <input type="date" 
+                     id="inline-add-reminder" 
+                     class="reminder-date-input" 
+                     title="Manual Reminder Date (Optional - triggers radar early)" 
+                     aria-label="Manual Reminder Date">
+            </div>
+          </td>
           <td class="col-actions">
             <div class="inline-actions-btns">
               <button class="btn-inline-submit" onclick="BacklogEngine.submitInlineAdd()" title="Save Objective">
@@ -1511,12 +1605,14 @@ const BacklogEngine = {
     const assignedGroup = groupSelect && groupSelect.value ? groupSelect.value : (this.activeGroup !== 'all' ? this.activeGroup : 'work');
 
     const recSelect = document.getElementById('inline-add-recurrence');
+    const reminderInput = document.getElementById('inline-add-reminder');
     const newItem = this.addItem({
       objective: input.value,
       group: assignedGroup,
       severity: sevSelect ? sevSelect.value : 'low',
       dueDate: dueInput && dueInput.value ? dueInput.value : null,
-      recurrence: recSelect ? recSelect.value : 'none'
+      recurrence: recSelect ? recSelect.value : 'none',
+      reminderDate: reminderInput && reminderInput.value ? reminderInput.value : null
     });
 
     if (newItem) {

@@ -78,9 +78,9 @@ const Components = {
             <span>Quarterly Goals</span>
             <span class="badge" id="badge-quarterly">0</span>
           </button>
-          <button class="nav-item ${isHome && activeHorizon === 'annual' ? 'active' : ''}" data-horizon="annual" id="tab-annual" onclick="Components.closeMobileSidebar()" title="Annual Vision">
+          <button class="nav-item ${isHome && activeHorizon === 'annual' ? 'active' : ''}" data-horizon="annual" id="tab-annual" onclick="Components.closeMobileSidebar()" title="Annual Goals">
             <span class="nav-emoji">🏆</span>
-            <span>Annual Vision</span>
+            <span>Annual Goals</span>
             <span class="badge" id="badge-annual">0</span>
           </button>
           <button class="nav-item ${isHome && activeHorizon === 'all' ? 'active' : ''}" data-horizon="all" id="tab-all" onclick="Components.closeMobileSidebar()" title="All 5 Horizons">
@@ -354,7 +354,7 @@ const Components = {
               <option value="weekly">📅 Weekly Milestone (This Week)</option>
               <option value="monthly">🗓️ Monthly Goal (This Month)</option>
               <option value="quarterly">🎯 Quarterly Goal (90-Day Objective)</option>
-              <option value="annual">🏆 Annual Vision (Yearly Goal)</option>
+              <option value="annual">🏆 Annual Goals (Yearly Target)</option>
             </select>
           </div>
 
@@ -649,7 +649,7 @@ const Components = {
           <div class="ritual-header-icon">🌐</div>
           <div>
             <h3 class="ritual-modal-title">Bridge to Strategic North Star</h3>
-            <p class="ritual-modal-sub">Link this task to an Annual Vision, Quarterly Objective, or Milestone.</p>
+            <p class="ritual-modal-sub">Link this task to an Annual Goal, Quarterly Objective, or Milestone.</p>
           </div>
           <button class="modal-close-btn" onclick="AlignmentEngine.closeModal();">&times;</button>
         </div>

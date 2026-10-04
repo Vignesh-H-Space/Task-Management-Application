@@ -383,7 +383,7 @@ const TouchEngine = {
       weekly: '📅 Weekly Milestones',
       monthly: '🗓️ Monthly Goals',
       quarterly: '🎯 Quarterly Objectives',
-      annual: '🏆 Annual Vision',
+      annual: '🏆 Annual Goals',
       all: '🌐 All Horizons'
     };
     if (typeof showToast === 'function') {

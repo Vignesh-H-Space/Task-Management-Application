@@ -149,6 +149,12 @@
                       <span class="th-order-tag" id="order-tag-dueDate"></span>
                     </button>
                   </th>
+                  <th class="col-reminder sortable-th" data-sort-col="reminderDate">
+                    <button type="button" class="th-sort-btn" onclick="BacklogEngine.toggleSort('reminderDate')" aria-label="Sort by Reminder Date">
+                      <span class="th-sort-label">Reminder Date</span>
+                      <span class="th-order-tag" id="order-tag-reminderDate"></span>
+                    </button>
+                  </th>
                   <th class="col-actions">Actions</th>
                 </tr>
               </thead>
@@ -171,7 +177,7 @@
             </button>
             <span class="table-scroll-hint-text">
               <i data-lucide="move-horizontal"></i>
-              <span>Scroll horizontally to view Group, Severity, Due Date &amp; Actions</span>
+              <span>Scroll horizontally to view Group, Severity, Due Date, Reminder Date &amp; Actions</span>
             </span>
           </div>
 

@@ -69,7 +69,7 @@ const BADGE_DEFINITIONS = [
   { id: 'weekly_crusher', icon: '📅', name: 'Weekly Crusher', desc: 'Achieved a Tactical Weekly Milestone', condition: 'task_weekly' },
   { id: 'monthly_conqueror', icon: '🗓️', name: 'Monthly Conqueror', desc: 'Achieved a Strategic Monthly Goal', condition: 'task_monthly' },
   { id: 'quarterly_titan', icon: '🎯', name: 'Quarterly Titan', desc: 'Crushed a 90-Day Quarterly Objective', condition: 'task_quarterly' },
-  { id: 'annual_luminary', icon: '🏆', name: 'Annual Luminary', desc: 'Achieved an Annual Vision North Star', condition: 'task_annual' },
+  { id: 'annual_luminary', icon: '🏆', name: 'Annual Luminary', desc: 'Achieved an Annual Goal North Star', condition: 'task_annual' },
   { id: 'flow_state', icon: '⚡', name: 'Flow State', desc: 'Completed a 90m deep work session', condition: 'focus_90' },
   { id: 'perfect_day', icon: '🎯', name: 'Perfect Execution', desc: 'Cleared 100% of all daily tasks in one day', condition: 'perfect_day' },
   { id: 'shield_guardian', icon: '🛡️', name: 'Shield Guardian', desc: 'Earned and held a Streak Shield', condition: 'shield_held' },

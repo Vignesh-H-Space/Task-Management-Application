@@ -11,8 +11,13 @@ const AlignmentEngine = {
       return { totalTactical: 0, linkedCount: 0, orphanCount: 0, score: 100, orphans: [] };
     }
 
-    // Only non-annual tasks require parent alignment (annual goals are top-level pillars)
-    const tacticalTasks = state.tasks.filter(t => t.tier !== 'annual');
+    // Only non-annual, non-general, non-standalone tasks require parent alignment (annual goals are top-level pillars)
+    const tacticalTasks = state.tasks.filter(t => 
+      t.tier !== 'annual' && 
+      t.tier !== 'general' && 
+      !t.isStandalone && 
+      !['petty', 'household'].includes(t.group)
+    );
     const validParentIds = new Set(state.tasks.map(t => t.id));
 
     const linked = tacticalTasks.filter(t => t.parentId && validParentIds.has(t.parentId));
@@ -76,7 +81,7 @@ const AlignmentEngine = {
     if (candidateParents.length === 0) {
       listContainer.innerHTML = `
         <div class="empty-parents-note">
-          <p>No higher-tier goals available. Create an Annual Vision or Quarterly Objective first!</p>
+          <p>No higher-tier goals available. Create an Annual Goal or Quarterly Objective first!</p>
         </div>
       `;
     } else {
@@ -116,7 +121,7 @@ const AlignmentEngine = {
         `;
       };
 
-      html += renderGroup('Annual Visions (Top North Stars)', '🏆', annualGoals, 'group-annual');
+      html += renderGroup('Annual Goals (Top North Stars)', '🏆', annualGoals, 'group-annual');
       html += renderGroup('Quarterly Objectives (90-Day Focus)', '🎯', quarterlyGoals, 'group-quarterly');
       html += renderGroup('Monthly Milestones', '🗓️', monthlyGoals, 'group-monthly');
       html += renderGroup('Weekly Deliverables', '📅', weeklyGoals, 'group-weekly');

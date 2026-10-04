@@ -545,8 +545,8 @@ const RoadmapEngine = {
 
       <!-- Tier Sections or Empty State -->
       ${hasAnyTasks ? `
-        <!-- Tier Section 1: Annual Vision -->
-        ${this.renderTierSection('🏆 Annual Vision Pillars', 'annual', annualTasks, startTime, totalDuration, viewYear)}
+        <!-- Tier Section 1: Annual Goals -->
+        ${this.renderTierSection('🏆 Annual Goals', 'annual', annualTasks, startTime, totalDuration, viewYear)}
 
         <!-- Tier Section 2: Quarterly Objectives -->
         ${this.renderTierSection('🎯 Quarterly Objectives', 'quarterly', quarterlyTasks, startTime, totalDuration, viewYear)}
