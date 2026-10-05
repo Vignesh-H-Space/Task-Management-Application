@@ -139,6 +139,14 @@ const CommandPalette = {
         desc: 'XP level, badges, mission creed, and data vault',
         icon: 'user',
         action: () => { window.location.href = 'profile.html'; }
+      },
+      {
+        id: 'nav-professional',
+        category: 'NAVIGATION',
+        title: 'Professional Journal & Resume',
+        desc: 'Career timeline, milestones, dynamic resume, and professional achievements',
+        icon: 'briefcase',
+        action: () => { window.location.href = 'professional.html'; }
       }
     ];
   },
