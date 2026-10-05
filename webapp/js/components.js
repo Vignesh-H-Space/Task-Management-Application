@@ -27,6 +27,7 @@ const Components = {
     const isBacklogs = page === 'backlogs' || page === 'completed_backlogs';
     const isPulse = page === 'pulse';
     const isReport = page === 'report';
+    const isProfessional = page === 'professional';
 
     const sidebarHTML = `
     <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="Components.closeMobileSidebar()"></div>
@@ -123,6 +124,10 @@ const Components = {
           <button class="nav-item ${isReport ? 'active' : ''}" id="btn-view-report" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='report') window.location.href='report.html';" title="Executive Reports">
             <i data-lucide="file-text"></i>
             <span>Executive Reports</span>
+          </button>
+          <button class="nav-item ${isProfessional ? 'active' : ''}" id="btn-view-professional" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='professional') window.location.href='professional.html';" title="Professional Journal">
+            <i data-lucide="briefcase"></i>
+            <span>Professional</span>
           </button>
         </nav>
 

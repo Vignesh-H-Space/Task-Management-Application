@@ -89,6 +89,8 @@ function init() {
       headerConfig = { title: 'Executive Intelligence & Reports', subtitle: 'Multi-cadence debriefs, SVG velocity charts, habit heatmaps, and strategic synthesis.', showSearch: false };
     } else if (page === 'profile') {
       headerConfig = { title: 'Your Profile', subtitle: 'Stats, badges, and activity history.', showSearch: false };
+    } else if (page === 'professional') {
+      headerConfig = { title: 'Professional Journal', subtitle: 'Living career timeline, dynamic resume, and professional milestone tracker.', showSearch: false };
     }
     Components.renderHeader(headerConfig);
     Components.renderModalAndToasts();
@@ -107,6 +109,7 @@ function init() {
   if (typeof TouchEngine !== 'undefined') TouchEngine.init();
   if (typeof SyncEngine !== 'undefined') SyncEngine.init();
   if (typeof NotificationEngine !== 'undefined') NotificationEngine.init();
+  if (typeof ProfessionalEngine !== 'undefined') ProfessionalEngine.init();
   renderAll();
   renderStreakUI();
   lucide.createIcons();
@@ -1116,6 +1119,8 @@ function renderAll() {
     if (typeof BucketListEngine !== 'undefined') BucketListEngine.render();
   } else if (page === 'report') {
     if (typeof ReportEngine !== 'undefined') ReportEngine.render();
+  } else if (page === 'professional') {
+    if (typeof ProfessionalEngine !== 'undefined') ProfessionalEngine.render();
   } else if (page === 'profile') {
     renderProfileView();
   }
