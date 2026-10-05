@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Professional Journal & Resume | Tesseract</title>
+  <meta name="description" content="Living career journal, dynamic resume, and professional milestone tracker powered by Tesseract.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Executive Authentication Gatekeeper -->
+  <script src="js/auth_engine.js"></script>
+  <script>if (typeof AuthEngine !== 'undefined') AuthEngine.requireAuth();</script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- Professional Page View -->
+      <section class="pro-view" id="professional-container">
+        <!-- Stats Strip -->
+        <div class="pro-stats-strip" id="pro-stats-strip">
+          <!-- Rendered by ProfessionalEngine -->
+        </div>
+
+        <!-- Toolbar: View Toggle, Year Nav, Add Entry, Export -->
+        <div class="pro-toolbar" id="pro-toolbar">
+          <div class="pro-toolbar-left">
+            <!-- View Toggle -->
+            <div class="pro-view-toggle" id="pro-view-toggle">
+              <button class="pro-view-btn active" data-view="timeline" id="pro-btn-timeline">
+                <i data-lucide="calendar-days"></i>
+                <span>Timeline</span>
+              </button>
+              <button class="pro-view-btn" data-view="resume" id="pro-btn-resume">
+                <i data-lucide="file-text"></i>
+                <span>Resume</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pro-toolbar-right">
+            <!-- Year Navigation (Timeline view only) -->
+            <div class="pro-year-nav" id="pro-year-nav">
+              <button class="btn-report-nav" id="pro-year-prev" title="Previous Year" aria-label="Previous Year">
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <span class="report-period-pill" id="pro-year-badge">2026</span>
+              <button class="btn-report-nav" id="pro-year-next" title="Next Year" aria-label="Next Year">
+                <i data-lucide="chevron-right"></i>
+              </button>
+            </div>
+
+            <!-- Add Entry -->
+            <button class="pro-add-btn" id="pro-add-entry-btn" title="Add Career Entry">
+              <i data-lucide="plus"></i>
+              <span>Add Entry</span>
+            </button>
+
+            <!-- Export -->
+            <div class="report-export-actions" id="pro-export-actions" style="display:none;">
+              <button class="btn-export-action" id="pro-btn-print" title="Print Resume">
+                <i data-lucide="printer"></i>
+                <span>Print</span>
+              </button>
+              <button class="btn-export-action btn-export-primary" id="pro-btn-copy" title="Copy Resume as Markdown">
+                <i data-lucide="copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline View Mount -->
+        <div id="pro-timeline-mount" class="pro-timeline-mount">
+          <!-- Rendered by ProfessionalEngine -->
+        </div>
+
+        <!-- Resume View Mount -->
+        <div id="pro-resume-mount" class="pro-resume-mount" style="display:none;">
+          <!-- Rendered by ProfessionalEngine -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add / Edit Entry Modal -->
+  <div class="pro-modal-backdrop" id="pro-entry-modal" style="display:none;">
+    <div class="pro-modal">
+      <div class="pro-modal-header">
+        <h3 id="pro-modal-title">Add Career Entry</h3>
+        <button class="pro-modal-close" id="pro-modal-close" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="pro-modal-body">
+        <div class="pro-form-group">
+          <label for="pro-entry-title">Title</label>
+          <input type="text" id="pro-entry-title" placeholder="e.g., Promoted to Senior Engineer" autocomplete="off">
+        </div>
+        <div class="pro-form-group">
+          <label for="pro-entry-desc">Description</label>
+          <textarea id="pro-entry-desc" rows="3" placeholder="Brief description of the achievement..."></textarea>
+        </div>
+        <div class="pro-form-row">
+          <div class="pro-form-group">
+            <label for="pro-entry-category">Category</label>
+            <select id="pro-entry-category">
+              <option value="achievement">🏆 Achievement</option>
+              <option value="project">🚀 Project Shipped</option>
+              <option value="certification">📜 Certification</option>
+              <option value="promotion">⬆️ Promotion</option>
+              <option value="learning">📚 Learning</option>
+              <option value="recognition">🌟 Recognition</option>
+              <option value="job_change">💼 Job Change</option>
+              <option value="other">📌 Other</option>
+            </select>
+          </div>
+          <div class="pro-form-group">
+            <label for="pro-entry-date">Date</label>
+            <input type="date" id="pro-entry-date">
+          </div>
+        </div>
+        <div class="pro-form-row">
+          <div class="pro-form-group">
+            <label for="pro-entry-impact">Impact</label>
+            <select id="pro-entry-impact">
+              <option value="high">🔴 High</option>
+              <option value="medium">🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+          <div class="pro-form-group">
+            <label for="pro-entry-tags">Tags (comma separated)</label>
+            <input type="text" id="pro-entry-tags" placeholder="e.g., career, leadership" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="pro-modal-footer">
+        <button class="pro-modal-cancel" id="pro-modal-cancel-btn">Cancel</button>
+        <button class="pro-modal-save" id="pro-modal-save-btn">
+          <i data-lucide="check"></i>
+          <span>Save Entry</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+    <!-- Firebase Compat v10 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- E2EE Sync Engine -->
+  <script src="js/sync_engine.js"></script>
+  <script src="js/notification_engine.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/drag_drop.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/backlog_engine.js"></script>
+  <script src="js/docket_engine.js"></script>
+  <script src="js/report_engine.js"></script>
+  <script src="js/touch_engine.js"></script>
+  <script src="js/professional_engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
