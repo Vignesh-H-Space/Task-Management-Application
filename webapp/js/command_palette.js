@@ -147,6 +147,14 @@ const CommandPalette = {
         desc: 'Career timeline, milestones, dynamic resume, and professional achievements',
         icon: 'briefcase',
         action: () => { window.location.href = 'professional.html'; }
+      },
+      {
+        id: 'nav-tracker',
+        category: 'NAVIGATION',
+        title: 'Routine & Cadence Tracker',
+        desc: 'Multi-date rolling tracker for grooming, maintenance, hygiene & habits',
+        icon: 'calendar-clock',
+        action: () => { window.location.href = 'tracker.html'; }
       }
     ];
   },
