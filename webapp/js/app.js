@@ -91,6 +91,8 @@ function init() {
       headerConfig = { title: 'Your Profile', subtitle: 'Stats, badges, and activity history.', showSearch: false };
     } else if (page === 'professional') {
       headerConfig = { title: 'Professional Journal', subtitle: 'Living career timeline, dynamic resume, and professional milestone tracker.', showSearch: false };
+    } else if (page === 'tracker') {
+      headerConfig = { title: 'Routine & Cadence Tracker', subtitle: 'Multi-date rolling tracker for grooming, maintenance, hygiene & habits.', showSearch: false };
     }
     Components.renderHeader(headerConfig);
     Components.renderModalAndToasts();
@@ -110,6 +112,7 @@ function init() {
   if (typeof SyncEngine !== 'undefined') SyncEngine.init();
   if (typeof NotificationEngine !== 'undefined') NotificationEngine.init();
   if (typeof ProfessionalEngine !== 'undefined') ProfessionalEngine.init();
+  if (typeof TrackerEngine !== 'undefined') TrackerEngine.init();
   renderAll();
   renderStreakUI();
   lucide.createIcons();

@@ -28,6 +28,7 @@ const Components = {
     const isPulse = page === 'pulse';
     const isReport = page === 'report';
     const isProfessional = page === 'professional';
+    const isTracker = page === 'tracker';
 
     const sidebarHTML = `
     <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="Components.closeMobileSidebar()"></div>
@@ -128,6 +129,10 @@ const Components = {
           <button class="nav-item ${isProfessional ? 'active' : ''}" id="btn-view-professional" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='professional') window.location.href='professional.html';" title="Professional Journal">
             <i data-lucide="briefcase"></i>
             <span>Professional</span>
+          </button>
+          <button class="nav-item ${isTracker ? 'active' : ''}" id="btn-view-tracker" onclick="Components.closeMobileSidebar(); if(Components.getCurrentPage()!=='tracker') window.location.href='tracker.html';" title="Cadence & Routine Tracker">
+            <i data-lucide="calendar-clock"></i>
+            <span>Tracker</span>
           </button>
         </nav>
 
@@ -1068,6 +1073,10 @@ const Components = {
             <div class="tool-tile-icon rose"><i data-lucide="activity"></i></div>
             <span class="tool-tile-label">Pulse</span>
           </button>
+          <button class="tool-tile ${page === 'tracker' ? 'active' : ''}" onclick="Components.closeMobileToolsSheet(); window.location.href='tracker.html';">
+            <div class="tool-tile-icon amber"><i data-lucide="calendar-clock"></i></div>
+            <span class="tool-tile-label">Tracker</span>
+          </button>
           ${(() => {
             try {
               const raw = localStorage.getItem('tesseract_backlog_data');
@@ -1140,7 +1149,7 @@ const Components = {
         <i data-lucide="file-text"></i>
         <span>Reports</span>
       </button>
-      <button class="bottom-nav-item ${['analytics', 'cascade', 'bucketlist', 'profile', 'backlogs', 'completed_backlogs', 'pulse'].includes(page) ? 'active' : ''}" onclick="Components.toggleMobileToolsSheet()" aria-label="Tools">
+      <button class="bottom-nav-item ${['analytics', 'cascade', 'bucketlist', 'profile', 'backlogs', 'completed_backlogs', 'pulse', 'professional', 'tracker'].includes(page) ? 'active' : ''}" onclick="Components.toggleMobileToolsSheet()" aria-label="Tools">
         <i data-lucide="grid"></i>
         <span>Tools</span>
       </button>

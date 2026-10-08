@@ -454,7 +454,8 @@ const SyncEngine = {
         }),
         docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]'),
         pulse: (typeof PulseEngine !== 'undefined') ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]'),
-        radarAcks: JSON.parse(localStorage.getItem('tesseract_docket_radar_acks') || '{}')
+        radarAcks: JSON.parse(localStorage.getItem('tesseract_docket_radar_acks') || '{}'),
+        trackers: (typeof TrackerEngine !== 'undefined') ? TrackerEngine.getTrackers() : JSON.parse(localStorage.getItem('tesseract_trackers') || '[]')
       };
 
       // Encrypt with native AES-256-GCM
@@ -585,6 +586,11 @@ const SyncEngine = {
         localStorage.setItem('tesseract_docket_radar_acks', JSON.stringify(data.radarAcks));
       }
 
+      // 12. Routine & Cadence Trackers
+      if (Array.isArray(data.trackers)) {
+        localStorage.setItem('tesseract_trackers', JSON.stringify(data.trackers));
+      }
+
       // 9. Re-render UI views dynamically
       if (typeof renderAll === 'function') renderAll();
       if (typeof renderSidebarBadgeCounts === 'function') renderSidebarBadgeCounts();
@@ -596,6 +602,7 @@ const SyncEngine = {
       if (typeof RoadmapEngine !== 'undefined' && typeof RoadmapEngine.render === 'function') RoadmapEngine.render();
       if (typeof DocketEngine !== 'undefined' && typeof DocketEngine.render === 'function' && typeof Components !== 'undefined' && Components.getCurrentPage() === 'backlogs') DocketEngine.render();
       if (typeof PulseEngine !== 'undefined' && typeof PulseEngine.render === 'function' && typeof Components !== 'undefined' && Components.getCurrentPage() === 'pulse') PulseEngine.render();
+      if (typeof TrackerEngine !== 'undefined' && typeof TrackerEngine.render === 'function' && typeof Components !== 'undefined' && Components.getCurrentPage() === 'tracker') TrackerEngine.render();
       if (typeof lucide !== 'undefined') lucide.createIcons();
 
     } finally {
