@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Cadence & Routine Tracker | Tesseract</title>
+  <meta name="description" content="Rolling multi-date routine and cadence tracker for personal grooming, home maintenance, and recurring tasks.">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tesseract">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Executive Authentication Gatekeeper -->
+  <script src="js/auth_engine.js"></script>
+  <script>if (typeof AuthEngine !== 'undefined') AuthEngine.requireAuth();</script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Mount Point -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header Mount Point -->
+      <div id="header-mount"></div>
+
+      <!-- Tracker Page Container -->
+      <section class="tracker-page-view" id="tracker-container">
+        <!-- Top Banner / Header -->
+        <div class="tracker-header-strip">
+          <div class="tracker-header-left">
+            <div class="tracker-badge-pill">
+              <i data-lucide="calendar-clock"></i>
+              <span>Multi-Date Cadence Tracker</span>
+            </div>
+            <h1 class="tracker-title">Routine & Maintenance Tracker</h1>
+            <p class="tracker-subtitle">
+              Monitor recurring life events, personal grooming, and periodic upkeep across rolling historical completion dates.
+            </p>
+          </div>
+          <div class="tracker-header-right">
+            <button class="btn-create-tracker" id="tracker-btn-add" onclick="TrackerEngine.openAddModal()">
+              <i data-lucide="plus"></i>
+              <span>Add Routine</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Statistics Strip -->
+        <div class="tracker-stats-strip" id="tracker-stats-strip">
+          <!-- Rendered by TrackerEngine -->
+        </div>
+
+        <!-- Filter & Search Control Bar -->
+        <div class="tracker-toolbar">
+          <div class="tracker-toolbar-row">
+            <!-- Search Input -->
+            <div class="tracker-search-wrap">
+              <i data-lucide="search" class="tracker-search-icon"></i>
+              <input type="text" 
+                     id="tracker-search-input" 
+                     class="tracker-search-input" 
+                     placeholder="Search routines (e.g., nail cut, oil change)..." 
+                     autocomplete="off">
+            </div>
+
+            <!-- Status Quick Filters -->
+            <div class="tracker-status-filters">
+              <button class="tracker-status-btn active" data-status="all" onclick="TrackerEngine.setStatusFilter('all')">
+                All
+              </button>
+              <button class="tracker-status-btn" data-status="overdue" onclick="TrackerEngine.setStatusFilter('overdue')">
+                <span class="status-dot dot-overdue"></span> Overdue
+              </button>
+              <button class="tracker-status-btn" data-status="duesoon" onclick="TrackerEngine.setStatusFilter('duesoon')">
+                <span class="status-dot dot-duesoon"></span> Due Soon
+              </button>
+              <button class="tracker-status-btn" data-status="ontrack" onclick="TrackerEngine.setStatusFilter('ontrack')">
+                <span class="status-dot dot-ontrack"></span> On Track
+              </button>
+            </div>
+
+            <!-- Sort By Dropdown -->
+            <div class="tracker-sort-wrap">
+              <label for="tracker-sort-select">Sort by:</label>
+              <select id="tracker-sort-select" class="tracker-select">
+                <option value="overdue">Urgency (Overdue First)</option>
+                <option value="recent">Recently Done</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="target">Cycle Interval</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Category Filter Chips -->
+          <div class="tracker-category-bar" id="tracker-category-filters">
+            <!-- Rendered by TrackerEngine -->
+          </div>
+        </div>
+
+        <!-- Table & Cards Mount Point -->
+        <div id="tracker-table-mount" class="tracker-table-mount">
+          <!-- Rendered by TrackerEngine -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add / Edit Routine Modal -->
+  <div class="tracker-modal-backdrop" id="tracker-modal" style="display:none;" onclick="if(event.target === this) TrackerEngine.closeModal()">
+    <div class="tracker-modal">
+      <div class="tracker-modal-header">
+        <div class="tracker-modal-title-wrap">
+          <i data-lucide="calendar-plus" class="tracker-modal-icon"></i>
+          <h3 id="tracker-modal-title">Add Routine Tracker</h3>
+        </div>
+        <button class="tracker-modal-close" onclick="TrackerEngine.closeModal()" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="tracker-modal-body">
+        <input type="hidden" id="tracker-form-id">
+
+        <div class="tracker-form-group">
+          <label for="tracker-form-title">Routine / Event Name *</label>
+          <input type="text" id="tracker-form-title" placeholder="e.g., Nail cut - hands, Haircut, Car oil change" required autocomplete="off">
+        </div>
+
+        <div class="tracker-form-row">
+          <div class="tracker-form-group">
+            <label for="tracker-form-category">Category</label>
+            <select id="tracker-form-category">
+              <option value="grooming">✂️ Grooming & Hygiene</option>
+              <option value="home">🏠 Home & Living</option>
+              <option value="vehicle">🚗 Vehicle & Equipment</option>
+              <option value="health">💊 Health & Wellness</option>
+              <option value="tech">💻 Tech & Admin</option>
+              <option value="other">📌 Other</option>
+            </select>
+          </div>
+
+          <div class="tracker-form-group">
+            <label for="tracker-form-target">Target Frequency (Days)</label>
+            <input type="number" id="tracker-form-target" placeholder="e.g., 7 for weekly, 30 for monthly" min="1" max="1000">
+            <span class="tracker-hint">Expected recurrence interval in days</span>
+          </div>
+        </div>
+
+        <div class="tracker-modal-section-title">
+          <span>Initial Rolling Dates (Selectable Calendars)</span>
+        </div>
+
+        <div class="tracker-form-row tracker-dates-grid">
+          <div class="tracker-form-group">
+            <label for="tracker-form-recent-date">
+              <span class="col-num-tag">Col 2</span> Most Recent (Latest)
+            </label>
+            <input type="date" id="tracker-form-recent-date">
+          </div>
+
+          <div class="tracker-form-group">
+            <label for="tracker-form-prev-date">
+              <span class="col-num-tag">Col 3</span> Previous Date (2nd Last)
+            </label>
+            <input type="date" id="tracker-form-prev-date">
+          </div>
+
+          <div class="tracker-form-group">
+            <label for="tracker-form-prior-date">
+              <span class="col-num-tag">Col 4</span> Prior Date (3rd Last)
+            </label>
+            <input type="date" id="tracker-form-prior-date">
+          </div>
+        </div>
+
+        <div class="tracker-form-group">
+          <label for="tracker-form-notes">Notes / Instructions</label>
+          <textarea id="tracker-form-notes" rows="2" placeholder="e.g., Clip edges and moisturize, check filter replacement code..."></textarea>
+        </div>
+      </div>
+
+      <div class="tracker-modal-footer">
+        <button class="tracker-modal-btn btn-cancel" onclick="TrackerEngine.closeModal()">Cancel</button>
+        <button class="tracker-modal-btn btn-save" onclick="TrackerEngine.saveModalForm()">
+          <i data-lucide="check"></i>
+          <span>Save Routine</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full History Log Modal -->
+  <div class="tracker-modal-backdrop" id="tracker-history-modal" style="display:none;" onclick="if(event.target === this) TrackerEngine.closeHistoryModal()">
+    <div class="tracker-modal tracker-history-modal-box">
+      <div class="tracker-modal-header">
+        <div class="tracker-modal-title-wrap">
+          <i data-lucide="history" class="tracker-modal-icon"></i>
+          <h3 id="history-modal-title">Routine Full History</h3>
+        </div>
+        <button class="tracker-modal-close" onclick="TrackerEngine.closeHistoryModal()" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="tracker-modal-body">
+        <div class="history-add-strip">
+          <label for="history-manual-date-input">Log Historical Date:</label>
+          <div class="history-add-inputs">
+            <input type="date" id="history-manual-date-input">
+            <button class="btn-history-add" onclick="TrackerEngine.addHistoryDateManual()">
+              <i data-lucide="plus"></i> Add to History
+            </button>
+          </div>
+        </div>
+
+        <div class="history-list-mount" id="history-modal-list">
+          <!-- Rendered by TrackerEngine -->
+        </div>
+      </div>
+
+      <div class="tracker-modal-footer">
+        <button class="tracker-modal-btn btn-cancel" onclick="TrackerEngine.closeHistoryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Scripts -->
+  <!-- Firebase Compat v10 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- E2EE Sync Engine -->
+  <script src="js/sync_engine.js"></script>
+  <script src="js/notification_engine.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/command_palette.js"></script>
+  <script src="js/drag_drop.js"></script>
+  <script src="js/initial_data.js"></script>
+  <script src="js/xp_engine.js"></script>
+  <script src="js/habits_engine.js"></script>
+  <script src="js/rituals_engine.js"></script>
+  <script src="js/roadmap_engine.js"></script>
+  <script src="js/bucketlist_engine.js"></script>
+  <script src="js/alignment_engine.js"></script>
+  <script src="js/backlog_engine.js"></script>
+  <script src="js/docket_engine.js"></script>
+  <script src="js/report_engine.js"></script>
+  <script src="js/touch_engine.js"></script>
+  <script src="js/professional_engine.js"></script>
+  <script src="js/tracker_engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
