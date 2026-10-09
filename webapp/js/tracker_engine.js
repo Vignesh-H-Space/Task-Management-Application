@@ -336,10 +336,17 @@ const TrackerEngine = (() => {
     showToast(`⚡ Logged "${item.title}" for today! Dates shifted forward.`);
   }
 
+  let lastShiftedId = null;
+
   /**
    * Update a specific date cell in history (Col 2 = idx 0, Col 3 = idx 1, Col 4 = idx 2)
+   * When index === 0 (Recent Date) and !isDirectEdit:
+   * Dynamic Shift:
+   *   Col 2 (Recent) moves to Col 3 (Previous)
+   *   Col 3 (Previous) moves to Col 4 (Prior)
+   *   Col 4 (Prior) vanishes from view into background history
    */
-  function updateDateCell(id, index, newDateStr) {
+  function updateDateCell(id, index, newDateStr, isDirectEdit = false) {
     const item = trackers.find(t => t.id === id);
     if (!item) return;
 
@@ -350,18 +357,68 @@ const TrackerEngine = (() => {
       if (index < history.length) {
         history.splice(index, 1);
       }
-    } else {
-      // Ensure history array has room
-      while (history.length <= index) {
-        history.push('');
-      }
-      history[index] = newDateStr;
-      // Re-sort descending
-      history = cleanAndSortHistory(history);
+      item.history = cleanAndSortHistory(history);
+      item.updatedAt = new Date().toISOString();
+      saveData();
+      render();
+      showToast(`Cleared date for "${item.title}"`);
+      return;
     }
 
+    if (index === 0 && !isDirectEdit) {
+      // Dynamic shift when Recent Date (Col 2) is updated:
+      const oldRecent = history[0] || null;
+      if (newDateStr === oldRecent) return; // No change
+
+      const oldPrev = history[1] || null;
+      const oldPrior = history[2] || null;
+
+      // Filter out newDateStr if already present in history
+      history = history.filter(d => d !== newDateStr);
+
+      // Prepend new completion date to front:
+      // index 0 -> newDateStr (Col 2)
+      // index 1 -> oldRecent (Col 3, shifted right!)
+      // index 2 -> oldPrev (Col 4, shifted right!)
+      // index 3 -> oldPrior (vanishes from the 3 visible columns into background history!)
+      history.unshift(newDateStr);
+
+      item.history = history;
+      item.updatedAt = new Date().toISOString();
+      lastShiftedId = id;
+      saveData();
+      render();
+
+      if (typeof confetti === 'function') {
+        try {
+          confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 } });
+        } catch(e) {}
+      }
+
+      const oldRecFmt = oldRecent ? formatDisplayDDMMYYYY(oldRecent) : 'None';
+      const newRecFmt = formatDisplayDDMMYYYY(newDateStr);
+      const oldPriorFmt = oldPrior ? ` (${formatDisplayDDMMYYYY(oldPrior)} moved to history)` : '';
+
+      showToast(`⚡ Dynamic Shift Applied: Recent is ${newRecFmt} ➔ ${oldRecFmt} moved to Previous Date${oldPriorFmt}.`);
+
+      setTimeout(() => {
+        if (lastShiftedId === id) {
+          lastShiftedId = null;
+          const row = document.querySelector(`.tracker-table-row[data-id="${id}"]`);
+          if (row) row.classList.remove('row-just-shifted');
+        }
+      }, 2500);
+      return;
+    }
+
+    // Direct edit for Col 3, Col 4, or manual correction
+    while (history.length <= index) {
+      history.push('');
+    }
+    history[index] = newDateStr;
     item.history = history;
     item.updatedAt = new Date().toISOString();
+    lastShiftedId = id;
     saveData();
     render();
     showToast(`Updated date for "${item.title}"`);
@@ -546,7 +603,7 @@ const TrackerEngine = (() => {
         : (m.avgInterval ? `Avg: ~${m.avgInterval}d` : 'No cadence');
 
       rowsHTML += `
-        <tr class="tracker-table-row" data-id="${t.id}">
+        <tr class="tracker-table-row ${t.id === lastShiftedId ? 'row-just-shifted' : ''}" data-id="${t.id}">
           <!-- Col 1: Event / Routine -->
           <td class="col-event">
             <div class="tracker-event-cell">
@@ -564,13 +621,16 @@ const TrackerEngine = (() => {
             </div>
           </td>
 
-          <!-- Col 2: Most Recent (Calendar Selectable) -->
+          <!-- Col 2: Most Recent (Calendar Selectable & Dynamic Auto-Shift) -->
           <td class="col-date col-recent">
-            <div class="tracker-date-widget ${m.recent ? 'has-date' : 'empty-date'}" title="Click to choose or change latest date">
+            <div class="tracker-date-widget col-recent-widget ${m.recent ? 'has-date' : 'empty-date'}" title="Pick new date to dynamically shift: Col 2 ➔ Col 3 ➔ Col 4">
               <label class="tracker-date-btn">
                 <i data-lucide="calendar" class="tracker-cal-icon"></i>
                 <div class="tracker-date-text-wrap">
-                  <span class="tracker-date-val">${recentText}</span>
+                  <div class="tracker-date-val-row">
+                    <span class="tracker-date-val">${recentText}</span>
+                    <span class="tracker-shift-arrow-tag" title="Auto-shifts right on change">➔</span>
+                  </div>
                   <span class="tracker-date-sub recent-sub">${recentRel}</span>
                 </div>
                 <input type="date" 
@@ -638,6 +698,9 @@ const TrackerEngine = (() => {
               </button>
               
               <div class="tracker-menu-actions">
+                <button class="btn-action-icon btn-action-dynamic" onclick="TrackerEngine.openDynamicUpdaterModal('${t.id}')" title="Dynamic Rolling Updater (Live Preview)">
+                  <i data-lucide="zap"></i>
+                </button>
                 <button class="btn-action-icon" onclick="TrackerEngine.openHistoryModal('${t.id}')" title="Full History Log">
                   <i data-lucide="history"></i>
                 </button>
@@ -663,19 +726,19 @@ const TrackerEngine = (() => {
               <th class="th-date">
                 <div class="th-date-content">
                   <span>Most Recent</span>
-                  <span class="th-sub">Col 2 • Latest</span>
+                  <span class="th-sub">Col 2 • Auto-Shifts ➔</span>
                 </div>
               </th>
               <th class="th-date">
                 <div class="th-date-content">
                   <span>Previous Date</span>
-                  <span class="th-sub">Col 3 • 2nd Last</span>
+                  <span class="th-sub">Col 3 • Shifted from Col 2</span>
                 </div>
               </th>
               <th class="th-date">
                 <div class="th-date-content">
                   <span>Prior Date</span>
-                  <span class="th-sub">Col 4 • 3rd Last</span>
+                  <span class="th-sub">Col 4 • Shifted from Col 3</span>
                 </div>
               </th>
               <th class="th-status">Cadence & Status</th>
@@ -732,7 +795,7 @@ const TrackerEngine = (() => {
           <div class="tracker-m-dates-row">
             <!-- Col 2: Most Recent -->
             <label class="tracker-m-date-item">
-              <span class="m-date-lbl">Most Recent</span>
+              <span class="m-date-lbl">Most Recent <span class="m-shift-tag">➔ Shifts</span></span>
               <span class="m-date-val">${recentText}</span>
               <span class="m-date-sub">${m.recent ? (m.daysAgo === 0 ? 'Today' : `${m.daysAgo}d ago`) : '—'}</span>
               <input type="date" 
@@ -770,6 +833,9 @@ const TrackerEngine = (() => {
               <i data-lucide="repeat"></i> ${t.targetDays ? `Target: ${t.targetDays}d` : (m.avgInterval ? `Avg: ~${m.avgInterval}d` : 'No target')}
             </span>
             <div class="tracker-m-actions">
+              <button class="btn-action-icon btn-action-dynamic" onclick="TrackerEngine.openDynamicUpdaterModal('${t.id}')" title="Dynamic Rolling Updater">
+                <i data-lucide="zap"></i>
+              </button>
               <button class="btn-action-icon" onclick="TrackerEngine.openHistoryModal('${t.id}')">
                 <i data-lucide="history"></i>
               </button>
@@ -1046,6 +1112,188 @@ const TrackerEngine = (() => {
     }
   }
 
+  /* ----------------- Dynamic Rolling Updater Modal ----------------- */
+  let dynamicSelectedId = null;
+
+  function openDynamicUpdaterModal(routineId = null) {
+    const modal = document.getElementById('tracker-dynamic-modal');
+    if (!modal) return;
+
+    const select = document.getElementById('dynamic-select-routine');
+    if (select) {
+      select.innerHTML = trackers.map(t => `
+        <option value="${t.id}" ${t.id === routineId ? 'selected' : ''}>
+          ${escapeHTML(t.title)} (${getCategoryMeta(t.category).label})
+        </option>
+      `).join('');
+    }
+
+    dynamicSelectedId = routineId || (trackers[0] ? trackers[0].id : null);
+    if (select && dynamicSelectedId) {
+      select.value = dynamicSelectedId;
+    }
+
+    const dateInput = document.getElementById('dynamic-input-date');
+    if (dateInput) {
+      dateInput.value = getTodayStr();
+    }
+
+    updateDynamicPreview();
+    modal.style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function closeDynamicModal() {
+    const modal = document.getElementById('tracker-dynamic-modal');
+    if (modal) modal.style.display = 'none';
+    dynamicSelectedId = null;
+  }
+
+  function setDynamicDateToday() {
+    const dateInput = document.getElementById('dynamic-input-date');
+    if (dateInput) {
+      dateInput.value = getTodayStr();
+      updateDynamicPreview();
+    }
+  }
+
+  function setDynamicDateYesterday() {
+    const dateInput = document.getElementById('dynamic-input-date');
+    if (dateInput) {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      dateInput.value = `${year}-${month}-${day}`;
+      updateDynamicPreview();
+    }
+  }
+
+  function updateDynamicPreview() {
+    const select = document.getElementById('dynamic-select-routine');
+    const dateInput = document.getElementById('dynamic-input-date');
+    const previewMount = document.getElementById('dynamic-shift-preview');
+    if (!select || !previewMount) return;
+
+    const targetId = select.value;
+    dynamicSelectedId = targetId;
+    const item = trackers.find(t => t.id === targetId);
+    if (!item) {
+      previewMount.innerHTML = '<p class="tracker-hint">Select a routine to preview shift.</p>';
+      return;
+    }
+
+    const inputDate = dateInput ? dateInput.value : getTodayStr();
+    const history = item.history || [];
+    const curRecent = history[0] || '—';
+    const curPrev = history[1] || '—';
+    const curPrior = history[2] || '—';
+
+    // Projected after shift
+    const nextRecent = inputDate || 'Pick Date';
+    const nextPrev = curRecent !== '—' ? curRecent : '—';
+    const nextPrior = curPrev !== '—' ? curPrev : '—';
+    const vanishing = curPrior !== '—' ? curPrior : null;
+
+    previewMount.innerHTML = `
+      <div class="dynamic-preview-box">
+        <div class="dynamic-preview-section-title">
+          <i data-lucide="sparkles"></i> Live Dynamic Shift Simulation
+        </div>
+
+        <div class="dynamic-comparison-grid">
+          <!-- BEFORE ROW -->
+          <div class="dynamic-comp-col">
+            <span class="comp-label">CURRENT VISIBLE DATES</span>
+            <div class="comp-chips-row">
+              <div class="comp-chip current-chip">
+                <span class="chip-col-tag">Col 2 (Recent)</span>
+                <span class="chip-date-val">${formatDisplayDDMMYYYY(curRecent)}</span>
+              </div>
+              <span class="comp-arrow-sep">➔</span>
+              <div class="comp-chip current-chip">
+                <span class="chip-col-tag">Col 3 (Previous)</span>
+                <span class="chip-date-val">${formatDisplayDDMMYYYY(curPrev)}</span>
+              </div>
+              <span class="comp-arrow-sep">➔</span>
+              <div class="comp-chip current-chip">
+                <span class="chip-col-tag">Col 4 (Prior)</span>
+                <span class="chip-date-val">${formatDisplayDDMMYYYY(curPrior)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dynamic-shift-divider">
+            <span class="shift-divider-badge"><i data-lucide="arrow-down"></i> DYNAMIC ROLLING SHIFT (RIGHTWARD) <i data-lucide="arrow-down"></i></span>
+          </div>
+
+          <!-- AFTER ROW -->
+          <div class="dynamic-comp-col shifted-col">
+            <span class="comp-label">AFTER SHIFT APPLIED</span>
+            <div class="comp-chips-row">
+              <div class="comp-chip shifted-new-chip">
+                <span class="chip-col-tag new-tag">✨ Col 2 (NEW Recent)</span>
+                <span class="chip-date-val">${formatDisplayDDMMYYYY(nextRecent)}</span>
+              </div>
+              <span class="comp-arrow-sep active">➔</span>
+              <div class="comp-chip shifted-mid-chip">
+                <span class="chip-col-tag">Col 3 (Shifted from Col 2)</span>
+                <span class="chip-date-val">${formatDisplayDDMMYYYY(nextPrev)}</span>
+              </div>
+              <span class="comp-arrow-sep active">➔</span>
+              <div class="comp-chip shifted-mid-chip">
+                <span class="chip-col-tag">Col 4 (Shifted from Col 3)</span>
+                <span class="chip-date-val">${formatDisplayDDMMYYYY(nextPrior)}</span>
+              </div>
+              ${vanishing ? `
+              <span class="comp-arrow-sep vanishing-arrow">➔</span>
+              <div class="comp-chip vanishing-chip" title="Archived into full history log">
+                <span class="chip-col-tag vanish-tag">📦 Vanishes from View</span>
+                <span class="chip-date-val">${formatDisplayDDMMYYYY(vanishing)}</span>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function applyDynamicShift() {
+    const select = document.getElementById('dynamic-select-routine');
+    const dateInput = document.getElementById('dynamic-input-date');
+    if (!select || !dateInput) return;
+
+    const id = select.value;
+    const dateVal = dateInput.value;
+    if (!dateVal) {
+      alert('Please choose a completion date.');
+      return;
+    }
+
+    updateDateCell(id, 0, dateVal, false); // isDirectEdit = false -> SHIFTS RIGHT!
+    closeDynamicModal();
+  }
+
+  function applyDynamicEditOnly() {
+    const select = document.getElementById('dynamic-select-routine');
+    const dateInput = document.getElementById('dynamic-input-date');
+    if (!select || !dateInput) return;
+
+    const id = select.value;
+    const dateVal = dateInput.value;
+    if (!dateVal) {
+      alert('Please choose a completion date.');
+      return;
+    }
+
+    updateDateCell(id, 0, dateVal, true); // isDirectEdit = true -> REPLACES WITHOUT SHIFTING!
+    closeDynamicModal();
+  }
+
   /* ----------------- Utilities ----------------- */
   function escapeHTML(str) {
     if (!str) return '';
@@ -1098,6 +1346,7 @@ const TrackerEngine = (() => {
       if (e.key === 'Escape') {
         closeModal();
         closeHistoryModal();
+        closeDynamicModal();
       }
     });
   }
@@ -1130,6 +1379,13 @@ const TrackerEngine = (() => {
     closeHistoryModal,
     addHistoryDateManual,
     removeHistoryIndex,
+    openDynamicUpdaterModal,
+    closeDynamicModal,
+    setDynamicDateToday,
+    setDynamicDateYesterday,
+    updateDynamicPreview,
+    applyDynamicShift,
+    applyDynamicEditOnly,
     render
   };
 })();
@@ -1138,3 +1394,4 @@ const TrackerEngine = (() => {
 if (typeof window !== 'undefined') {
   window.TrackerEngine = TrackerEngine;
 }
+
