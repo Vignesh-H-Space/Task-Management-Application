@@ -50,6 +50,10 @@
             </p>
           </div>
           <div class="tracker-header-right">
+            <button class="btn-dynamic-updater-main" id="tracker-btn-dynamic-updater" onclick="TrackerEngine.openDynamicUpdaterModal()" title="Dynamic Rolling Updater (Live Preview)">
+              <i data-lucide="zap"></i>
+              <span>Dynamic Updater</span>
+            </button>
             <button class="btn-create-tracker" id="tracker-btn-add" onclick="TrackerEngine.openAddModal()">
               <i data-lucide="plus"></i>
               <span>Add Routine</span>
@@ -232,6 +236,62 @@
 
       <div class="tracker-modal-footer">
         <button class="tracker-modal-btn btn-cancel" onclick="TrackerEngine.closeHistoryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Rolling Updater Modal -->
+  <div class="tracker-modal-backdrop" id="tracker-dynamic-modal" style="display:none;" onclick="if(event.target === this) TrackerEngine.closeDynamicModal()">
+    <div class="tracker-modal tracker-dynamic-modal-box">
+      <div class="tracker-modal-header">
+        <div class="tracker-modal-title-wrap">
+          <i data-lucide="zap" class="tracker-modal-icon zap-icon"></i>
+          <h3>Dynamic Rolling Updater</h3>
+        </div>
+        <button class="tracker-modal-close" onclick="TrackerEngine.closeDynamicModal()" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="tracker-modal-body">
+        <p class="tracker-dynamic-intro">
+          Pick or change a completion date. The date previously in <b>Col 2 (Recent)</b> automatically shifts right into <b>Col 3</b>, Col 3 shifts into <b>Col 4</b>, and Col 4 vanishes from view into your permanent history log.
+        </p>
+
+        <div class="tracker-form-group">
+          <label for="dynamic-select-routine">Select Routine</label>
+          <select id="dynamic-select-routine" onchange="TrackerEngine.updateDynamicPreview()">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div class="tracker-form-group">
+          <label for="dynamic-input-date">New Completion Date (Will become Col 2 Recent)</label>
+          <div class="dynamic-date-row">
+            <input type="date" id="dynamic-input-date" onchange="TrackerEngine.updateDynamicPreview()">
+            <div class="dynamic-quick-buttons">
+              <button type="button" class="btn-quick-date" onclick="TrackerEngine.setDynamicDateToday()">Today</button>
+              <button type="button" class="btn-quick-date" onclick="TrackerEngine.setDynamicDateYesterday()">Yesterday</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Shift Visualizer Mount Point -->
+        <div class="dynamic-shift-visualizer" id="dynamic-shift-preview">
+          <!-- Rendered in real-time by TrackerEngine -->
+        </div>
+      </div>
+
+      <div class="tracker-modal-footer">
+        <button class="tracker-modal-btn btn-cancel" onclick="TrackerEngine.closeDynamicModal()">Cancel</button>
+        <button class="tracker-modal-btn btn-secondary-action" onclick="TrackerEngine.applyDynamicEditOnly()" title="Replace date without shifting older columns">
+          <i data-lucide="edit-3"></i>
+          <span>Replace Date Only</span>
+        </button>
+        <button class="tracker-modal-btn btn-save" onclick="TrackerEngine.applyDynamicShift()">
+          <i data-lucide="arrow-right-circle"></i>
+          <span>Apply Dynamic Shift ➔</span>
+        </button>
       </div>
     </div>
   </div>
