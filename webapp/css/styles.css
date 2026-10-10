@@ -15595,9 +15595,15 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 14px 12px;
   text-align: center;
   transition: border-color 0.2s, transform 0.2s;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .pro-stat-card:hover {
@@ -15610,7 +15616,37 @@ body {
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-primary);
-  white-space: nowrap;
+  line-height: 1.2;
+  max-width: 100%;
+}
+
+.pro-stat-value.is-category {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 1.7rem;
+}
+
+.pro-stat-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 100%;
+  text-align: center;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.pro-stat-icon {
+  font-size: 1.15rem;
+  margin-right: 2px;
 }
 
 .pro-stat-unit {
@@ -15621,12 +15657,13 @@ body {
 }
 
 .pro-stat-label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-top: 4px;
+  margin-top: 5px;
+  white-space: nowrap;
 }
 
 /* ── Toolbar ── */
@@ -16138,6 +16175,14 @@ body {
   display: block;
   margin-top: 2px;
   line-height: 1.4;
+}
+
+.pro-resume-empty-note {
+  padding: 10px 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.45;
 }
 
 /* Milestone timeline */
