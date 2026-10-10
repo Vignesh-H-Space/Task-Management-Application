@@ -719,36 +719,82 @@ const TrackerEngine = (() => {
 
     mount.innerHTML = `
       <div class="tracker-table-container">
-        <table class="tracker-table">
-          <thead>
-            <tr>
-              <th class="th-event">Event / Task</th>
-              <th class="th-date">
-                <div class="th-date-content">
-                  <span>Most Recent</span>
-                  <span class="th-sub">Col 2 • Auto-Shifts ➔</span>
-                </div>
-              </th>
-              <th class="th-date">
-                <div class="th-date-content">
-                  <span>Previous Date</span>
-                  <span class="th-sub">Col 3 • Shifted from Col 2</span>
-                </div>
-              </th>
-              <th class="th-date">
-                <div class="th-date-content">
-                  <span>Prior Date</span>
-                  <span class="th-sub">Col 4 • Shifted from Col 3</span>
-                </div>
-              </th>
-              <th class="th-status">Cadence & Status</th>
-              <th class="th-actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHTML}
-          </tbody>
-        </table>
+        <!-- Horizontal View Toggle & Quick Scroll Controls -->
+        <div class="tracker-table-scroll-controls" id="tracker-table-scroll-controls">
+          <div class="tracker-scroll-controls-left">
+            <span class="tracker-scroll-view-label">
+              <i data-lucide="columns"></i>
+              <span>Horizontal View:</span>
+            </span>
+            <div class="tracker-scroll-toggle-btns">
+              <button class="btn-scroll-toggle active" id="btn-toggle-event" onclick="TrackerEngine.scrollToLeft()" title="Jump to Event & Recent Dates">
+                <i data-lucide="align-left"></i>
+                <span>Event / Dates</span>
+              </button>
+              <button class="btn-scroll-toggle" id="btn-toggle-cadence" onclick="TrackerEngine.scrollToRight()" title="Jump to Cadence & Actions">
+                <span>Cadence &amp; Actions</span>
+                <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+          <div class="tracker-scroll-controls-right">
+            <button class="btn-scroll-step" id="tracker-scroll-step-left" onclick="TrackerEngine.scrollTableStep(-240)" title="Scroll Left (Shift View)">
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <div class="tracker-table-scroll-track" id="tracker-scroll-track" onclick="TrackerEngine.handleScrollTrackClick(event)" title="Click or drag to scroll columns">
+              <div class="tracker-table-scroll-thumb" id="tracker-scroll-thumb"></div>
+            </div>
+            <button class="btn-scroll-step" id="tracker-scroll-step-right" onclick="TrackerEngine.scrollTableStep(240)" title="Scroll Right (Shift View)">
+              <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dedicated Horizontal Scroller Wrapper -->
+        <div class="tracker-table-scroller" id="tracker-table-scroller" onscroll="TrackerEngine.handleTableScroll(this)">
+          <table class="tracker-table">
+            <thead>
+              <tr>
+                <th class="th-event">Event / Task</th>
+                <th class="th-date">
+                  <div class="th-date-content">
+                    <span>Most Recent</span>
+                    <span class="th-sub">Col 2 • Auto-Shifts ➔</span>
+                  </div>
+                </th>
+                <th class="th-date">
+                  <div class="th-date-content">
+                    <span>Previous Date</span>
+                    <span class="th-sub">Col 3 • Shifted from Col 2</span>
+                  </div>
+                </th>
+                <th class="th-date">
+                  <div class="th-date-content">
+                    <span>Prior Date</span>
+                    <span class="th-sub">Col 4 • Shifted from Col 3</span>
+                  </div>
+                </th>
+                <th class="th-status">Cadence & Status</th>
+                <th class="th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHTML}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bottom Horizontal Scroll & Quick Info Bar -->
+        <div class="tracker-table-bottom-bar" id="tracker-table-bottom-bar">
+          <div class="tracker-bottom-scroll-info">
+            <i data-lucide="move-horizontal"></i>
+            <span>Scroll or drag horizontally to view <strong>Cadence &amp; Status</strong> and <strong>Actions</strong>. The Event / Task column stays pinned on the left.</span>
+          </div>
+          <div class="tracker-bottom-scroll-actions">
+            <button class="btn-quick-scroll-edge" onclick="TrackerEngine.scrollToLeft()" title="Scroll to start">◂ Event / Dates</button>
+            <button class="btn-quick-scroll-edge" onclick="TrackerEngine.scrollToRight()" title="Scroll to Cadence & Actions">Cadence &amp; Actions ▸</button>
+          </div>
+        </div>
       </div>
 
       <!-- Mobile Responsive View (Cards) -->
@@ -757,7 +803,191 @@ const TrackerEngine = (() => {
       </div>
     `;
 
+    bindTableScroll();
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  /* ----------------- Table Horizontal Scrolling & Toggling ----------------- */
+  function scrollToLeft() {
+    if (typeof document === 'undefined') return;
+    const scroller = document.getElementById('tracker-table-scroller');
+    if (!scroller) return;
+    scroller.scrollTo({ left: 0, behavior: 'smooth' });
+    setTimeout(() => handleTableScroll(scroller), 300);
+  }
+
+  function scrollToRight() {
+    if (typeof document === 'undefined') return;
+    const scroller = document.getElementById('tracker-table-scroller');
+    if (!scroller) return;
+    const maxScroll = (scroller.scrollWidth || 0) - (scroller.clientWidth || 0);
+    scroller.scrollTo({ left: Math.max(0, maxScroll), behavior: 'smooth' });
+    setTimeout(() => handleTableScroll(scroller), 300);
+  }
+
+  function scrollTableStep(delta) {
+    if (typeof document === 'undefined') return;
+    const scroller = document.getElementById('tracker-table-scroller');
+    if (!scroller) return;
+    scroller.scrollBy({ left: delta, behavior: 'smooth' });
+    setTimeout(() => handleTableScroll(scroller), 300);
+  }
+
+  function handleScrollTrackClick(e) {
+    if (!e || typeof document === 'undefined') return;
+    if (e.target && e.target.id === 'tracker-scroll-thumb') return;
+    const scroller = document.getElementById('tracker-table-scroller');
+    const track = document.getElementById('tracker-scroll-track');
+    if (!scroller || !track) return;
+    const rect = track.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+    scroller.scrollTo({ left: ratio * maxScroll, behavior: 'smooth' });
+    setTimeout(() => handleTableScroll(scroller), 300);
+  }
+
+  function handleTableScroll(scroller) {
+    if (typeof document === 'undefined') return;
+    if (!scroller) scroller = document.getElementById('tracker-table-scroller');
+    if (!scroller) return;
+
+    const scrollWidth = scroller.scrollWidth || 0;
+    const clientWidth = scroller.clientWidth || 0;
+    const maxScroll = Math.max(0, scrollWidth - clientWidth);
+    const scrollLeft = scroller.scrollLeft || 0;
+
+    // Toggle button active states
+    const btnEvent = document.getElementById('btn-toggle-event');
+    const btnCadence = document.getElementById('btn-toggle-cadence');
+    if (btnEvent && btnCadence) {
+      if (scrollLeft <= 40) {
+        btnEvent.classList.add('active');
+        btnCadence.classList.remove('active');
+      } else if (scrollLeft >= maxScroll - 40 && maxScroll > 0) {
+        btnEvent.classList.remove('active');
+        btnCadence.classList.add('active');
+      } else {
+        btnEvent.classList.remove('active');
+        btnCadence.classList.remove('active');
+      }
+    }
+
+    // Step button disabled states
+    const btnLeft = document.getElementById('tracker-scroll-step-left');
+    const btnRight = document.getElementById('tracker-scroll-step-right');
+    if (btnLeft) btnLeft.disabled = scrollLeft <= 3;
+    if (btnRight) btnRight.disabled = maxScroll === 0 || scrollLeft >= maxScroll - 3;
+
+    // Update custom scrollbar thumb
+    const track = document.getElementById('tracker-scroll-track');
+    const thumb = document.getElementById('tracker-scroll-thumb');
+    if (track && thumb) {
+      if (maxScroll <= 5) {
+        thumb.style.width = '100%';
+        thumb.style.transform = 'translateX(0px)';
+      } else {
+        const trackWidth = track.clientWidth || 140;
+        const visibleRatio = clientWidth > 0 ? Math.min(1, clientWidth / scrollWidth) : 0.5;
+        const thumbWidth = Math.max(28, Math.round(trackWidth * visibleRatio));
+        const availableTrack = Math.max(1, trackWidth - thumbWidth);
+        const scrollRatio = Math.max(0, Math.min(1, scrollLeft / maxScroll));
+        const thumbLeft = Math.round(scrollRatio * availableTrack);
+        thumb.style.width = `${thumbWidth}px`;
+        thumb.style.transform = `translateX(${thumbLeft}px)`;
+      }
+    }
+  }
+
+  function bindTableScroll() {
+    if (typeof document === 'undefined') return;
+    const scroller = document.getElementById('tracker-table-scroller');
+    const track = document.getElementById('tracker-scroll-track');
+    const thumb = document.getElementById('tracker-scroll-thumb');
+    if (!scroller) return;
+
+    if (!scroller._hasScrollBound) {
+      scroller._hasScrollBound = true;
+      scroller.addEventListener('scroll', () => {
+        handleTableScroll(scroller);
+      }, { passive: true });
+
+      if (typeof window !== 'undefined') {
+        window.addEventListener('resize', () => {
+          handleTableScroll(scroller);
+        }, { passive: true });
+      }
+    }
+
+    if (thumb && track && !track._hasThumbBound) {
+      track._hasThumbBound = true;
+
+      let isDragging = false;
+      let startMouseX = 0;
+      let startScrollLeft = 0;
+
+      const onMouseDown = (e) => {
+        if (e.button !== 0) return;
+        isDragging = true;
+        startMouseX = e.clientX;
+        startScrollLeft = scroller.scrollLeft;
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - startMouseX;
+        const trackWidth = track.clientWidth || 140;
+        const thumbWidth = thumb.clientWidth || 28;
+        const availableTrack = Math.max(1, trackWidth - thumbWidth);
+        const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+        if (maxScroll <= 0) return;
+        const scrollDelta = (deltaX / availableTrack) * maxScroll;
+        scroller.scrollLeft = startScrollLeft + scrollDelta;
+      };
+
+      const onMouseUp = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        document.body.style.userSelect = '';
+      };
+
+      thumb.addEventListener('mousedown', onMouseDown);
+      if (typeof window !== 'undefined') {
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      }
+
+      // Touch drag
+      let touchStartX = 0;
+      let touchStartScrollLeft = 0;
+      thumb.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length !== 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartScrollLeft = scroller.scrollLeft;
+        if (e.stopPropagation) e.stopPropagation();
+      }, { passive: true });
+
+      thumb.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length !== 1) return;
+        const deltaX = e.touches[0].clientX - touchStartX;
+        const trackWidth = track.clientWidth || 140;
+        const thumbWidth = thumb.clientWidth || 28;
+        const availableTrack = Math.max(1, trackWidth - thumbWidth);
+        const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+        if (maxScroll <= 0) return;
+        const scrollDelta = (deltaX / availableTrack) * maxScroll;
+        scroller.scrollLeft = touchStartScrollLeft + scrollDelta;
+        if (e.stopPropagation) e.stopPropagation();
+      }, { passive: true });
+    }
+
+    setTimeout(() => {
+      handleTableScroll(scroller);
+    }, 60);
   }
 
   function renderMobileCardsHTML(list, todayStr) {
@@ -1386,6 +1616,11 @@ const TrackerEngine = (() => {
     updateDynamicPreview,
     applyDynamicShift,
     applyDynamicEditOnly,
+    scrollToLeft,
+    scrollToRight,
+    scrollTableStep,
+    handleTableScroll,
+    handleScrollTrackClick,
     render
   };
 })();
