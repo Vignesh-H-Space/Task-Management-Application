@@ -486,6 +486,247 @@ const DocketEngine = {
     return null;
   },
 
+  // ── Tracker Cadence Radar Evaluators ──
+  getTrackerCategoryMeta(catId) {
+    const cats = {
+      grooming: { label: 'Grooming', icon: 'scissors', color: '#ec4899' },
+      home: { label: 'Home', icon: 'home', color: '#3b82f6' },
+      vehicle: { label: 'Vehicle', icon: 'wrench', color: '#f59e0b' },
+      health: { label: 'Health', icon: 'heart-pulse', color: '#10b981' },
+      tech: { label: 'Tech', icon: 'laptop', color: '#8b5cf6' },
+      other: { label: 'Other', icon: 'bookmark', color: '#64748b' }
+    };
+    return cats[catId] || cats.other;
+  },
+
+  getTrackerRecurrenceKey(tracker) {
+    if (tracker.recurrence && tracker.recurrence !== 'custom' && tracker.recurrence !== 'none') {
+      return tracker.recurrence;
+    }
+    const days = parseInt(tracker.targetDays, 10);
+    if (days === 7) return 'weekly';
+    if (days === 14) return 'biweekly';
+    if (days >= 28 && days <= 31) return 'monthly';
+    if (days >= 85 && days <= 95) return 'quarterly';
+    if (days >= 360 && days <= 366) return 'annually';
+    return 'custom';
+  },
+
+  getTrackerDueDate(tracker) {
+    const history = (tracker.history || []).filter(Boolean);
+    const recent = history[0];
+    const target = parseInt(tracker.targetDays, 10) || 7;
+    if (!recent) {
+      return tracker.reminderDate || this.getTodayStr();
+    }
+    const d = new Date(recent + 'T00:00:00');
+    d.setDate(d.getDate() + target);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  },
+
+  evalTrackerRadar(tracker, todayStr) {
+    if (!tracker || tracker.reminderEnabled === false) return null;
+    const dueDate = this.getTrackerDueDate(tracker);
+    if (!dueDate) return null;
+
+    const today = new Date(todayStr + 'T00:00:00');
+    const target = new Date(dueDate + 'T00:00:00');
+    const diffTime = target.getTime() - today.getTime();
+    const daysLeft = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    const cadence = this.getTrackerRecurrenceKey(tracker);
+    const dayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon, ..., 3 = Wed, 5 = Fri, 6 = Sat
+
+    // ── 🔔 MANUAL REMINDER DATE OVERRIDE ──
+    if (tracker.reminderDate) {
+      if (todayStr >= tracker.reminderDate) {
+        let text;
+        if (daysLeft < 0) {
+          text = `🚨 Routine Overdue · ${Math.abs(daysLeft)}d overdue`;
+        } else if (daysLeft === 0) {
+          text = `🔔 Routine Reminder · Due Today`;
+        } else if (daysLeft === 1) {
+          text = `🔔 Routine Reminder · Due Tomorrow`;
+        } else {
+          text = `🔔 Routine Reminder · ${daysLeft}d left`;
+        }
+        return {
+          isTriggered: true,
+          isManual: true,
+          cadence: cadence || 'routine',
+          stage: daysLeft <= 2 ? 'sprint_window' : 'checkpoint',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: daysLeft < 0 ? '#ef4444' : '#f59e0b',
+          bg: daysLeft < 0 ? 'rgba(239, 68, 68, 0.16)' : 'rgba(245, 158, 11, 0.16)',
+          border: daysLeft < 0 ? 'rgba(239, 68, 68, 0.45)' : 'rgba(245, 158, 11, 0.45)'
+        };
+      } else {
+        // Awaiting future manual reminder date, unless closing in on deadline
+        if (daysLeft > 7) return null;
+      }
+    }
+
+    // ── 🚨 OVERDUE CHECK (Universal across all routine cadences) ──
+    if (daysLeft < 0) {
+      const overdueDays = Math.abs(daysLeft);
+      return {
+        isTriggered: true,
+        cadence: cadence,
+        stage: 'overdue',
+        badgeText: overdueDays === 1 ? '🚨 Routine Overdue · 1d overdue' : `🚨 Routine Overdue · ${overdueDays}d overdue`,
+        daysLeft: daysLeft,
+        color: '#ef4444',
+        bg: 'rgba(239, 68, 68, 0.18)',
+        border: 'rgba(239, 68, 68, 0.45)'
+      };
+    }
+
+    // 1. WEEKLY (7 days)
+    if (cadence === 'weekly') {
+      if (dayOfWeek === 3 && daysLeft > 2) {
+        return {
+          isTriggered: true,
+          cadence: 'weekly',
+          stage: 'checkpoint',
+          badgeText: '📅 Weekly Routine · Mid-Week Check',
+          daysLeft: daysLeft,
+          color: '#8b5cf6',
+          bg: 'rgba(139, 92, 246, 0.14)',
+          border: 'rgba(139, 92, 246, 0.35)'
+        };
+      }
+      if (([5, 6, 0].includes(dayOfWeek) || daysLeft <= 2) && daysLeft >= 0) {
+        const text = daysLeft === 0 
+          ? '📅 Weekly Routine · Due Today' 
+          : (daysLeft === 1 ? '📅 Weekly Routine · Due Tomorrow' : '📅 Weekly Routine · Weekend Sprint');
+        return {
+          isTriggered: true,
+          cadence: 'weekly',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#8b5cf6',
+          bg: 'rgba(139, 92, 246, 0.2)',
+          border: 'rgba(139, 92, 246, 0.45)'
+        };
+      }
+    }
+
+    // 2. BI-WEEKLY (14 days)
+    if (cadence === 'biweekly') {
+      if (daysLeft === 5) {
+        return {
+          isTriggered: true,
+          cadence: 'biweekly',
+          stage: 'checkpoint',
+          badgeText: '🗓️ Bi-Weekly Routine · T-5d Notice',
+          daysLeft: 5,
+          color: '#3b82f6',
+          bg: 'rgba(59, 130, 246, 0.14)',
+          border: 'rgba(59, 130, 246, 0.35)'
+        };
+      }
+      if (daysLeft <= 2 && daysLeft >= 0) {
+        const text = daysLeft === 0
+          ? '🗓️ Bi-Weekly Routine · Due Today'
+          : (daysLeft === 1 ? '🗓️ Bi-Weekly Routine · Due Tomorrow' : `🗓️ Bi-Weekly Sprint · Due in ${daysLeft}d`);
+        return {
+          isTriggered: true,
+          cadence: 'biweekly',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#3b82f6',
+          bg: 'rgba(59, 130, 246, 0.2)',
+          border: 'rgba(59, 130, 246, 0.45)'
+        };
+      }
+    }
+
+    // 3. MONTHLY (30 days)
+    if (cadence === 'monthly') {
+      if (daysLeft === 7) {
+        return {
+          isTriggered: true,
+          cadence: 'monthly',
+          stage: 'checkpoint',
+          badgeText: '🗓️ Monthly Routine · T-7d Notice',
+          daysLeft: 7,
+          color: '#10b981',
+          bg: 'rgba(16, 185, 129, 0.14)',
+          border: 'rgba(16, 185, 129, 0.35)'
+        };
+      }
+      if (daysLeft <= 3 && daysLeft >= 0) {
+        const text = daysLeft === 0 
+          ? '🗓️ Monthly Routine · Due Today' 
+          : (daysLeft === 1 ? '🗓️ Monthly Routine · Due Tomorrow' : `🗓️ Monthly Sprint · ${daysLeft}d left`);
+        return {
+          isTriggered: true,
+          cadence: 'monthly',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#10b981',
+          bg: 'rgba(16, 185, 129, 0.2)',
+          border: 'rgba(16, 185, 129, 0.45)'
+        };
+      }
+    }
+
+    // 4. QUARTERLY (90 days)
+    if (cadence === 'quarterly') {
+      if (daysLeft === 30 || daysLeft === 15) {
+        return {
+          isTriggered: true,
+          cadence: 'quarterly',
+          stage: 'checkpoint',
+          badgeText: `🎯 Quarterly Routine · T-${daysLeft}d`,
+          daysLeft: daysLeft,
+          color: '#06b6d4',
+          bg: 'rgba(6, 182, 212, 0.14)',
+          border: 'rgba(6, 182, 212, 0.35)'
+        };
+      }
+      if (daysLeft <= 7 && daysLeft >= 0) {
+        const text = daysLeft === 0 ? '🎯 Quarterly Routine · Due Today' : `🎯 Quarterly Sprint · ${daysLeft}d left`;
+        return {
+          isTriggered: true,
+          cadence: 'quarterly',
+          stage: 'sprint_window',
+          badgeText: text,
+          daysLeft: daysLeft,
+          color: '#06b6d4',
+          bg: 'rgba(6, 182, 212, 0.2)',
+          border: 'rgba(6, 182, 212, 0.45)'
+        };
+      }
+    }
+
+    // 5. CUSTOM / GENERAL DAYS
+    if (daysLeft <= 2 && daysLeft >= 0) {
+      const text = daysLeft === 0 
+        ? '⚡ Routine · Due Today' 
+        : (daysLeft === 1 ? '⚡ Routine · Due Tomorrow' : `⚡ Routine · Due in ${daysLeft}d`);
+      return {
+        isTriggered: true,
+        cadence: 'custom',
+        stage: 'sprint_window',
+        badgeText: text,
+        daysLeft: daysLeft,
+        color: '#f59e0b',
+        bg: 'rgba(245, 158, 11, 0.16)',
+        border: 'rgba(245, 158, 11, 0.45)'
+      };
+    }
+
+    return null;
+  },
+
   getRadarItems() {
     const todayStr = this.getTodayStr();
     const radarList = [];
@@ -552,6 +793,45 @@ const DocketEngine = {
       });
     }
 
+    // 3. Scan Tracker Routines (Weekly, Monthly, Bi-weekly, etc.)
+    let trackerItems = [];
+    if (typeof TrackerEngine !== 'undefined' && typeof TrackerEngine.getTrackers === 'function') {
+      trackerItems = TrackerEngine.getTrackers();
+    } else {
+      try {
+        const raw = localStorage.getItem('tesseract_trackers');
+        if (raw) trackerItems = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    if (Array.isArray(trackerItems)) {
+      trackerItems.forEach(trk => {
+        if (!trk || trk.reminderEnabled === false) return;
+        if (seenIds.has(trk.id)) return;
+
+        const radarMeta = this.evalTrackerRadar(trk, todayStr);
+        if (radarMeta && radarMeta.isTriggered) {
+          if (!this.isRadarAcknowledged(trk.id)) {
+            const catMeta = this.getTrackerCategoryMeta(trk.category);
+            const dueDate = this.getTrackerDueDate(trk);
+            radarList.push({
+              id: trk.id,
+              source: 'tracker',
+              title: trk.title,
+              dueDate: dueDate,
+              reminderDate: trk.reminderDate || null,
+              severity: trk.severity || 'low',
+              category: trk.category,
+              group: `${catMeta.label} · Routine`,
+              completed: false,
+              radar: radarMeta
+            });
+            seenIds.add(trk.id);
+          }
+        }
+      });
+    }
+
     radarList.sort((a, b) => a.radar.daysLeft - b.radar.daysLeft);
     return radarList;
   },
@@ -562,6 +842,31 @@ const DocketEngine = {
       setTimeout(() => {
         this.render();
       }, 100);
+    } else if (source === 'tracker') {
+      if (typeof TrackerEngine !== 'undefined' && typeof TrackerEngine.logToday === 'function') {
+        TrackerEngine.logToday(id);
+      } else {
+        try {
+          const raw = localStorage.getItem('tesseract_trackers');
+          if (raw) {
+            const list = JSON.parse(raw);
+            const trk = list.find(x => x.id === id);
+            if (trk) {
+              const today = this.getTodayStr();
+              trk.history = Array.from(new Set([today, ...(trk.history || [])])).sort((a, b) => b.localeCompare(a));
+              trk.updatedAt = new Date().toISOString();
+              localStorage.setItem('tesseract_trackers', JSON.stringify(list));
+              if (typeof SyncEngine !== 'undefined' && SyncEngine.pushLocalChange) {
+                SyncEngine.pushLocalChange();
+              }
+            }
+          }
+        } catch (e) {}
+      }
+      this.render();
+      if (typeof showToast === 'function') {
+        showToast('⚡ Routine logged for today! Rolling dates shifted. ✨', 'success');
+      }
     } else if (source === 'task') {
       if (typeof window !== 'undefined' && typeof toggleTaskStatus === 'function') {
         toggleTaskStatus(id);
@@ -619,8 +924,8 @@ const DocketEngine = {
 
       html += `
         <div class="docket-radar-row ${isCompleting ? 'row-completing' : ''}" data-id="${item.id}" style="border-left-color: ${item.radar.color};">
-          <!-- Checkbox: Complete Deliverable -->
-          <label class="docket-check-wrap" title="Mark deliverable complete (calculates next recurrence)">
+          <!-- Checkbox: Complete Deliverable / Log Routine -->
+          <label class="docket-check-wrap" title="${item.source === 'tracker' ? 'Log routine completed today (shifts rolling dates)' : 'Mark deliverable complete (calculates next recurrence)'}">
             <input type="checkbox" class="docket-checkbox" ${item.completed ? 'checked disabled' : ''} onchange="DocketEngine.completeRadarItem('${item.id}', '${item.source}')">
             <span class="docket-custom-check">
               <i data-lucide="check"></i>
@@ -633,10 +938,16 @@ const DocketEngine = {
               <span class="docket-task-title ${item.completed ? 'completed-strikethrough' : ''}">
                 ${this.escapeHTML(item.title)}
               </span>
+              ${item.source === 'tracker' ? `
+                <a href="tracker.html" class="docket-tracker-link-chip" title="View in Routine & Maintenance Tracker">
+                  <i data-lucide="repeat"></i>
+                  <span>Routine Tracker ➔</span>
+                </a>
+              ` : ''}
             </div>
             <div class="docket-radar-meta-row">
               <span class="docket-radar-badge" style="color:${item.radar.color}; background:${item.radar.bg}; border:1px solid ${item.radar.border};">
-                <i data-lucide="${item.radar.stage === 'sprint_window' ? 'zap' : 'bell'}"></i>
+                <i data-lucide="${item.radar.stage === 'sprint_window' ? 'zap' : (item.radar.stage === 'overdue' ? 'alert-triangle' : 'bell')}"></i>
                 <span>${item.radar.badgeText}</span>
               </span>
               ${item.group ? `<span class="docket-radar-group-tag">${this.escapeHTML(item.group)}</span>` : ''}
