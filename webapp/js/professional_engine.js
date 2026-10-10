@@ -106,8 +106,20 @@ const ProfessionalEngine = {
     const auto = [];
 
     // 1. From state.tasks (completed ones with career-relevant categories)
+    let tasksList = [];
     if (typeof state !== 'undefined' && Array.isArray(state.tasks)) {
-      state.tasks.forEach(task => {
+      tasksList = state.tasks;
+    } else if (typeof window !== 'undefined' && window.state && Array.isArray(window.state.tasks)) {
+      tasksList = window.state.tasks;
+    } else {
+      try {
+        const raw = localStorage.getItem('tesseract_goals_tasks_data');
+        if (raw) tasksList = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    if (Array.isArray(tasksList)) {
+      tasksList.forEach(task => {
         if (!task.completed || !task.completedAt) return;
         const d = new Date(task.completedAt);
         if (isNaN(d.getTime())) return;
@@ -115,12 +127,19 @@ const ProfessionalEngine = {
 
         let autoCat = 'achievement';
         let autoLabel = '✅ Task Completed';
-        if (task.tier === 'annual') {
+
+        const catLower = (task.category || '').toLowerCase();
+        const titleLower = (task.title || '').toLowerCase();
+        const isProjectTask = catLower.includes('project') || catLower.includes('engineering') || catLower.includes('tech') ||
+                             titleLower.includes('ship') || titleLower.includes('deploy') || titleLower.includes('launch') ||
+                             titleLower.includes('build') || task.tier === 'quarterly';
+
+        if (isProjectTask) {
+          autoCat = 'project';
+          autoLabel = task.tier === 'quarterly' ? '🎯 Quarterly Objective' : '🚀 Shipped Project';
+        } else if (task.tier === 'annual') {
           autoCat = 'achievement';
           autoLabel = '🏆 Annual Goal Achieved';
-        } else if (task.tier === 'quarterly') {
-          autoCat = 'project';
-          autoLabel = '🎯 Quarterly Objective';
         } else if (task.tier === 'monthly') {
           autoCat = 'achievement';
           autoLabel = '📋 Monthly Milestone';
@@ -152,10 +171,20 @@ const ProfessionalEngine = {
     }
 
     // 2. From BacklogEngine.items (completed work backlogs)
+    let backlogList = [];
     if (typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
-      BacklogEngine.items.forEach(item => {
+      backlogList = BacklogEngine.items;
+    } else {
+      try {
+        const raw = localStorage.getItem('tesseract_backlog_items');
+        if (raw) backlogList = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    if (Array.isArray(backlogList)) {
+      backlogList.forEach(item => {
         if (!item.completed || !item.completedAt) return;
-        if (item.group !== 'work' && item.group !== 'tesseract') return;
+        if (item.group !== 'work' && item.group !== 'tesseract' && item.group !== 'career') return;
         const d = new Date(item.completedAt);
         if (isNaN(d.getTime())) return;
         const dateStr = d.toISOString().slice(0, 10);
@@ -211,6 +240,7 @@ const ProfessionalEngine = {
     const allEntries = this.getAllEntries();
     const yearEntries = allEntries.filter(e => e.date && new Date(e.date + 'T00:00:00').getFullYear() === currentYear);
     const monthEntries = yearEntries.filter(e => new Date(e.date + 'T00:00:00').getMonth() === currentMonth);
+    const projectsShipped = yearEntries.filter(e => e.category === 'project').length;
 
     // Top category
     const catCounts = {};
@@ -242,6 +272,7 @@ const ProfessionalEngine = {
     return {
       thisYear: yearEntries.length,
       thisMonth: monthEntries.length,
+      projectsShipped,
       topCategory: topCat ? PRO_CATEGORIES[topCat[0]] : null,
       topCategoryCount: topCat ? topCat[1] : 0,
       impactScore,
@@ -431,6 +462,8 @@ const ProfessionalEngine = {
     if (!mount) return;
     const s = this.computeStats();
     const topCatLabel = s.topCategory ? `${s.topCategory.emoji} ${s.topCategory.label}` : '—';
+    const topCatBg = s.topCategory ? s.topCategory.bg : 'transparent';
+    const topCatColor = s.topCategory ? s.topCategory.color : 'inherit';
 
     mount.innerHTML = `
       <div class="pro-stat-card">
@@ -441,8 +474,16 @@ const ProfessionalEngine = {
         <div class="pro-stat-value">${s.thisMonth}</div>
         <div class="pro-stat-label">This Month</div>
       </div>
-      <div class="pro-stat-card">
-        <div class="pro-stat-value">${topCatLabel}</div>
+      <div class="pro-stat-card" title="${s.projectsShipped} Projects Shipped this year">
+        <div class="pro-stat-value"><span class="pro-stat-icon">🚀</span> ${s.projectsShipped}</div>
+        <div class="pro-stat-label">Projects Shipped</div>
+      </div>
+      <div class="pro-stat-card" title="Top Category: ${topCatLabel} (${s.topCategoryCount})">
+        <div class="pro-stat-value is-category">
+          <span class="pro-stat-cat-badge" style="background:${topCatBg}; color:${topCatColor};">
+            ${topCatLabel}
+          </span>
+        </div>
         <div class="pro-stat-label">Top Category</div>
       </div>
       <div class="pro-stat-card">
@@ -666,12 +707,12 @@ const ProfessionalEngine = {
         ` : ''}
 
         <!-- Projects Shipped -->
-        ${projects.length > 0 ? `
         <div class="pro-resume-section">
           <div class="pro-resume-section-header">
             <i data-lucide="rocket"></i>
             <h2>Projects Shipped</h2>
           </div>
+          ${projects.length > 0 ? `
           <div class="pro-resume-list">
             ${projects.map(e => `
               <div class="pro-resume-item">
@@ -684,8 +725,12 @@ const ProfessionalEngine = {
               </div>
             `).join('')}
           </div>
+          ` : `
+          <div class="pro-resume-empty-note">
+            <p>No shipped projects recorded yet. Complete quarterly objectives, work backlogs, or add entries categorized as "🚀 Project Shipped".</p>
+          </div>
+          `}
         </div>
-        ` : ''}
 
         <!-- Certifications & Learning -->
         ${certsAndLearning.length > 0 ? `
