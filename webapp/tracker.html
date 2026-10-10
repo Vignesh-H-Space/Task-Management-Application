@@ -61,6 +61,9 @@
           </div>
         </div>
 
+        <!-- Active Cadence Radar Banner (Weekly & Monthly Routine Sprints) -->
+        <div class="tracker-radar-banner" id="tracker-radar-banner" style="display: none;"></div>
+
         <!-- Metric Statistics Strip -->
         <div class="tracker-stats-strip" id="tracker-stats-strip">
           <!-- Rendered by TrackerEngine -->
@@ -83,6 +86,9 @@
             <div class="tracker-status-filters">
               <button class="tracker-status-btn active" data-status="all" onclick="TrackerEngine.setStatusFilter('all')">
                 All
+              </button>
+              <button class="tracker-status-btn tracker-radar-filter-btn" data-status="radar" onclick="TrackerEngine.setStatusFilter('radar')" title="Filter routines active on Cadence Radar">
+                <i data-lucide="radio" class="radar-filter-icon"></i> Radar Active (<span id="tracker-radar-filter-count">0</span>)
               </button>
               <button class="tracker-status-btn" data-status="overdue" onclick="TrackerEngine.setStatusFilter('overdue')">
                 <span class="status-dot dot-overdue"></span> Overdue
@@ -139,7 +145,7 @@
 
         <div class="tracker-form-group">
           <label for="tracker-form-title">Routine / Event Name *</label>
-          <input type="text" id="tracker-form-title" placeholder="e.g., Nail cut - hands, Haircut, Car oil change" required autocomplete="off">
+          <input type="text" id="tracker-form-title" placeholder="e.g., Nail cut - hands, Haircut, AC filter cleaning" required autocomplete="off">
         </div>
 
         <div class="tracker-form-row">
@@ -156,9 +162,58 @@
           </div>
 
           <div class="tracker-form-group">
-            <label for="tracker-form-target">Target Frequency (Days)</label>
-            <input type="number" id="tracker-form-target" placeholder="e.g., 7 for weekly, 30 for monthly" min="1" max="1000">
-            <span class="tracker-hint">Expected recurrence interval in days</span>
+            <label for="tracker-form-severity">Urgency / Severity</label>
+            <select id="tracker-form-severity">
+              <option value="low">🟢 Low</option>
+              <option value="moderate" selected>🟡 Moderate</option>
+              <option value="high">🔴 High</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Cadence & Recurrence Settings -->
+        <div class="tracker-modal-section-title">
+          <span>Cadence & Reminder Radar Settings</span>
+        </div>
+
+        <div class="tracker-form-row">
+          <div class="tracker-form-group">
+            <label for="tracker-form-recurrence">Recurrence Cadence</label>
+            <select id="tracker-form-recurrence" onchange="TrackerEngine.handleRecurrencePresetChange(this.value)">
+              <option value="weekly">📅 Weekly (Every 7 days)</option>
+              <option value="biweekly">🗓️ Bi-Weekly (Every 14 days)</option>
+              <option value="monthly">🗓️ Monthly (Every 30 days)</option>
+              <option value="quarterly">🎯 Quarterly (Every 90 days)</option>
+              <option value="annual">🏆 Annual (Every 365 days)</option>
+              <option value="custom">⚙️ Custom Interval</option>
+            </select>
+            <span class="tracker-hint">Determines weekly/monthly sprint windows</span>
+          </div>
+
+          <div class="tracker-form-group">
+            <label for="tracker-form-target">Cycle Interval (Days) *</label>
+            <input type="number" id="tracker-form-target" placeholder="e.g., 7 for weekly, 30 for monthly" min="1" max="1000" oninput="TrackerEngine.handleTargetDaysChange(this.value)">
+            <span class="tracker-hint">Expected cycle recurrence in days</span>
+          </div>
+        </div>
+
+        <div class="tracker-form-row">
+          <div class="tracker-form-group">
+            <label for="tracker-form-reminder-date">Manual Reminder Date (Optional)</label>
+            <div class="tracker-reminder-input-wrap">
+              <input type="date" id="tracker-form-reminder-date">
+              <button type="button" class="btn-clear-date-inline" onclick="document.getElementById('tracker-form-reminder-date').value = ''" title="Clear manual date">Clear</button>
+            </div>
+            <span class="tracker-hint">Triggers advance radar reminder on this date</span>
+          </div>
+
+          <div class="tracker-form-group tracker-toggle-group">
+            <label class="tracker-checkbox-label">
+              <input type="checkbox" id="tracker-form-reminder-enabled" checked>
+              <span class="tracker-checkbox-custom"></span>
+              <span class="tracker-checkbox-text">Enable Cadence Radar Reminders</span>
+            </label>
+            <span class="tracker-hint">Shows in Today's Docket active sprint window & reminders</span>
           </div>
         </div>
 
