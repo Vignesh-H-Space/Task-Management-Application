@@ -274,7 +274,9 @@ const CommandPalette = {
         badge: 'THEME',
         action: () => {
           this.close();
-          if (typeof toggleTheme === 'function') {
+          if (typeof Components !== 'undefined' && typeof Components.toggleTheme === 'function') {
+            Components.toggleTheme();
+          } else if (typeof toggleTheme === 'function') {
             toggleTheme();
           }
         }
