@@ -15,6 +15,59 @@ const Components = {
   },
 
   /**
+   * Initialize and restore saved theme (light or dark)
+   */
+  initTheme() {
+    if (typeof document === 'undefined') return;
+    const saved = localStorage.getItem('tesseract_goals_theme') || localStorage.getItem('tesseract_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    this.updateThemeUI(saved);
+  },
+
+  /**
+   * Toggle between Dark & Light themes with persistent state and UI sync
+   */
+  toggleTheme() {
+    if (typeof document === 'undefined') return;
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('tesseract_goals_theme', next);
+    localStorage.setItem('tesseract_theme', next);
+    this.updateThemeUI(next);
+
+    if (typeof this.showToast === 'function') {
+      this.showToast(next === 'light' ? 'Switched to Light Theme ☀️' : 'Switched to Dark Theme 🌙', 'info');
+    }
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
+    }
+  },
+
+  /**
+   * Update theme toggle button tooltips and icon states across header and sidebar
+   */
+  updateThemeUI(theme) {
+    if (typeof document === 'undefined') return;
+    const isLight = theme === 'light';
+    const headerBtn = document.getElementById('header-theme-toggle');
+    if (headerBtn) {
+      headerBtn.title = isLight ? 'Switch to Dark Theme (🌙)' : 'Switch to Light Theme (☀️)';
+      headerBtn.setAttribute('aria-label', headerBtn.title);
+    }
+    const sidebarBtn = document.getElementById('theme-toggle');
+    if (sidebarBtn) {
+      sidebarBtn.title = isLight ? 'Switch to Dark Theme (🌙)' : 'Switch to Light Theme (☀️)';
+      sidebarBtn.setAttribute('aria-label', sidebarBtn.title);
+    }
+  },
+
+  /**
    * Render Sidebar into an element with id="sidebar-mount" or prepend to .app-layout
    */
   renderSidebar(activeHorizon = 'general') {
@@ -155,7 +208,7 @@ const Components = {
           </div>
 
           <div class="user-controls">
-            <button class="icon-btn" id="theme-toggle" title="Toggle Theme" aria-label="Toggle Theme">
+            <button class="icon-btn" id="theme-toggle" onclick="Components.toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">
               <i data-lucide="sun" class="sun-icon"></i>
               <i data-lucide="moon" class="moon-icon"></i>
             </button>
@@ -303,6 +356,12 @@ const Components = {
         <!-- Native Notifications & Alarms Bell Button -->
         <button class="header-icon-btn" id="header-notif-btn" onclick="if(typeof NotificationEngine !== 'undefined') NotificationEngine.openModal();" title="Notifications & Ritual Alarms">
           <i data-lucide="bell"></i>
+        </button>
+
+        <!-- Global Theme Toggle (Light / Dark) -->
+        <button class="header-icon-btn header-theme-toggle-btn" id="header-theme-toggle" onclick="Components.toggleTheme()" title="Switch to Light / Dark Theme" aria-label="Toggle Theme">
+          <i data-lucide="sun" class="theme-icon-sun"></i>
+          <i data-lucide="moon" class="theme-icon-moon"></i>
         </button>
 
         <!-- Live Header XP & Rank Widget -->
@@ -1197,6 +1256,18 @@ const Components = {
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.Components = Components;
+}
+if (typeof globalThis !== 'undefined') {
+  globalThis.Components = Components;
+}
+
+// Auto-initialize theme immediately on load
+if (typeof Components !== 'undefined' && typeof Components.initTheme === 'function') {
+  Components.initTheme();
+}
 
 // Register PWA Service Worker
 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
