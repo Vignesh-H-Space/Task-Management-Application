@@ -352,8 +352,12 @@ function renderStreakUI() {
 const ACCENT_KEY = 'horizon_accent';
 
 function loadTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'dark';
-  document.documentElement.setAttribute('data-theme', saved);
+  if (typeof Components !== 'undefined' && typeof Components.initTheme === 'function') {
+    Components.initTheme();
+  } else {
+    const saved = localStorage.getItem(THEME_KEY) || localStorage.getItem('tesseract_goals_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+  }
   const savedAccent = localStorage.getItem(ACCENT_KEY);
   if (savedAccent) {
     document.documentElement.setAttribute('data-accent', savedAccent);
@@ -361,10 +365,15 @@ function loadTheme() {
 }
 
 function toggleTheme() {
+  if (typeof Components !== 'undefined' && typeof Components.toggleTheme === 'function') {
+    Components.toggleTheme();
+    return;
+  }
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem(THEME_KEY, next);
+  localStorage.setItem('tesseract_goals_theme', next);
 }
 
 function setAccent(accent) {
