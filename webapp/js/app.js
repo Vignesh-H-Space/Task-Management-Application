@@ -106,6 +106,7 @@ function init() {
   if (typeof RitualsEngine !== 'undefined') RitualsEngine.init();
   if (typeof BucketListEngine !== 'undefined') BucketListEngine.init();
   if (typeof BacklogEngine !== 'undefined') BacklogEngine.init();
+  if (typeof HorizonBridge !== 'undefined') HorizonBridge.init();
   if (typeof DocketEngine !== 'undefined') DocketEngine.init();
   if (typeof ReportEngine !== 'undefined') ReportEngine.init();
   if (typeof TouchEngine !== 'undefined') TouchEngine.init();
@@ -155,6 +156,11 @@ function loadData() {
   } else if (typeof INITIAL_TASKS !== 'undefined') {
     state.tasks = [...INITIAL_TASKS];
     saveData();
+  }
+
+  // Ensure Backlog items are fresh and merged into state.tasks
+  if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncAll === 'function') {
+    HorizonBridge.syncAll();
   }
 }
 
@@ -1621,6 +1627,8 @@ const KANBAN_COLUMNS = [
 function getKanbanStatus(task) {
   if (task.completed) return 'done';
   if (task.kanbanStatus) return task.kanbanStatus;
+  // Executive Backlogs and General horizon items cleanly default to the 'backlog' column
+  if (task.backlogId || task.isBacklog || task.tier === 'general') return 'backlog';
   // Auto-classify based on existing data
   if (task.priority === 'low' && !task.dueDate) return 'backlog';
   return 'todo';
@@ -1634,13 +1642,20 @@ function moveTaskToKanban(taskId, columnId, event) {
   if (columnId === 'done') {
     task.completed = true;
     task.kanbanStatus = 'done';
+    task.completedAt = task.completedAt || new Date().toISOString();
     // Award XP
     if (typeof XPEngine !== 'undefined') {
       XPEngine.awardXP(task);
     }
   } else {
     task.completed = false;
+    task.completedAt = null;
     task.kanbanStatus = columnId;
+  }
+
+  // Bi-directional sync back to Executive Backlogs if linked
+  if (task.backlogId && typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncHorizonTaskToBacklog === 'function') {
+    HorizonBridge.syncHorizonTaskToBacklog(task);
   }
 
   saveData();
@@ -1655,12 +1670,17 @@ function renderKanbanBoard() {
   const container = document.getElementById('kanban-board-container');
   if (!container) return;
 
+  // Auto-sync Backlog items into state before rendering Kanban
+  if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncAll === 'function') {
+    HorizonBridge.syncAll();
+  }
+
   // Get tasks based on current horizon filter
   let tasks = state.tasks.filter(task => {
     if (state.activeHorizon === 'general') {
-      return ['daily', 'weekly', 'monthly'].includes(task.tier);
+      return ['daily', 'weekly', 'monthly', 'general'].includes(task.tier) || !!task.backlogId;
     } else if (state.activeHorizon !== 'all') {
-      return task.tier === state.activeHorizon;
+      return task.tier === state.activeHorizon || (state.activeHorizon === 'general' && !!task.backlogId);
     }
     return true;
   });
@@ -1672,6 +1692,7 @@ function renderKanbanBoard() {
       return (t.title || '').toLowerCase().includes(q) ||
              (t.description || '').toLowerCase().includes(q) ||
              (t.category || '').toLowerCase().includes(q) ||
+             (t.group || '').toLowerCase().includes(q) ||
              (t.tags || []).some(tg => tg.toLowerCase().includes(q));
     });
   }
@@ -1703,14 +1724,15 @@ function renderKanbanBoard() {
         <div class="kb-column-body" id="kb-body-${col.id}" data-column="${col.id}">
           ${colTasks.length === 0 ? `<div class="kb-empty">No tasks here</div>` :
             colTasks.map(t => {
-              const tierObj = TIERS.find(ti => ti.id === t.tier) || { emoji: '📌', name: 'Task', color: '#888' };
+              const isBkl = !!t.backlogId || !!t.isBacklog;
+              const tierObj = TIERS.find(ti => ti.id === t.tier) || { emoji: isBkl ? '📥' : '📌', name: isBkl ? 'Backlog' : 'Task', color: '#64748b' };
               const subtasks = t.subtasks || [];
               const doneSubs = subtasks.filter(s => s.completed).length;
               const totalSubs = subtasks.length;
               const subPct = totalSubs > 0 ? Math.round((doneSubs / totalSubs) * 100) : -1;
 
               return `
-                <div class="kb-card" data-id="${t.id}" draggable="true">
+                <div class="kb-card ${isBkl ? 'kb-card-backlog' : ''}" data-id="${t.id}" draggable="true">
                   <div class="kb-card-top">
                     <div class="kb-card-title">${escapeHTML(t.title)}</div>
                     <div class="kb-card-move-dropdown">
@@ -1732,7 +1754,13 @@ function renderKanbanBoard() {
                   </div>
                   ${t.description ? `<div class="kb-card-desc">${escapeHTML(t.description.substring(0, 80))}${t.description.length > 80 ? '...' : ''}</div>` : ''}
                   <div class="kb-card-meta">
-                    <span class="kb-tier-pill" style="color: ${tierObj.color || '#888'}">${tierObj.emoji} ${tierObj.name}</span>
+                    ${isBkl ? `
+                      <span class="kb-backlog-badge" title="Executive Backlog Objective">
+                        <i data-lucide="layers" style="width:10px;height:10px;"></i> Backlog
+                      </span>
+                    ` : `
+                      <span class="kb-tier-pill" style="color: ${tierObj.color || '#888'}">${tierObj.emoji} ${tierObj.name}</span>
+                    `}
                     <span class="kb-prio-pill kb-prio-${t.priority}">${t.priority}</span>
                     ${t.dueDate ? `<span class="kb-due-pill"><i data-lucide="calendar" style="width:10px;height:10px;"></i> ${t.dueDate}</span>` : ''}
                   </div>
@@ -1745,7 +1773,7 @@ function renderKanbanBoard() {
                     </div>
                   ` : ''}
                   <div class="kb-card-footer">
-                    <span class="kb-category-tag">#${t.category || 'General'}</span>
+                    <span class="kb-category-tag">#${t.group ? (t.group.charAt(0).toUpperCase() + t.group.slice(1)) : (t.category || 'General')}</span>
                     ${col.id !== 'done' ? `
                       <button class="kb-focus-btn" onclick="if(typeof FocusEngine!=='undefined') FocusEngine.open('${t.id}')" title="Focus Mode">
                         <i data-lucide="zap"></i>

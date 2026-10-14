@@ -27,6 +27,7 @@ const ASSETS_TO_CACHE = [
   './js/rituals_engine.js',
   './js/bucketlist_engine.js',
   './js/backlog_engine.js',
+  './js/horizon_bridge.js',
   './js/docket_engine.js',
   './js/alignment_engine.js',
   './js/roadmap_engine.js',
