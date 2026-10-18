@@ -14912,6 +14912,122 @@ body {
   font-weight: 600;
 }
 
+/* ── Pulse Date Selector Row ── */
+.pulse-date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pulse-date-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #64748b);
+  white-space: nowrap;
+}
+
+.pulse-date-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pulse-date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.pulse-date-chip i,
+.pulse-date-chip svg {
+  width: 12px;
+  height: 12px;
+}
+
+.pulse-date-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #ffffff);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pulse-date-chip.active {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #60a5fa;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.pulse-custom-date-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pulse-date-hidden-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.pulse-date-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.74rem;
+  padding: 3px 9px;
+  border-radius: 6px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.pulse-date-notice i,
+.pulse-date-notice svg {
+  width: 12px;
+  height: 12px;
+}
+
+.btn-reset-pulse-date {
+  background: transparent;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-pulse-date:hover {
+  background: rgba(245, 158, 11, 0.25);
+  color: #ffffff;
+}
+
 /* Input Row */
 .pulse-input-row {
   display: flex;
@@ -15485,6 +15601,32 @@ body {
   color: var(--text-primary, #ffffff);
   font-size: 0.75rem;
   outline: none;
+}
+
+.pulse-edit-date-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(15, 18, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.pulse-edit-date-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.pulse-edit-date-input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #ffffff);
+  font-size: 0.75rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
 }
 
 .pulse-edit-textarea {
@@ -19938,6 +20080,50 @@ html[data-theme="light"] body,
   background-color: rgba(37, 99, 235, 0.08) !important;
   border-color: rgba(37, 99, 235, 0.25) !important;
 }
+
+[data-theme="light"] .pulse-date-chip {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+[data-theme="light"] .pulse-date-chip:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+[data-theme="light"] .pulse-date-chip.active {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: #2563eb;
+  color: #2563eb;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="light"] .pulse-date-notice {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #d97706;
+}
+
+[data-theme="light"] .btn-reset-pulse-date {
+  border-color: rgba(217, 119, 6, 0.4);
+  color: #d97706;
+}
+
+[data-theme="light"] .btn-reset-pulse-date:hover {
+  background: rgba(217, 119, 6, 0.18);
+  color: #0f172a;
+}
+
+[data-theme="light"] .pulse-edit-date-wrap {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .pulse-edit-date-input {
+  color: #0f172a;
+}
+
 
 
 
