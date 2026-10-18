@@ -100,6 +100,29 @@
             </div>
           </div>
 
+          <!-- Date Anchor Row for Logging Past Dates -->
+          <div class="pulse-date-row">
+            <span class="pulse-date-label">Date:</span>
+            <div class="pulse-date-selector">
+              <button type="button" class="pulse-date-chip active" id="pulse-date-btn-today" onclick="PulseEngine.setCaptureDate('today')">
+                <i data-lucide="sun"></i>
+                <span>Today</span>
+              </button>
+              <button type="button" class="pulse-date-chip" id="pulse-date-btn-yesterday" onclick="PulseEngine.setCaptureDate('yesterday')">
+                <i data-lucide="history"></i>
+                <span>Yesterday</span>
+              </button>
+              <div class="pulse-custom-date-wrap">
+                <button type="button" class="pulse-date-chip" id="pulse-date-btn-custom" onclick="PulseEngine.openCustomDatePicker()">
+                  <i data-lucide="calendar"></i>
+                  <span id="pulse-custom-date-label">Older Date...</span>
+                </button>
+                <input type="date" id="pulse-date-picker" class="pulse-date-hidden-input" onchange="PulseEngine.onCustomDateChange(this.value)">
+              </div>
+            </div>
+            <div id="pulse-date-notice" class="pulse-date-notice" style="display: none;"></div>
+          </div>
+
           <!-- Main Input Row -->
           <div class="pulse-input-row">
             <div class="pulse-input-field-wrap">
