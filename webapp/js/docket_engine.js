@@ -19,6 +19,7 @@ const DOCKET_SEVERITIES = {
 const DocketEngine = {
   items: [],
   isCollapsed: false,
+  showCompleted: false,
   pendingVanishes: {}, // { [id]: { timer, interval, startTime } }
   pendingDeletions: {}, // { [id]: { timer, interval, startTime } }
 
@@ -127,6 +128,35 @@ const DocketEngine = {
       localStorage.setItem(DOCKET_COLLAPSED_KEY, this.isCollapsed ? 'true' : 'false');
     } catch (e) {}
     this.render();
+  },
+
+  toggleShowCompleted() {
+    this.showCompleted = !this.showCompleted;
+    this.render();
+  },
+
+  restoreCompleted(id) {
+    const item = this.items.find(i => i.id === id);
+    if (!item) return;
+    item.completed = false;
+    item.completedAt = null;
+    this.save();
+
+    // Two-way sync: If item came from Backlog, restore in Backlog too!
+    if (item.backlogId && typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
+      const bkl = BacklogEngine.items.find(b => b.id === item.backlogId);
+      if (bkl) {
+        bkl.completed = false;
+        bkl.completedAt = null;
+        BacklogEngine.save();
+        BacklogEngine.render();
+      }
+    }
+
+    this.render();
+    if (typeof showToast === 'function') {
+      showToast(`Restored "${item.task}" to Today's Agenda`, 'info');
+    }
   },
 
   getTodayItems() {
@@ -868,7 +898,9 @@ const DocketEngine = {
         showToast('⚡ Routine logged for today! Rolling dates shifted. ✨', 'success');
       }
     } else if (source === 'task') {
-      if (typeof window !== 'undefined' && typeof toggleTaskStatus === 'function') {
+      if (typeof window !== 'undefined' && typeof toggleTaskCompletion === 'function') {
+        toggleTaskCompletion(id);
+      } else if (typeof window !== 'undefined' && typeof toggleTaskStatus === 'function') {
         toggleTaskStatus(id);
       } else {
         try {
@@ -880,6 +912,13 @@ const DocketEngine = {
               t.completed = true;
               t.completedAt = new Date().toISOString();
               localStorage.setItem('tesseract_goals_tasks_data', JSON.stringify(list));
+              if (typeof window !== 'undefined' && window.state && Array.isArray(window.state.tasks)) {
+                const memTask = window.state.tasks.find(x => x.id === id);
+                if (memTask) {
+                  memTask.completed = true;
+                  memTask.completedAt = t.completedAt;
+                }
+              }
             }
           }
         } catch (e) {}
@@ -1609,7 +1648,10 @@ const DocketEngine = {
           <div class="docket-tasks-list" id="docket-tasks-list">
     `;
 
-    if (todayItems.length === 0) {
+    const activeTodayItems = todayItems.filter(item => !item.completed || this.pendingVanishes[item.id]);
+    const completedTodayItems = todayItems.filter(item => item.completed && !this.pendingVanishes[item.id]);
+
+    if (activeTodayItems.length === 0) {
       html += `
         <div class="docket-empty-state">
           <div class="docket-empty-icon">
@@ -1622,7 +1664,7 @@ const DocketEngine = {
         </div>
       `;
     } else {
-      todayItems.forEach(item => {
+      activeTodayItems.forEach(item => {
         const isCompleting = !!this.pendingVanishes[item.id];
         const isDeleting = !!this.pendingDeletions[item.id];
         const sevMeta = DOCKET_SEVERITIES[item.severity] || DOCKET_SEVERITIES.low;
@@ -1680,7 +1722,46 @@ const DocketEngine = {
 
     html += `
           </div>
+    `;
 
+    // Collapsible Completed Today Archive Drawer
+    if (completedTodayItems.length > 0) {
+      html += `
+        <div class="docket-completed-drawer" id="docket-completed-drawer">
+          <button type="button" class="docket-completed-toggle-btn" onclick="DocketEngine.toggleShowCompleted()" title="${this.showCompleted ? 'Hide completed tasks' : 'Show completed tasks'}">
+            <div class="docket-completed-toggle-left">
+              <i data-lucide="check-circle-2"></i>
+              <span>${completedTodayItems.length} task${completedTodayItems.length > 1 ? 's' : ''} completed today</span>
+            </div>
+            <span class="docket-completed-toggle-pill">${this.showCompleted ? 'Hide Archive ▲' : 'Show Archive ▼'}</span>
+          </button>
+          ${this.showCompleted ? `
+            <div class="docket-completed-items-wrap">
+              ${completedTodayItems.map(item => `
+                <div class="docket-task-row docket-task-completed" data-id="${item.id}">
+                  <label class="docket-check-wrap" title="Completed">
+                    <input type="checkbox" class="docket-checkbox" checked disabled>
+                    <span class="docket-custom-check"><i data-lucide="check"></i></span>
+                  </label>
+                  <div class="docket-task-text-wrap">
+                    <span class="docket-task-title completed-strikethrough">${this.escapeHTML(item.task)}</span>
+                    <span class="docket-completed-timestamp">Done ${item.completedAt ? new Date(item.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'today'}</span>
+                  </div>
+                  <div class="docket-row-actions">
+                    <button type="button" class="btn-docket-restore" onclick="DocketEngine.restoreCompleted('${item.id}')" title="Restore task to active agenda">
+                      <i data-lucide="rotate-ccw"></i>
+                      <span>Restore</span>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    html += `
           <!-- Bottom Section: Cadence Radar & Active Sprints Sub-Group -->
           ${this.renderRadarSection()}
 

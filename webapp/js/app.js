@@ -39,7 +39,7 @@ let state = {
   priorityFilter: 'all',
   searchQuery: '',
   editingTaskId: null,
-  viewMode: 'list', // 'list' | 'eisenhower'
+  viewMode: (typeof localStorage !== 'undefined' && localStorage.getItem('tesseract_view_mode')) || 'list', // 'list' | 'eisenhower' | 'kanban'
   profile: {
     name: 'Tesseract User',
     image: null
@@ -114,7 +114,13 @@ function init() {
   if (typeof NotificationEngine !== 'undefined') NotificationEngine.init();
   if (typeof ProfessionalEngine !== 'undefined') ProfessionalEngine.init();
   if (typeof TrackerEngine !== 'undefined') TrackerEngine.init();
-  renderAll();
+
+  if (page === 'index' && state.viewMode && state.viewMode !== 'list') {
+    switchView(state.viewMode);
+  } else {
+    renderAll();
+  }
+
   renderStreakUI();
   lucide.createIcons();
   initPwaInstallPrompt();
@@ -871,6 +877,10 @@ function toggleTaskCompletion(taskId, clickEvent = null) {
   renderAll();
 }
 
+if (typeof window !== 'undefined') {
+  window.toggleTaskCompletion = toggleTaskCompletion;
+}
+
 // Delete Task
 function deleteTask(taskId) {
   const task = state.tasks.find(t => t.id === taskId);
@@ -1123,7 +1133,13 @@ function renderAll() {
     syncHorizonUI();
     updateHeaderTitle();
     updateProgressCards();
-    renderTaskList();
+    if (state.viewMode === 'eisenhower') {
+      renderEisenhowerMatrix();
+    } else if (state.viewMode === 'kanban') {
+      renderKanbanBoard();
+    } else {
+      renderTaskList();
+    }
     if (typeof HabitsEngine !== 'undefined') HabitsEngine.renderWidget();
     if (typeof RitualsEngine !== 'undefined') RitualsEngine.renderMorningBanner();
   } else if (page === 'cascade') {
@@ -1462,6 +1478,9 @@ function toggleViewMode() {
 
 function switchView(mode) {
   state.viewMode = mode;
+  try {
+    localStorage.setItem('tesseract_view_mode', mode);
+  } catch (e) {}
   const listBtn = document.getElementById('view-mode-list');
   const matrixBtn = document.getElementById('view-mode-matrix');
   const kanbanBtn = document.getElementById('view-mode-kanban');

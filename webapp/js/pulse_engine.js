@@ -45,6 +45,7 @@ const PulseEngine = {
   searchQuery: '',
   selectedCategory: 'career',
   selectedSubcategory: 'win',
+  selectedDate: null, // null means today, or 'YYYY-MM-DD'
   editingId: null,
 
   /**
@@ -113,7 +114,6 @@ const PulseEngine = {
   setCaptureCategory(categoryKey) {
     if (!PULSE_CATEGORIES[categoryKey]) return;
     this.selectedCategory = categoryKey;
-    // Set default subcategory for this category
     const subKeys = Object.keys(PULSE_CATEGORIES[categoryKey].subcategories);
     this.selectedSubcategory = subKeys[0] || 'observation';
     this.renderCaptureConsole();
@@ -129,7 +129,6 @@ const PulseEngine = {
     const cat = PULSE_CATEGORIES[this.selectedCategory];
     if (cat && cat.subcategories[subKey]) {
       this.selectedSubcategory = subKey;
-      // Update DOM classes directly to preserve existing SVG icons and prevent them from disappearing
       const pills = document.querySelectorAll('.pulse-subcat-pill');
       if (pills && pills.length > 0) {
         pills.forEach(p => {
@@ -141,6 +140,141 @@ const PulseEngine = {
       } else {
         this.renderCaptureConsole();
       }
+    }
+  },
+
+  getTodayStr() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
+  getYesterdayStr() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
+  setCaptureDate(mode, customVal) {
+    const todayStr = this.getTodayStr();
+    const yesterdayStr = this.getYesterdayStr();
+
+    if (mode === 'today') {
+      this.selectedDate = null;
+    } else if (mode === 'yesterday') {
+      this.selectedDate = yesterdayStr;
+    } else if (mode === 'custom' && customVal) {
+      this.selectedDate = customVal;
+    }
+
+    this.renderDateSelectorUI();
+  },
+
+  openCustomDatePicker() {
+    const picker = document.getElementById('pulse-date-picker');
+    if (picker) {
+      if (typeof picker.showPicker === 'function') {
+        try {
+          picker.showPicker();
+          return;
+        } catch (e) {}
+      }
+      picker.focus();
+      picker.click();
+    }
+  },
+
+  onCustomDateChange(val) {
+    if (!val) return;
+    this.setCaptureDate('custom', val);
+  },
+
+  resetCaptureDate() {
+    this.selectedDate = null;
+    const picker = document.getElementById('pulse-date-picker');
+    if (picker) picker.value = '';
+    this.renderDateSelectorUI();
+    if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
+      Components.showToast('Reset capture date to Today', 'info');
+    }
+  },
+
+  renderDateSelectorUI() {
+    const todayBtn = document.getElementById('pulse-date-btn-today');
+    const yestBtn = document.getElementById('pulse-date-btn-yesterday');
+    const customBtn = document.getElementById('pulse-date-btn-custom');
+    const customLabel = document.getElementById('pulse-custom-date-label');
+    const noticeEl = document.getElementById('pulse-date-notice');
+    const picker = document.getElementById('pulse-date-picker');
+
+    const todayStr = this.getTodayStr();
+    const yesterdayStr = this.getYesterdayStr();
+
+    if (picker) {
+      picker.max = todayStr; // Keep calendar for today and past dates
+    }
+
+    if (!this.selectedDate || this.selectedDate === todayStr) {
+      // Today active
+      if (todayBtn) todayBtn.classList.add('active');
+      if (yestBtn) yestBtn.classList.remove('active');
+      if (customBtn) customBtn.classList.remove('active');
+      if (customLabel) customLabel.textContent = 'Older Date...';
+      if (noticeEl) {
+        noticeEl.style.display = 'none';
+        noticeEl.innerHTML = '';
+      }
+    } else if (this.selectedDate === yesterdayStr) {
+      // Yesterday active
+      if (todayBtn) todayBtn.classList.remove('active');
+      if (yestBtn) yestBtn.classList.add('active');
+      if (customBtn) customBtn.classList.remove('active');
+      if (customLabel) customLabel.textContent = 'Older Date...';
+      if (noticeEl) {
+        noticeEl.style.display = 'inline-flex';
+        noticeEl.innerHTML = `
+          <i data-lucide="history"></i>
+          <span>Logging for <b>Yesterday</b></span>
+          <button type="button" class="btn-reset-pulse-date" onclick="PulseEngine.resetCaptureDate()" title="Switch back to Today">
+            <i data-lucide="x"></i> Reset
+          </button>
+        `;
+      }
+    } else {
+      // Custom older date active
+      if (todayBtn) todayBtn.classList.remove('active');
+      if (yestBtn) yestBtn.classList.remove('active');
+      if (customBtn) customBtn.classList.add('active');
+
+      const parts = this.selectedDate.split('-');
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      const formatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      
+      const now = new Date();
+      const diffDays = Math.max(1, Math.round((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)));
+
+      if (customLabel) customLabel.textContent = formatted;
+      if (picker) picker.value = this.selectedDate;
+
+      if (noticeEl) {
+        noticeEl.style.display = 'inline-flex';
+        noticeEl.innerHTML = `
+          <i data-lucide="calendar"></i>
+          <span>Logging for <b>${formatted}</b> (${diffDays} days ago)</span>
+          <button type="button" class="btn-reset-pulse-date" onclick="PulseEngine.resetCaptureDate()" title="Switch back to Today">
+            <i data-lucide="x"></i> Reset
+          </button>
+        `;
+      }
+    }
+
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
     }
   },
 
@@ -156,8 +290,20 @@ const PulseEngine = {
       return;
     }
 
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
+    const todayStr = this.getTodayStr();
+    const dateStr = this.selectedDate || todayStr;
+    const isPastDate = (dateStr !== todayStr);
+
+    let createdAt;
+    if (!isPastDate) {
+      createdAt = Date.now();
+    } else {
+      // Set timestamp on that past date matching current time of day
+      const now = new Date();
+      const parts = dateStr.split('-');
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), now.getHours(), now.getMinutes(), now.getSeconds());
+      createdAt = d.getTime();
+    }
 
     const newPulse = {
       id: 'pulse_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
@@ -165,7 +311,7 @@ const PulseEngine = {
       category: this.selectedCategory,
       subcategory: this.selectedSubcategory,
       pinned: false,
-      createdAt: now.getTime(),
+      createdAt: createdAt,
       date: dateStr
     };
 
@@ -178,14 +324,15 @@ const PulseEngine = {
 
     // Reward XP (+10 XP)
     if (typeof XPEngine !== 'undefined' && typeof XPEngine.addXP === 'function') {
-      XPEngine.addXP(10, 'Pulse Recorded');
+      XPEngine.addXP(10, isPastDate ? 'Retroactive Pulse Recorded' : 'Pulse Recorded');
     }
 
     // Trigger feedback toast
     if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
       const catLabel = PULSE_CATEGORIES[newPulse.category]?.label || 'Pulse';
       const subLabel = PULSE_CATEGORIES[newPulse.category]?.subcategories[newPulse.subcategory]?.label || '';
-      Components.showToast(`✨ Pulse logged: ${subLabel ? subLabel + ' • ' : ''}+10 XP`, 'success');
+      const dateNotice = isPastDate ? ` for ${dateStr}` : '';
+      Components.showToast(`✨ Pulse logged${dateNotice}: ${subLabel ? subLabel + ' • ' : ''}+10 XP`, 'success');
     }
 
     this.render();
@@ -251,6 +398,7 @@ const PulseEngine = {
   saveEdit(id) {
     const editInput = document.getElementById(`pulse-edit-input-${id}`);
     const subSelect = document.getElementById(`pulse-edit-sub-${id}`);
+    const dateInput = document.getElementById(`pulse-edit-date-${id}`);
     if (!editInput) return;
 
     const newText = editInput.value.trim();
@@ -264,6 +412,16 @@ const PulseEngine = {
       pulse.text = newText;
       if (subSelect && subSelect.value) {
         pulse.subcategory = subSelect.value;
+      }
+      if (dateInput && dateInput.value) {
+        const newDate = dateInput.value;
+        if (newDate !== pulse.date) {
+          pulse.date = newDate;
+          const prevTime = new Date(pulse.createdAt || Date.now());
+          const parts = newDate.split('-');
+          const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), prevTime.getHours(), prevTime.getMinutes(), prevTime.getSeconds());
+          pulse.createdAt = d.getTime();
+        }
       }
       this.save();
     }
@@ -291,6 +449,7 @@ const PulseEngine = {
   render() {
     this.renderStats();
     this.renderCaptureConsole();
+    this.renderDateSelectorUI();
     this.renderFilters();
     this.renderTimeline();
     if (typeof lucide !== 'undefined') {
@@ -612,6 +771,10 @@ const PulseEngine = {
                 <option value="${s.key}" ${s.key === pulse.subcategory ? 'selected' : ''}>${s.label}</option>
               `).join('')}
             </select>
+            <div class="pulse-edit-date-wrap" title="Change date of this reflection">
+              <i data-lucide="calendar" class="pulse-edit-date-icon"></i>
+              <input type="date" id="pulse-edit-date-${pulse.id}" class="pulse-edit-date-input" value="${pulse.date || (pulse.createdAt ? new Date(pulse.createdAt).toISOString().split('T')[0] : '')}">
+            </div>
           </div>
           <textarea id="pulse-edit-input-${pulse.id}" class="pulse-edit-textarea" rows="2">${this.escapeHTML(pulse.text)}</textarea>
           <div class="pulse-card-edit-actions">

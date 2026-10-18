@@ -13982,6 +13982,99 @@ body {
   color: var(--accent-primary);
 }
 
+/* ── Docket Completed Archive Drawer (Collapsible) ── */
+.docket-completed-drawer {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(16, 185, 129, 0.02);
+}
+
+.docket-completed-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  color: var(--text-muted, #71717a);
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+
+.docket-completed-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.docket-completed-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.docket-completed-toggle-left i,
+.docket-completed-toggle-left svg {
+  width: 14px;
+  height: 14px;
+}
+
+.docket-completed-toggle-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted, #71717a);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.docket-completed-items-wrap {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+.docket-completed-timestamp {
+  font-size: 0.7rem;
+  color: var(--text-muted, #71717a);
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: 0.5rem;
+}
+
+.btn-docket-restore {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  color: #60a5fa;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-docket-restore:hover {
+  background: rgba(59, 130, 246, 0.22);
+  color: #93c5fd;
+  transform: translateY(-1px);
+}
+
+.btn-docket-restore i,
+.btn-docket-restore svg {
+  width: 12px;
+  height: 12px;
+}
+
 /* ══════════════════════════════════════════════════════════════════
    🌅 TOP AGENDA HEADER & 📡 CADENCE RADAR BOTTOM SECTION
    ══════════════════════════════════════════════════════════════════ */
@@ -19903,6 +19996,37 @@ html[data-theme="light"] body,
 
 [data-theme="light"] .docket-tip {
   color: #64748b !important;
+}
+
+[data-theme="light"] .docket-completed-drawer {
+  border-top-color: rgba(0, 0, 0, 0.06) !important;
+  background: rgba(16, 185, 129, 0.04) !important;
+}
+
+[data-theme="light"] .docket-completed-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] .docket-completed-toggle-pill {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #475569 !important;
+}
+
+[data-theme="light"] .docket-completed-items-wrap {
+  background: rgba(0, 0, 0, 0.02) !important;
+  border-top-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .btn-docket-restore {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(37, 99, 235, 0.25) !important;
+  color: #2563eb !important;
+}
+
+[data-theme="light"] .btn-docket-restore:hover {
+  background: rgba(37, 99, 235, 0.16) !important;
+  color: #1d4ed8 !important;
 }
 
 /* Cadence Radar within Docket */
