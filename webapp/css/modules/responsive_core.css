@@ -1,0 +1,660 @@
+/* ══════════════════════════════════════════════════════════════════
+   📱 MOBILE & TABLET RESPONSIVE SYSTEM (Unified Across All Views)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Default Desktop Elements for Mobile Navigation */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.mobile-menu-btn:hover,
+.mobile-menu-btn:active {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border-color: var(--accent-primary);
+}
+
+.mobile-menu-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-close-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sidebar-close-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+.sidebar-close-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ── 💻 Tablet Breakpoint (max-width: 1024px) ──────────────────── */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+    padding: 18px 12px;
+  }
+
+  .main-content {
+    padding: 24px 20px;
+  }
+
+  .progress-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .bucketlist-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 📱 Mobile Breakpoint (max-width: 768px) ───────────────────── */
+@media (max-width: 768px) {
+  /* Layout & Navigation Drawer */
+  .app-layout {
+    display: block;
+    min-height: 100vh;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+
+  .sidebar-close-btn {
+    display: inline-flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+
+  .sidebar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 300px;
+    max-width: 86vw;
+    height: 100vh;
+    z-index: 999;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .brand-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+  }
+
+  /* Main Content Area */
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 100vh;
+    padding: 14px 12px 90px;
+    overflow-x: hidden;
+  }
+
+  /* Header & Top Controls */
+  .top-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .view-title {
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  .view-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .header-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .search-box {
+    width: 100%;
+    order: 3;
+  }
+
+  .search-box input {
+    width: 100%;
+    font-size: 0.85rem;
+  }
+
+  .header-xp-pill {
+    order: 1;
+    padding: 6px 12px;
+  }
+
+  .profile-avatar-btn {
+    order: 2;
+  }
+
+  .btn-header-focus-btn,
+  .btn-header-add-btn {
+    order: 4;
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+    font-size: 0.82rem;
+    padding: 9px 12px;
+  }
+
+  /* Command Hero on Home Dashboard */
+  .command-hero {
+    padding: 16px 14px;
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+  }
+
+  .command-greeting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .command-greeting-title {
+    font-size: 1.35rem;
+  }
+
+  .ritual-quick-actions {
+    width: 100%;
+  }
+
+  .ritual-action-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+
+  .spotlight-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .spotlight-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Daily Mindset Ribbon */
+  .mindset-ribbon {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 12px;
+    margin: 0 0 16px 0;
+  }
+
+  /* Horizon Launchpad Cards */
+  .progress-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .horizon-card {
+    padding: 12px 14px;
+  }
+
+  .horizon-pct {
+    font-size: 1.15rem;
+  }
+
+  /* Executive Focus Banner & Priming */
+  .executive-focus-banner {
+    padding: 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+  }
+
+  .executive-banner-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .executive-priority-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .executive-banner-actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .executive-banner-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Daily Quests Board */
+  .daily-quest-board {
+    margin-bottom: 16px;
+  }
+
+  .quest-board-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .quest-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* 7-Day Consistency Grid (Habits) */
+  .habits-widget-container {
+    margin-bottom: 16px;
+  }
+
+  .habits-widget-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .habits-header-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .habit-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .habit-info {
+    width: 100%;
+  }
+
+  .habit-dots-week {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+
+  .habit-actions {
+    align-self: flex-end;
+  }
+
+  /* Quick Metrics & Strategic Alignment */
+  .command-quick-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+
+  .quick-metric-item {
+    padding: 8px 10px;
+  }
+
+  /* View Mode Switcher */
+  .view-mode-switcher {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  /* Filters Bar */
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-group .custom-select {
+    flex: 1;
+    width: 100%;
+    max-width: 220px;
+  }
+
+  .filter-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .filter-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Task Cards (Touch-Friendly) */
+  .task-card {
+    padding: 12px 14px;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .task-card-main {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .task-card-header-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .task-card-meta {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .task-card-actions {
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .orphan-task-alert {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .orphan-link-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Eisenhower Matrix */
+  .eisenhower-matrix {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .em-quadrant {
+    min-height: auto;
+  }
+
+  .em-quadrant-body {
+    max-height: 350px;
+  }
+
+  .em-task-actions {
+    opacity: 1 !important;
+  }
+
+  /* Bottom-Sheet Modals for Native Mobile Feel */
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-card,
+  .ritual-modal-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    animation: modalSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes modalSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-header,
+  .ritual-modal-header {
+    padding: 16px 18px;
+  }
+
+  .modal-footer,
+  .ritual-modal-footer {
+    padding: 12px 18px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer .btn,
+  .ritual-modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Life's Bucket List Responsive */
+  .bucketlist-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px 16px;
+    gap: 14px;
+  }
+
+  .bucketlist-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    gap: 8px;
+  }
+
+  .category-pill-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .category-pill {
+    flex-shrink: 0;
+  }
+
+  .dreams-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dream-card-actions {
+    opacity: 1 !important;
+  }
+
+  /* Roadmap Timeline View */
+  .roadmap-view {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .roadmap-timeline-container {
+    min-width: 680px;
+  }
+
+  .roadmap-hero {
+    padding: 16px;
+  }
+
+  /* Goal Cascade Tree */
+  .cascade-view-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cascade-tree {
+    min-width: 620px;
+  }
+
+  /* Productivity Metrics / Analytics */
+  .analytics-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Profile View */
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .profile-header-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .profile-badges-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+  }
+
+  /* Toast & Notification Containers */
+  .toast-container {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+  }
+
+  .toast {
+    width: 100%;
+    font-size: 0.82rem;
+  }
+
+  .xp-burst-container {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
+
+/* ── 📱 Small Phone Breakpoint (max-width: 480px) ───────────────── */
+@media (max-width: 480px) {
+  .progress-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .command-quick-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .bucketlist-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-title {
+    font-size: 1.2rem;
+  }
+
+  .btn-header-focus-btn,
+  .btn-header-add-btn {
+    flex: 1 1 100%;
+  }
+
+  .segmented-control {
+    width: 100%;
+  }
+
+  .segment {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+}

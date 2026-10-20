@@ -1,0 +1,287 @@
+/* ── View Mode Switcher ─────────────────────────────────── */
+.view-mode-switcher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+  margin-bottom: 16px;
+}
+
+.view-mode-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.view-mode-control {
+  gap: 2px;
+}
+
+.view-mode-control .segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.view-mode-control .segment svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Eisenhower Matrix ─────────────────────────────────── */
+.eisenhower-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.em-quadrant {
+  border-radius: 14px;
+  border: 1.5px solid;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+  backdrop-filter: blur(6px);
+  transition: box-shadow 0.3s ease, transform 0.15s ease;
+}
+
+.em-quadrant:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.em-quadrant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid;
+}
+
+.em-quadrant-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.em-quadrant-emoji {
+  font-size: 22px;
+}
+
+.em-quadrant-label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  display: block;
+}
+
+.em-quadrant-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: block;
+  margin-top: 2px;
+}
+
+.em-quadrant-count {
+  font-size: 28px;
+  font-weight: 900;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.em-quadrant-body {
+  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+}
+
+.em-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  padding: 32px 16px;
+  opacity: 0.6;
+}
+
+/* ── Matrix Task Card ─────────────────────────────────── */
+.em-task-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  animation: em-card-in 0.3s ease forwards;
+}
+
+@keyframes em-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.em-task-card:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent-primary);
+  transform: scale(1.01);
+}
+
+.em-task-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.em-chk {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.em-task-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-task-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.em-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.em-tier-pill {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.em-prio-pill {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+}
+
+.em-prio-urgent { color: #ef4444; background: rgba(239, 68, 68, 0.12); }
+.em-prio-high { color: #f97316; background: rgba(249, 115, 22, 0.12); }
+.em-prio-medium { color: var(--prio-medium); background: rgba(234, 179, 8, 0.14); }
+.em-prio-low { color: #64748b; background: rgba(100, 116, 139, 0.12); }
+
+/* ── Matrix Task Actions ─────────────────────────────────── */
+.em-task-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.em-task-card:hover .em-task-actions {
+  opacity: 1;
+}
+
+.em-move-btn,
+.em-edit-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.em-move-btn:hover,
+.em-edit-btn:hover {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.em-move-btn svg,
+.em-edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Move Dropdown ─────────────────────────────────── */
+.em-move-dropdown {
+  position: relative;
+}
+
+.em-move-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  padding: 6px;
+  min-width: 170px;
+  z-index: 100;
+  animation: em-dropdown-in 0.2s ease;
+}
+
+@keyframes em-dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.em-move-dropdown:hover .em-move-menu,
+.em-move-dropdown:focus-within .em-move-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.em-move-option {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.em-move-option:hover {
+  background: var(--bg-secondary);
+}

@@ -1,0 +1,436 @@
+/* ── ✋ Drag & Drop Task Reordering Styles ──────────────────── */
+
+/* Drag Handle Grip Icon */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+  cursor: grab;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.15s ease;
+  margin-left: -4px;
+  margin-right: 2px;
+}
+
+.drag-handle i {
+  width: 14px;
+  height: 14px;
+}
+
+.task-card:hover .drag-handle {
+  opacity: 0.6;
+}
+
+.task-card:hover .drag-handle:hover {
+  opacity: 1;
+  color: var(--accent-primary);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Dragging state — the card being dragged */
+.task-card.dragging,
+.em-task-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  border: 1.5px dashed var(--accent-primary) !important;
+  background: var(--accent-subtle) !important;
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Touch dragging — slightly elevated */
+.task-card.touch-dragging,
+.em-task-card.touch-dragging {
+  z-index: 1000;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+  transform: scale(1.03) rotate(1deg);
+}
+
+/* Draggable marker — subtle cursor change */
+.draggable-task {
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Sortable container visual hint when something is being dragged over */
+.tasks-grid {
+  min-height: 40px;
+}
+
+.em-quadrant-body {
+  min-height: 60px;
+  transition: background 0.2s ease;
+}
+
+/* Matrix quadrant highlight when dragging over */
+.em-quadrant-body.drag-over {
+  background: var(--accent-subtle);
+  border-radius: var(--radius-md);
+}
+
+/* Make sure task-card has the right flex layout with drag handle */
+.task-card {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Mobile: always show drag handle since hover doesn't exist */
+@media (max-width: 768px) {
+  .drag-handle {
+    opacity: 0.4;
+  }
+}
+
+/* ── 📋 Kanban Board View ──────────────────────────────────── */
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  min-height: 400px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.kanban-board::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.kb-column {
+  min-width: 280px;
+  max-width: 320px;
+  flex: 1;
+  background: rgba(12, 12, 16, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+}
+
+.kb-column-header {
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+}
+
+.kb-column-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kb-column-emoji {
+  font-size: 1.1rem;
+}
+
+.kb-column-label {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.kb-column-count {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid;
+  margin-left: auto;
+}
+
+.kb-column-body {
+  flex: 1;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 100px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.kb-column-body.kb-drag-over {
+  background: var(--accent-subtle);
+  border: 1px dashed var(--accent-border);
+  border-radius: var(--radius-md);
+}
+
+.kb-empty {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 2rem 1rem;
+  opacity: 0.6;
+}
+
+/* ── Kanban Card ───────────────────────────────────────────── */
+.kb-card {
+  background: rgba(18, 18, 24, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kb-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.kb-card:active {
+  cursor: grabbing;
+}
+
+.kb-card.kb-dragging {
+  opacity: 0.35;
+  transform: scale(0.95) rotate(1deg);
+  border: 1.5px dashed var(--accent-primary) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.kb-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.kb-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+  flex: 1;
+}
+
+.kb-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.kb-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.kb-tier-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.kb-card-backlog {
+  border-left: 3px solid #3b82f6 !important;
+}
+
+.kb-backlog-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  padding: 1px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  letter-spacing: 0.02em;
+}
+
+.kb-prio-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.kb-prio-urgent { color: #ef4444; border-color: rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.1); }
+.kb-prio-high { color: #f97316; border-color: rgba(249, 115, 22, 0.35); background: rgba(249, 115, 22, 0.1); }
+.kb-prio-medium { color: var(--prio-medium); border-color: rgba(234, 179, 8, 0.14); background: rgba(234, 179, 8, 0.14); }
+.kb-prio-low { color: #10b981; border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.1); }
+
+.kb-due-pill {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.kb-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kb-progress-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.kb-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.kb-progress-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.kb-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kb-category-tag {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.kb-focus-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.kb-focus-btn i { width: 12px; height: 12px; }
+
+.kb-focus-btn:hover {
+  background: var(--accent-subtle-hover);
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+/* ── Kanban Card Move Dropdown ─────────────────────────────── */
+.kb-card-move-dropdown {
+  position: relative;
+}
+
+.kb-move-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.kb-move-btn i { width: 14px; height: 14px; }
+
+.kb-move-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.kb-move-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 160px;
+  background: #141418;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.kb-card-move-dropdown:hover .kb-move-menu,
+.kb-move-btn:focus + .kb-move-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.kb-move-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.kb-move-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Kanban Responsive ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .kanban-board {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .kb-column {
+    min-width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   📊 DEDICATED EXECUTIVE REPORTS & INTELLIGENCE PAGE STYLES
+   ══════════════════════════════════════════════════════════════════ */
+
+.report-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}

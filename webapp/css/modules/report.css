@@ -1,0 +1,613 @@
+/* ══════════════════════════════════════════════════════════════════
+   📄 EXECUTIVE WEEKLY REPORT MODAL & PRINT STYLES
+   ══════════════════════════════════════════════════════════════════ */
+.report-modal-card {
+  max-width: 680px;
+  width: 95%;
+  max-height: 90vh;
+}
+
+.report-modal-body {
+  padding: 20px;
+  background: var(--bg-primary);
+  overflow-y: auto;
+}
+
+.report-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-header-banner {
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  text-align: center;
+}
+
+.report-badge-pill {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.report-doc-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.report-meta-sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.report-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .report-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.report-stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.report-stat-card.gold {
+  border-color: var(--accent-border);
+  background: var(--accent-subtle);
+}
+
+.report-stat-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.report-stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+
+.report-stat-sub {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.report-section-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.report-count-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  background: var(--accent-subtle);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.report-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-tier-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-tier-header {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 0 2px;
+}
+
+.report-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+.report-task-row.active {
+  background: var(--accent-subtle-hover);
+  border-left: 2px solid var(--accent-primary);
+}
+
+.report-check {
+  color: #10b981;
+  font-weight: 900;
+  font-size: 0.9rem;
+}
+
+.report-bullet {
+  color: var(--accent-primary);
+  font-weight: 900;
+}
+
+.report-task-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-prio-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.report-cat-tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.report-tier-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  background: var(--accent-subtle);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.report-empty-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* Habits table in report */
+.report-habits-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-habit-header-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  padding: 0 8px 4px;
+}
+
+.report-habit-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+.report-habit-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.report-habit-dots {
+  color: var(--accent-primary);
+  letter-spacing: 2px;
+  font-size: 0.85rem;
+  padding: 0 12px;
+}
+
+.report-habit-pct {
+  font-weight: 700;
+  color: var(--text-primary);
+  width: 45px;
+  text-align: right;
+}
+
+.report-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Print Stylesheet */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #weekly-report-modal,
+  #weekly-report-modal * {
+    visibility: visible;
+  }
+  #weekly-report-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    background: #ffffff !important;
+    color: #000000 !important;
+    display: block !important;
+  }
+  .report-modal-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+  }
+  .ritual-modal-header .modal-close-btn,
+  .report-modal-footer {
+    display: none !important;
+  }
+  .report-modal-body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .report-stat-card,
+  .report-section-box,
+  .report-task-row,
+  .report-habit-data-row {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+}
+
+/* ── 🏛️ Personal North Star Creed & Core Values Card ────── */
+.profile-creed-card {
+  background: linear-gradient(135deg, rgba(20, 20, 26, 0.85), rgba(10, 10, 14, 0.95));
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--accent-subtle);
+}
+
+.profile-creed-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-subtle);
+}
+
+.creed-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.creed-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.creed-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.creed-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.creed-mission-box {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.creed-quote-mark {
+  font-family: Georgia, serif;
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--accent-primary);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.creed-mission-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.creed-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent-primary);
+  text-transform: uppercase;
+}
+
+.creed-mission-text {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: #f5f0e8;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.creed-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .creed-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.creed-motto-box,
+.creed-values-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.creed-motto-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  border-radius: 30px;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #fde68a;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.motto-sparkle {
+  font-size: 1.1rem;
+}
+
+.creed-values-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.creed-value-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(18, 18, 24, 0.85);
+  border: 1px solid var(--accent-border);
+  border-radius: 20px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+
+.creed-value-tag i {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-primary);
+}
+
+.creed-value-tag:hover {
+  border-color: var(--accent-primary);
+  background: var(--accent-subtle-hover);
+  transform: translateY(-1px);
+}
+
+/* ── 💾 Executive Data Vault & Backup Controls Card ─────── */
+.profile-vault-card {
+  background: linear-gradient(135deg, rgba(16, 16, 22, 0.85), rgba(8, 8, 12, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.vault-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.vault-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.vault-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.vault-storage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.vault-storage-badge i {
+  width: 14px;
+  height: 14px;
+  color: #06b6d4;
+}
+
+.vault-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.vault-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .vault-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.vault-metric-box {
+  background: rgba(12, 12, 16, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.vault-metric-num {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.vault-metric-name {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vault-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.vault-actions-grid .btn {
+  justify-content: center;
+  font-size: 0.86rem;
+  padding: 0.65rem 0.85rem;
+}
+
+.text-danger {
+  color: #f43f5e !important;
+  border-color: rgba(244, 63, 94, 0.25) !important;
+}
+
+.text-danger:hover {
+  background: rgba(244, 63, 94, 0.12) !important;
+  border-color: #f43f5e !important;
+}

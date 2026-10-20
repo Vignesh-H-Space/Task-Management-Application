@@ -1,0 +1,202 @@
+:root {
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ==========================================================================
+     COLOR THEME CONFIGURATION
+     Customize the entire application color scheme here!
+     All buttons, borders, badges, active states, and backgrounds throughout
+     the app are tied directly to these root variables.
+     ========================================================================== */
+
+  /* ── 1. PRIMARY ACCENT (Clean, ordinary, calm professional tone) ── */
+  /* Default: Clean Slate Blue. To change the theme, change these accent variables: */
+  --accent-primary: #3b82f6;               /* Main brand / accent color */
+  --accent-primary-hover: #2563eb;         /* Button / link hover */
+  --accent-subtle: rgba(59, 130, 246, 0.12);/* Pill, badge, active item backgrounds */
+  --accent-subtle-hover: rgba(59, 130, 246, 0.20);/* Hover on subtle elements */
+  --accent-border: rgba(59, 130, 246, 0.28);/* Subtle border for active items */
+  --accent-border-strong: rgba(59, 130, 246, 0.45);/* Stronger borders on active items */
+  --accent-text: #ffffff;                  /* Text color on accent backgrounds */
+  --accent-glow: none;                     /* Glow disabled for clean, ordinary feel */
+
+  /* ── 2. DARK MODE SURFACES (Neutral / Slate, calm & comfortable, not pitch-black) ── */
+  --bg-primary: #0f1117;                   /* Main application background */
+  --bg-secondary: #161822;                 /* Sidebar, topbar, secondary panels */
+  --bg-card: #1c1e29;                      /* Content cards, modals, lists */
+  --bg-card-hover: #222533;                /* Hover state for cards/rows */
+  --bg-input: #151720;                     /* Form input fields */
+  --bg-glass: rgba(28, 30, 41, 0.90);      /* Floating headers / sheets */
+
+  /* ── 3. BORDERS & DIVIDERS (Subtle & neutral, zero gold tint) ── */
+  --border-color: rgba(255, 255, 255, 0.08);/* Clean neutral border */
+  --border-subtle: rgba(255, 255, 255, 0.05);/* Subtle divider border */
+  --border-hover: rgba(255, 255, 255, 0.15);/* Hover border */
+  --border-focus: var(--accent-primary);   /* Focus ring color */
+
+  /* ── 4. TEXT HIERARCHY (Clean slate-white contrast) ── */
+  --text-primary: #f1f5f9;                 /* High contrast readable text */
+  --text-secondary: #94a3b8;               /* Metadata, secondary labels */
+  --text-muted: #64748b;                   /* Disabled or tertiary text */
+
+  /* ── 5. STATUS & PRIORITIES (Standard semantic colors) ── */
+  --prio-urgent: #ef4444;                  /* Red */
+  --prio-high: #f97316;                    /* Orange */
+  --prio-medium: #eab308;                  /* Warm Amber (for medium priority only) */
+  --prio-low: #10b981;                     /* Green */
+
+  --status-urgent: #ef4444;
+  --status-warning: #eab308;
+  --status-success: #10b981;
+  --status-info: #3b82f6;
+
+  /* ── 6. TIER HORIZONS ── */
+  --tier-daily: var(--accent-primary);
+  --tier-daily-bg: var(--accent-subtle);
+  --tier-weekly: #8b5cf6;
+  --tier-weekly-bg: rgba(139, 92, 246, 0.10);
+  --tier-monthly: #10b981;
+  --tier-monthly-bg: rgba(16, 185, 129, 0.10);
+  --tier-quarterly: #06b6d4;
+  --tier-quarterly-bg: rgba(6, 182, 212, 0.10);
+  --tier-annual: #ec4899;
+  --tier-annual-bg: rgba(236, 72, 153, 0.10);
+
+  /* ── 7. SHADOWS & GEOMETRY (Natural, clean shadows without glowing halos) ── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.40);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light Mode Overrides */
+[data-theme="light"] {
+  /* ── 1. LIGHT MODE SURFACES ── */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.94);
+
+  /* ── 2. LIGHT MODE BORDERS ── */
+  --border-color: #e2e8f0;
+  --border-subtle: #edf2f7;
+  --border-hover: #cbd5e1;
+  --border-focus: var(--accent-primary);
+
+  /* ── 3. LIGHT MODE TYPOGRAPHY ── */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  /* ── 4. LIGHT MODE ACCENTS & SUBTLE TONES ── */
+  --accent-primary: #2563eb;
+  --accent-primary-hover: #1d4ed8;
+  --accent-subtle: rgba(37, 99, 235, 0.08);
+  --accent-subtle-hover: rgba(37, 99, 235, 0.14);
+  --accent-border: rgba(37, 99, 235, 0.22);
+  --accent-border-strong: rgba(37, 99, 235, 0.38);
+  --accent-text: #ffffff;
+
+  /* ── 5. LIGHT MODE STATUS & PRIORITIES ── */
+  --prio-urgent: #dc2626;
+  --prio-high: #ea580c;
+  --prio-medium: #d97706;
+  --prio-low: #059669;
+
+  --status-urgent: #dc2626;
+  --status-warning: #d97706;
+  --status-success: #059669;
+  --status-info: #2563eb;
+
+  /* ── 6. LIGHT MODE TIER HORIZONS ── */
+  --tier-daily: #2563eb;
+  --tier-daily-bg: rgba(37, 99, 235, 0.08);
+  --tier-weekly: #7c3aed;
+  --tier-weekly-bg: rgba(124, 58, 237, 0.08);
+  --tier-monthly: #059669;
+  --tier-monthly-bg: rgba(5, 150, 105, 0.08);
+  --tier-quarterly: #0891b2;
+  --tier-quarterly-bg: rgba(8, 145, 178, 0.08);
+  --tier-annual: #db2777;
+  --tier-annual-bg: rgba(219, 39, 119, 0.08);
+
+  /* ── 7. LIGHT MODE SHADOWS ── */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+}
+
+/* ── PRESET THEME ACCENTS ──────────────────────────────────────────────────
+   You can change the primary colors directly in :root above, OR set
+   data-accent="indigo|emerald|slate|violet|rose|amber" on <html> or <body>
+   to instantly switch color palettes!
+   ───────────────────────────────────────────────────────────────────────── */
+[data-accent="blue"] {
+  --accent-primary: #3b82f6;
+  --accent-primary-hover: #2563eb;
+  --accent-subtle: rgba(59, 130, 246, 0.12);
+  --accent-subtle-hover: rgba(59, 130, 246, 0.20);
+  --accent-border: rgba(59, 130, 246, 0.28);
+  --accent-border-strong: rgba(59, 130, 246, 0.45);
+}
+
+[data-accent="indigo"] {
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-subtle: rgba(99, 102, 241, 0.12);
+  --accent-subtle-hover: rgba(99, 102, 241, 0.20);
+  --accent-border: rgba(99, 102, 241, 0.28);
+  --accent-border-strong: rgba(99, 102, 241, 0.45);
+}
+
+[data-accent="emerald"] {
+  --accent-primary: #10b981;
+  --accent-primary-hover: #059669;
+  --accent-subtle: rgba(16, 185, 129, 0.12);
+  --accent-subtle-hover: rgba(16, 185, 129, 0.20);
+  --accent-border: rgba(16, 185, 129, 0.28);
+  --accent-border-strong: rgba(16, 185, 129, 0.45);
+}
+
+[data-accent="slate"] {
+  --accent-primary: #64748b;
+  --accent-primary-hover: #475569;
+  --accent-subtle: rgba(100, 116, 139, 0.12);
+  --accent-subtle-hover: rgba(100, 116, 139, 0.20);
+  --accent-border: rgba(100, 116, 139, 0.28);
+  --accent-border-strong: rgba(100, 116, 139, 0.45);
+}
+
+[data-accent="violet"] {
+  --accent-primary: #8b5cf6;
+  --accent-primary-hover: #7c3aed;
+  --accent-subtle: rgba(139, 92, 246, 0.12);
+  --accent-subtle-hover: rgba(139, 92, 246, 0.20);
+  --accent-border: rgba(139, 92, 246, 0.28);
+  --accent-border-strong: rgba(139, 92, 246, 0.45);
+}
+
+[data-accent="rose"] {
+  --accent-primary: #f43f5e;
+  --accent-primary-hover: #e11d48;
+  --accent-subtle: rgba(244, 63, 94, 0.12);
+  --accent-subtle-hover: rgba(244, 63, 94, 0.20);
+  --accent-border: rgba(244, 63, 94, 0.28);
+  --accent-border-strong: rgba(244, 63, 94, 0.45);
+}
+
+[data-accent="amber"] {
+  --accent-primary: #f59e0b;
+  --accent-primary-hover: #d97706;
+  --accent-subtle: rgba(245, 158, 11, 0.12);
+  --accent-subtle-hover: rgba(245, 158, 11, 0.20);
+  --accent-border: rgba(245, 158, 11, 0.28);
+  --accent-border-strong: rgba(245, 158, 11, 0.45);
+}
