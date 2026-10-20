@@ -1,3 +1,4 @@
+/* ── MODULE: variables.css ── */
 :root {
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -201,6 +202,8 @@
   --accent-border-strong: rgba(245, 158, 11, 0.45);
 }
 
+
+/* ── MODULE: base.css ── */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -772,6 +775,8 @@ body {
   border-color: var(--border-focus);
 }
 
+
+/* ── MODULE: sidebar.css ── */
 /* Header & Sidebar Theme Switcher Controls */
 .header-theme-toggle-btn {
   display: inline-flex;
@@ -1120,6 +1125,8 @@ body {
   font-size: 0.8rem;
 }
 
+
+/* ── MODULE: dashboard.css ── */
 /* ── Executive Command Hub Hero (Landing Page) ────────── */
 .command-hero {
   background: var(--bg-card);
@@ -2766,6 +2773,8 @@ body {
   font-size: 0.88rem;
 }
 
+
+/* ── MODULE: focus_mode.css ── */
 /* ── Deep Work Focus Mode Overlay (Zero Scrollbar / Single-Screen Fit) ── */
 .focus-overlay {
   position: fixed;
@@ -3424,6 +3433,8 @@ body {
   }
 }
 
+
+/* ── MODULE: engines.css ── */
 /* ── Gamified Leveling & Executive XP Engine ──────────────── */
 
 /* Header XP Pill */
@@ -6107,6 +6118,8 @@ body {
 }
 
 
+
+/* ── MODULE: matrix.css ── */
 /* ── View Mode Switcher ─────────────────────────────────── */
 .view-mode-switcher {
   display: flex;
@@ -6395,6 +6408,8 @@ body {
   background: var(--bg-secondary);
 }
 
+
+/* ── MODULE: responsive_core.css ── */
 /* ══════════════════════════════════════════════════════════════════
    📱 MOBILE & TABLET RESPONSIVE SYSTEM (Unified Across All Views)
    ══════════════════════════════════════════════════════════════════ */
@@ -7056,6 +7071,8 @@ body {
   }
 }
 
+
+/* ── MODULE: report.css ── */
 /* ══════════════════════════════════════════════════════════════════
    📄 EXECUTIVE WEEKLY REPORT MODAL & PRINT STYLES
    ══════════════════════════════════════════════════════════════════ */
@@ -7670,6 +7687,8 @@ body {
   border-color: #f43f5e !important;
 }
 
+
+/* ── MODULE: command_palette.css ── */
 /* ── ⚡ Header Command Palette Button ─────────────────────── */
 .header-command-palette-btn {
   display: inline-flex;
@@ -7997,6 +8016,8 @@ body {
   opacity: 0.8;
 }
 
+
+/* ── MODULE: kanban.css ── */
 /* ── ✋ Drag & Drop Task Reordering Styles ──────────────────── */
 
 /* Drag Handle Grip Icon */
@@ -8434,6 +8455,8 @@ body {
   box-sizing: border-box;
 }
 
+
+/* ── MODULE: analytics.css ── */
 /* ── Top Toolbar ── */
 .report-toolbar {
   display: flex;
@@ -9397,6 +9420,8 @@ body {
    Report Page, Kanban Board, Command Palette, Roadmap Toolbar,
    Analytics Banner, Profile Cards, Timeline/Heatmap, Touch UX
    ══════════════════════════════════════════════════════════════════ */
+
+/* ── MODULE: mobile_suite.css ── */
 
 /* ── iOS Safe Area Support (Notch / Dynamic Island) ────────── */
 :root {
@@ -11794,6 +11819,8 @@ body {
   background: rgba(239, 68, 68, 0.12) !important;
 }
 
+
+/* ── MODULE: backlogs_docket.css ── */
 /* ════════════════════════════════════════════════════════════
    📋 NOTION-STYLE EXECUTIVE BACKLOGS VIEW
    ════════════════════════════════════════════════════════════ */
@@ -14692,6 +14719,8 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════
+
+/* ── MODULE: pulse.css ── */
    💓 EXECUTIVE PULSE STYLING
    ════════════════════════════════════════════════════════════ */
 
@@ -15912,6 +15941,8 @@ body {
 }
 
 
+
+/* ── MODULE: professional.css ── */
 /* ==========================================================================
    PROFESSIONAL PAGE
    ========================================================================== */
@@ -16883,6 +16914,8 @@ body {
   }
 }
 
+
+/* ── MODULE: tracker.css ── */
 /* ==========================================================================
    ROUTINE & CADENCE TRACKER PAGE STYLES (tracker.html)
    ========================================================================== */
@@ -18678,6 +18711,8 @@ body {
   color: var(--text-primary);
 }
 
+
+/* ── MODULE: themes_light.css ── */
 /* ==========================================================================
    COMPREHENSIVE HARMONIOUS LIGHT THEME ENGINE
    Matches all components, tables, cards, inputs, buttons, sidebars & headers
