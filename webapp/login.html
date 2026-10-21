@@ -138,8 +138,11 @@
           <label class="login-checkbox-label">
             <input type="checkbox" id="login-remember-me" checked>
             <span class="custom-checkbox"></span>
-            <span>Remember me on this device (30 Days)</span>
+            <span>Remember me</span>
           </label>
+          <button type="button" class="login-forgot-btn" onclick="handleForgotPassword()" title="Reset Master Password">
+            Forgot Password?
+          </button>
         </div>
 
         <button type="submit" class="btn btn-primary login-submit-btn" id="btn-login-submit">
@@ -280,6 +283,37 @@
         btn.disabled = false;
         btn.innerHTML = '<i data-lucide="unlock"></i><span>Unlock Executive OS</span>';
         if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+
+    function handleForgotPassword() {
+      const confirmReset = confirm(
+        "Forgot your Master Password?\n\n" +
+        "Click OK to reset your login credentials and create a new Master Key.\n\n" +
+        "NOTE: All your tasks, habits, pulses, routines, and data will remain 100% safe and intact."
+      );
+
+      if (confirmReset) {
+        if (typeof AuthEngine !== 'undefined' && typeof AuthEngine.resetMaster === 'function') {
+          AuthEngine.resetMaster();
+        } else {
+          localStorage.removeItem('tesseract_auth_master');
+          localStorage.removeItem('tesseract_auth_session');
+          sessionStorage.removeItem('tesseract_auth_temp_session');
+        }
+
+        const setupForm = document.getElementById('setup-form');
+        const loginForm = document.getElementById('login-form');
+        if (setupForm && loginForm) {
+          loginForm.style.display = 'none';
+          setupForm.style.display = 'flex';
+          showAlert('Master key reset. Enter your username and set a new password.', false);
+          const setupUserInput = document.getElementById('setup-username');
+          if (setupUserInput) setupUserInput.focus();
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        } else {
+          location.reload();
+        }
       }
     }
   </script>
