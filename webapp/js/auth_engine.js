@@ -228,6 +228,16 @@ const AuthEngine = {
   },
 
   /**
+   * Reset master credentials (clears master record & active sessions)
+   */
+  resetMaster() {
+    localStorage.removeItem(this.STORAGE_MASTER);
+    localStorage.removeItem(this.STORAGE_SESSION_LOCAL);
+    sessionStorage.removeItem(this.STORAGE_SESSION_TEMP);
+    return true;
+  },
+
+  /**
    * Sign out: Clears active sessions and redirects to login.html
    */
   logout() {
