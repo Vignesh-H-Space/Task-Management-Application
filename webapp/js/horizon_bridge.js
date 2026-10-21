@@ -137,8 +137,14 @@ const HorizonBridge = {
       task.dueDate = bkl.dueDate;
       task.reminderDate = bkl.reminderDate || null;
       task.recurrence = bkl.recurrence || 'none';
-      task.completed = !!bkl.completed;
-      task.completedAt = bkl.completedAt || null;
+      
+      // Reconcile completion: if either is completed, maintain completion across both
+      const isDone = !!(task.completed || bkl.completed);
+      task.completed = isDone;
+      bkl.completed = isDone;
+      task.completedAt = task.completedAt || bkl.completedAt || (isDone ? new Date().toISOString() : null);
+      bkl.completedAt = task.completedAt;
+
       task.completionCount = bkl.completionCount || 0;
       task.isStandalone = isStandalone;
       task.isBacklog = true;

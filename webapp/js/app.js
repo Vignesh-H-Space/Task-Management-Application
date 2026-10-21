@@ -836,6 +836,52 @@ function toggleTaskCompletion(taskId, clickEvent = null) {
   task.completedAt = task.completed ? new Date().toISOString() : null;
   saveData();
 
+  // Bi-directional synchronization with HorizonBridge / BacklogEngine
+  if (typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncHorizonTaskToBacklog === 'function') {
+    HorizonBridge.syncHorizonTaskToBacklog(task);
+  } else if (task.backlogId || (task.id && task.id.startsWith('task_bkl_'))) {
+    try {
+      const bklId = task.backlogId || task.id.replace('task_bkl_', '');
+      const raw = localStorage.getItem('tesseract_backlog_data');
+      if (raw) {
+        const bkls = JSON.parse(raw);
+        const b = bkls.find(x => x.id === bklId);
+        if (b) {
+          b.completed = task.completed;
+          b.completedAt = task.completedAt;
+          b.kanbanStatus = task.completed ? 'done' : (task.kanbanStatus || 'backlog');
+          localStorage.setItem('tesseract_backlog_data', JSON.stringify(bkls));
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Bi-directional synchronization with Today's Docket
+  if (typeof DocketEngine !== 'undefined') {
+    if (Array.isArray(DocketEngine.items)) {
+      const dktItem = DocketEngine.items.find(x => x.id === task.id || x.backlogId === task.backlogId || (task.backlogId && x.id === task.backlogId) || x.task === task.title);
+      if (dktItem) {
+        dktItem.completed = task.completed;
+        dktItem.completedAt = task.completedAt;
+        if (typeof DocketEngine.save === 'function') DocketEngine.save();
+        if (typeof DocketEngine.render === 'function') DocketEngine.render();
+      }
+    }
+  } else {
+    try {
+      const raw = localStorage.getItem('tesseract_docket_today_items');
+      if (raw) {
+        const dktItems = JSON.parse(raw);
+        const d = dktItems.find(x => x.id === task.id || x.backlogId === task.backlogId || (task.backlogId && x.id === task.backlogId) || x.task === task.title);
+        if (d) {
+          d.completed = task.completed;
+          d.completedAt = task.completedAt;
+          localStorage.setItem('tesseract_docket_today_items', JSON.stringify(dktItems));
+        }
+      }
+    } catch (e) {}
+  }
+
   if (task.completed) {
     triggerConfetti();
     
