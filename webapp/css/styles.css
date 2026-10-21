@@ -11712,7 +11712,28 @@ body {
 .login-remember-row {
   display: flex;
   align-items: center;
-  margin: 2px 0 6px 0;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 8px 0;
+}
+
+.login-forgot-btn {
+  background: none;
+  border: none;
+  color: var(--accent-primary, #6366f1);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.login-forgot-btn:hover {
+  color: #a5b4fc;
+  text-decoration: underline;
+  background: rgba(99, 102, 241, 0.1);
 }
 
 .login-checkbox-label {
