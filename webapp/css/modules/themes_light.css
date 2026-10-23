@@ -290,8 +290,74 @@ html[data-theme="light"] body,
   color: #0f172a;
 }
 
+[data-theme="light"] .command-greeting-desc,
 [data-theme="light"] .command-greeting-subtitle {
   color: #475569;
+}
+
+[data-theme="light"] .command-date-pill {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+/* Quick Metrics Strip on Light Theme */
+[data-theme="light"] .command-quick-metrics {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .command-quick-metrics:hover {
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .quick-metric-val {
+  color: #0f172a;
+}
+
+[data-theme="light"] .quick-metric-item.accent .quick-metric-val {
+  color: #d97706;
+}
+
+[data-theme="light"] .quick-metric-lbl {
+  color: #64748b;
+}
+
+[data-theme="light"] .quick-metric-divider {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .quick-metric-val.text-emerald,
+[data-theme="light"] #metric-alignment-score {
+  color: #059669 !important;
+}
+
+/* Spotlight Card & Ritual Buttons in Light Theme */
+[data-theme="light"] .command-spotlight-card {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .command-spotlight-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .spotlight-task-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .ritual-action-btn {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #1e293b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .ritual-action-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 [data-theme="light"] .command-stat-card {
