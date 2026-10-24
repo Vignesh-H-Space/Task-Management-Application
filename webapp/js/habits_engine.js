@@ -278,12 +278,12 @@ const HabitsEngine = {
               return `
                 <div class="habit-matrix-row ${isTodayDone ? 'today-done' : ''}">
                   <div class="habit-info-cell">
+                    <button class="habit-delete-btn" onclick="HabitsEngine.deleteHabit('${habit.id}')" title="Delete habit" aria-label="Delete habit">&times;</button>
                     <span class="habit-emoji">${habit.icon || '⚡'}</span>
                     <div class="habit-text">
                       <span class="habit-name">${escapeHTML(habit.title)}</span>
                       <span class="habit-meta">#${habit.category || 'Personal'}</span>
                     </div>
-                    <button class="habit-delete-btn" onclick="HabitsEngine.deleteHabit('${habit.id}')" title="Delete habit">&times;</button>
                   </div>
 
                   <div class="habit-dots-cell">

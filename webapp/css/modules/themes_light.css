@@ -360,6 +360,15 @@ html[data-theme="light"] body,
   border-color: #cbd5e1;
 }
 
+[data-theme="light"] .habit-delete-btn {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .habit-delete-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
 [data-theme="light"] .command-stat-card {
   background-color: #f8fafc;
   border: 1px solid var(--border-color);

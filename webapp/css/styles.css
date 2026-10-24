@@ -4168,20 +4168,32 @@ body {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  line-height: 1;
   cursor: pointer;
   opacity: 0;
-  transition: var(--transition);
-  margin-left: auto;
-  padding: 0 4px;
+  visibility: hidden;
+  transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  margin-right: 2px;
+  margin-left: -4px;
+  flex-shrink: 0;
 }
 
 .habit-matrix-row:hover .habit-delete-btn {
   opacity: 1;
+  visibility: visible;
 }
 
 .habit-delete-btn:hover {
   color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  transform: scale(1.08);
 }
 
 .habit-dots-cell {
@@ -19094,6 +19106,15 @@ html[data-theme="light"] body,
 [data-theme="light"] .ritual-action-btn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
+}
+
+[data-theme="light"] .habit-delete-btn {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .habit-delete-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 [data-theme="light"] .command-stat-card {
