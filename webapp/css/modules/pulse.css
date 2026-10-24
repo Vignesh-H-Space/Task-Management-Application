@@ -31,8 +31,9 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b, #ec4899);
+  height: 2px;
+  background: var(--accent-primary, #3b82f6);
+  opacity: 0.8;
 }
 
 .pulse-hero-main {
@@ -48,9 +49,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #f43f5e;
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: var(--text-secondary, #94a3b8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 4px 10px;
   border-radius: 20px;
   margin-bottom: 0.75rem;
@@ -60,7 +61,7 @@
 .pulse-hero-tag svg {
   width: 13px;
   height: 13px;
-  animation: pulse-heartbeat 1.8s infinite ease-in-out;
+  color: var(--accent-primary, #3b82f6);
 }
 
 .pulse-hero-title {
@@ -105,8 +106,8 @@
 
 .pulse-stat-val {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-size: 1.35rem;
+  font-weight: 700;
   color: var(--text-primary, #ffffff);
   line-height: 1.1;
 }
@@ -120,9 +121,11 @@
   margin-top: 4px;
 }
 
-.pulse-stat-box.accent-blue .pulse-stat-val { color: #60a5fa; }
-.pulse-stat-box.accent-emerald .pulse-stat-val { color: #34d399; }
-.pulse-stat-box.accent-amber .pulse-stat-val { color: #fbbf24; }
+.pulse-stat-box.accent-blue .pulse-stat-val,
+.pulse-stat-box.accent-emerald .pulse-stat-val,
+.pulse-stat-box.accent-amber .pulse-stat-val {
+  color: var(--text-primary, #ffffff);
+}
 
 /* ── Quick Capture Console Card ── */
 .pulse-capture-card {
@@ -158,29 +161,20 @@
 }
 
 .pulse-capture-indicator {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
-  background: rgba(244, 63, 94, 0.15);
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f43f5e;
+  color: var(--accent-primary, #3b82f6);
 }
 
 .pulse-icon-heartbeat {
-  width: 20px;
-  height: 20px;
-  animation: pulse-heartbeat 1.8s infinite ease-in-out;
-}
-
-@keyframes pulse-heartbeat {
-  0% { transform: scale(1); }
-  14% { transform: scale(1.22); }
-  28% { transform: scale(1); }
-  42% { transform: scale(1.22); }
-  70% { transform: scale(1); }
+  width: 18px;
+  height: 18px;
 }
 
 .pulse-capture-heading {
@@ -199,7 +193,7 @@
 /* Category Switcher Tabs */
 .pulse-cat-tabs {
   display: inline-flex;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 3px;
@@ -211,14 +205,14 @@
   align-items: center;
   gap: 6px;
   background: transparent;
-  border: none;
-  color: var(--text-muted, #94a3b8);
+  border: 1px solid transparent;
+  color: var(--text-secondary, #94a3b8);
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .pulse-cat-tab i,
@@ -229,20 +223,21 @@
 
 .pulse-cat-tab:hover {
   color: var(--text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .pulse-cat-tab.active.career {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: none;
 }
 
 .pulse-cat-tab.active.personal {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.14);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: none;
 }
 
 /* Subcategory Pills Row */
@@ -298,16 +293,16 @@
 }
 
 .pulse-subcat-pill.active.career {
-  background: rgba(59, 130, 246, 0.16);
-  border-color: rgba(59, 130, 246, 0.35);
-  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
   font-weight: 600;
 }
 
 .pulse-subcat-pill.active.personal {
-  background: rgba(16, 185, 129, 0.16);
-  border-color: rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
   font-weight: 600;
 }
 
@@ -473,28 +468,28 @@
   color: rgba(148, 163, 184, 0.55);
 }
 
-/* Vibrant Submit Button */
+/* Clean Submit Button */
 .pulse-submit-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: #2563eb;
   color: #ffffff !important;
   border: none;
   border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 0.86rem;
-  font-weight: 700;
+  padding: 11px 18px;
+  font-size: 0.84rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  transition: all 0.15s ease;
 }
 
 .pulse-submit-btn:hover {
-  background: linear-gradient(135deg, #60a5fa 0%, #1d4ed8 100%);
+  background: #1d4ed8;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .pulse-submit-btn:active {
@@ -1061,22 +1056,21 @@
 }
 
 .pulse-empty-icon-wrap {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background: rgba(244, 63, 94, 0.1);
-  border: 1px solid rgba(244, 63, 94, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f43f5e;
+  color: var(--text-muted, #64748b);
   margin-bottom: 0.5rem;
 }
 
 .pulse-empty-pulse-icon {
-  width: 28px;
-  height: 28px;
-  animation: pulse-heartbeat 2s infinite ease-in-out;
+  width: 22px;
+  height: 22px;
 }
 
 .pulse-empty-title {
