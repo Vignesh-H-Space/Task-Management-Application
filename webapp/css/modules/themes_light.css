@@ -1643,6 +1643,90 @@ html[data-theme="light"] body,
   color: #0f172a;
 }
 
+/* ── Kanban Board & Navigation (Light Theme) ── */
+[data-theme="light"] .kb-column-tabs {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .kb-tab-pill {
+  color: #475569;
+}
+
+[data-theme="light"] .kb-tab-pill:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+[data-theme="light"] .kb-tab-pill.active {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border-color: #2563eb;
+}
+
+[data-theme="light"] .kb-tab-badge {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+[data-theme="light"] .kb-tab-pill.active .kb-tab-badge {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+[data-theme="light"] .kb-column {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .kb-column-header {
+  border-bottom-color: #f1f5f9;
+}
+
+[data-theme="light"] .kb-column-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+[data-theme="light"] .kb-column-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+[data-theme="light"] .kb-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .kb-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .kb-drop-target-zone {
+  border-color: #cbd5e1;
+  background: rgba(241, 245, 249, 0.6);
+  color: #64748b;
+}
+
+[data-theme="light"] .kb-drop-target-zone.drag-hover {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+[data-theme="light"] .kb-archived-notice-row {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+[data-theme="light"] .kb-archived-pill {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+
 
 
 
