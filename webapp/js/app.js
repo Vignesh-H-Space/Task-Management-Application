@@ -40,6 +40,8 @@ let state = {
   searchQuery: '',
   editingTaskId: null,
   viewMode: (typeof localStorage !== 'undefined' && localStorage.getItem('tesseract_view_mode')) || 'list', // 'list' | 'eisenhower' | 'kanban'
+  kanbanColumnFilter: 'all', // 'all' | 'backlog' | 'todo' | 'in_progress' | 'done'
+  showArchivedDone: false,
   profile: {
     name: 'Tesseract User',
     image: null
@@ -1699,6 +1701,8 @@ function getKanbanStatus(task) {
   return 'todo';
 }
 
+window._recentlyDeletedTasks = window._recentlyDeletedTasks || {};
+
 function moveTaskToKanban(taskId, columnId, event) {
   if (event) event.stopPropagation();
   const task = state.tasks.find(t => t.id === taskId);
@@ -1726,9 +1730,119 @@ function moveTaskToKanban(taskId, columnId, event) {
   saveData();
   renderKanbanBoard();
   const col = KANBAN_COLUMNS.find(c => c.id === columnId);
-  if (typeof showToast === 'function' && col) {
+
+  if (columnId === 'done') {
+    // Show 10s revive toast option on moving to Done
+    if (typeof showActionToast === 'function') {
+      showActionToast(`✅ Completed "${task.title.substring(0, 24)}..."`, 'Delete Now 🗑️', () => {
+        deleteTaskWithRevive(task.id, 10);
+      }, 10000);
+    } else if (typeof showToast === 'function') {
+      showToast(`✅ Moved to Done`, 'success');
+    }
+  } else if (typeof showToast === 'function' && col) {
     showToast(`${col.emoji} Moved to ${col.label}`, 'info');
   }
+}
+
+function deleteTaskWithRevive(taskId, seconds = 10, event = null) {
+  if (event) event.stopPropagation();
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  // Stash in recently deleted
+  const backupTask = JSON.parse(JSON.stringify(task));
+  window._recentlyDeletedTasks[taskId] = {
+    task: backupTask,
+    timeoutId: setTimeout(() => {
+      delete window._recentlyDeletedTasks[taskId];
+    }, seconds * 1000)
+  };
+
+  // Remove from state
+  state.tasks = state.tasks.filter(t => t.id !== taskId);
+  saveData();
+
+  // If linked to backlog, sync
+  if (task.backlogId && typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.onHorizonTaskDeleted === 'function') {
+    HorizonBridge.onHorizonTaskDeleted(task.backlogId);
+  }
+
+  renderAll();
+
+  if (typeof showActionToast === 'function') {
+    showActionToast(`🗑️ Deleted "${task.title.substring(0, 28)}..."`, 'Revive', () => {
+      restoreRevivedTask(taskId);
+    }, seconds * 1000);
+  } else if (typeof showToast === 'function') {
+    showToast(`🗑️ Task deleted`, 'info');
+  }
+}
+
+function restoreRevivedTask(taskId) {
+  const item = window._recentlyDeletedTasks[taskId];
+  if (!item) return;
+
+  clearTimeout(item.timeoutId);
+  const task = item.task;
+  state.tasks.push(task);
+  saveData();
+
+  if (task.backlogId && typeof HorizonBridge !== 'undefined' && typeof HorizonBridge.syncHorizonTaskToBacklog === 'function') {
+    HorizonBridge.syncHorizonTaskToBacklog(task);
+  }
+
+  delete window._recentlyDeletedTasks[taskId];
+  renderAll();
+  if (typeof showToast === 'function') {
+    showToast(`✨ Restored "${task.title.substring(0, 28)}..."`, 'success');
+  }
+}
+
+function clearDoneColumnWithRevive(seconds = 10) {
+  const doneTasks = state.tasks.filter(t => t.completed || t.kanbanStatus === 'done');
+  if (doneTasks.length === 0) {
+    if (typeof showToast === 'function') showToast('Done column is already empty.', 'info');
+    return;
+  }
+
+  const backupList = JSON.parse(JSON.stringify(doneTasks));
+  const batchId = 'batch_' + Date.now();
+  window._recentlyDeletedTasks[batchId] = {
+    tasks: backupList,
+    timeoutId: setTimeout(() => {
+      delete window._recentlyDeletedTasks[batchId];
+    }, seconds * 1000)
+  };
+
+  const doneIds = new Set(doneTasks.map(t => t.id));
+  state.tasks = state.tasks.filter(t => !doneIds.has(t.id));
+  saveData();
+  renderAll();
+
+  if (typeof showActionToast === 'function') {
+    showActionToast(`🧹 Cleared ${doneTasks.length} Done tasks.`, 'Revive All', () => {
+      const b = window._recentlyDeletedTasks[batchId];
+      if (b) {
+        clearTimeout(b.timeoutId);
+        state.tasks = [...state.tasks, ...b.tasks];
+        delete window._recentlyDeletedTasks[batchId];
+        saveData();
+        renderAll();
+        if (typeof showToast === 'function') showToast(`✨ Revived ${b.tasks.length} tasks!`, 'success');
+      }
+    }, seconds * 1000);
+  }
+}
+
+function setKanbanColumnFilter(colId) {
+  state.kanbanColumnFilter = colId;
+  renderKanbanBoard();
+}
+
+function toggleArchivedDone() {
+  state.showArchivedDone = !state.showArchivedDone;
+  renderKanbanBoard();
 }
 
 function renderKanbanBoard() {
@@ -1773,136 +1887,220 @@ function renderKanbanBoard() {
     }
   });
 
-  container.innerHTML = KANBAN_COLUMNS.map(col => {
-    const colTasks = columns[col.id] || [];
-    const otherCols = KANBAN_COLUMNS.filter(c => c.id !== col.id);
+  // 24-Hour Auto-Archive for Done Column:
+  const now = Date.now();
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  const activeDoneTasks = [];
+  const archivedDoneTasks = [];
 
-    return `
-      <div class="kb-column" data-column="${col.id}">
-        <div class="kb-column-header" style="border-bottom-color: ${col.border};">
-          <div class="kb-column-title-row">
-            <span class="kb-column-emoji">${col.emoji}</span>
-            <span class="kb-column-label" style="color: ${col.color};">${col.label}</span>
-            <span class="kb-column-count" style="background: ${col.bg}; color: ${col.color}; border-color: ${col.border};">${colTasks.length}</span>
-          </div>
-        </div>
-        <div class="kb-column-body" id="kb-body-${col.id}" data-column="${col.id}">
-          ${colTasks.length === 0 ? `<div class="kb-empty">No tasks here</div>` :
-            colTasks.map(t => {
-              const isBkl = !!t.backlogId || !!t.isBacklog;
-              const tierObj = TIERS.find(ti => ti.id === t.tier) || { emoji: isBkl ? '📥' : '📌', name: isBkl ? 'Backlog' : 'Task', color: '#64748b' };
-              const subtasks = t.subtasks || [];
-              const doneSubs = subtasks.filter(s => s.completed).length;
-              const totalSubs = subtasks.length;
-              const subPct = totalSubs > 0 ? Math.round((doneSubs / totalSubs) * 100) : -1;
+  columns.done.forEach(t => {
+    const compTime = t.completedAt ? new Date(t.completedAt).getTime() : 0;
+    if (compTime && (now - compTime) >= TWENTY_FOUR_HOURS) {
+      archivedDoneTasks.push(t);
+    } else {
+      activeDoneTasks.push(t);
+    }
+  });
 
-              return `
-                <div class="kb-card ${isBkl ? 'kb-card-backlog' : ''}" data-id="${t.id}" draggable="true">
-                  <div class="kb-card-top">
-                    <div class="kb-card-title">${escapeHTML(t.title)}</div>
-                    <div class="kb-card-move-dropdown">
-                      <button class="kb-move-btn" title="Move to column">
-                        <i data-lucide="more-horizontal"></i>
-                      </button>
-                      <div class="kb-move-menu">
-                        ${otherCols.map(oc => `
-                          <button class="kb-move-option" onclick="moveTaskToKanban('${t.id}', '${oc.id}', event)" style="color: ${oc.color};">
-                            ${oc.emoji} ${oc.label}
-                          </button>
-                        `).join('')}
-                        <hr style="border-color: rgba(255,255,255,0.06); margin: 4px 0;">
-                        <button class="kb-move-option" onclick="openEditModal('${t.id}')" style="color: var(--text-secondary);">
-                          ✏️ Edit Task
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  ${t.description ? `<div class="kb-card-desc">${escapeHTML(t.description.substring(0, 80))}${t.description.length > 80 ? '...' : ''}</div>` : ''}
-                  <div class="kb-card-meta">
-                    ${isBkl ? `
-                      <span class="kb-backlog-badge" title="Executive Backlog Objective">
-                        <i data-lucide="layers" style="width:10px;height:10px;"></i> Backlog
-                      </span>
-                    ` : `
-                      <span class="kb-tier-pill" style="color: ${tierObj.color || '#888'}">${tierObj.emoji} ${tierObj.name}</span>
-                    `}
-                    <span class="kb-prio-pill kb-prio-${t.priority}">${t.priority}</span>
-                    ${t.dueDate ? `<span class="kb-due-pill"><i data-lucide="calendar" style="width:10px;height:10px;"></i> ${t.dueDate}</span>` : ''}
-                  </div>
-                  ${subPct >= 0 ? `
-                    <div class="kb-card-progress">
-                      <div class="kb-progress-track">
-                        <div class="kb-progress-fill" style="width: ${subPct}%; background: ${col.color};"></div>
-                      </div>
-                      <span class="kb-progress-label">${doneSubs}/${totalSubs}</span>
-                    </div>
-                  ` : ''}
-                  <div class="kb-card-footer">
-                    <span class="kb-category-tag">#${t.group ? (t.group.charAt(0).toUpperCase() + t.group.slice(1)) : (t.category || 'General')}</span>
-                    ${col.id !== 'done' ? `
-                      <button class="kb-focus-btn" onclick="if(typeof FocusEngine!=='undefined') FocusEngine.open('${t.id}')" title="Focus Mode">
-                        <i data-lucide="zap"></i>
-                      </button>
-                    ` : ''}
-                  </div>
-                </div>
-              `;
-            }).join('')
-          }
-        </div>
+  const displayDoneTasks = state.showArchivedDone
+    ? [...activeDoneTasks, ...archivedDoneTasks]
+    : activeDoneTasks;
+
+  const totalVisibleCount = columns.backlog.length + columns.todo.length + columns.in_progress.length + activeDoneTasks.length;
+
+  // Render Column Tabs Bar above columns:
+  const tabsHTML = `
+    <div class="kb-tabs-wrapper">
+      <div class="kb-column-tabs">
+        <button type="button" class="kb-tab-pill ${state.kanbanColumnFilter === 'all' ? 'active' : ''}" onclick="setKanbanColumnFilter('all')">
+          <i data-lucide="layout-grid" style="width:13px;height:13px;"></i>
+          <span>All Columns</span>
+          <span class="kb-tab-badge">${totalVisibleCount}</span>
+        </button>
+        ${KANBAN_COLUMNS.map(col => {
+          const count = col.id === 'done' ? activeDoneTasks.length : (columns[col.id] || []).length;
+          const isSelected = state.kanbanColumnFilter === col.id;
+          return `
+            <button type="button" class="kb-tab-pill ${isSelected ? 'active' : ''}" onclick="setKanbanColumnFilter('${col.id}')" style="--col-color: ${col.color};">
+              <span>${col.emoji} ${col.label}</span>
+              <span class="kb-tab-badge">${count}</span>
+            </button>
+          `;
+        }).join('')}
       </div>
-    `;
-  }).join('');
+    </div>
+  `;
 
+  // Filter columns if tab selected:
+  const visibleColumns = state.kanbanColumnFilter === 'all'
+    ? KANBAN_COLUMNS
+    : KANBAN_COLUMNS.filter(c => c.id === state.kanbanColumnFilter);
+
+  const columnsGridHTML = `
+    <div class="kanban-grid-wrapper ${state.kanbanColumnFilter !== 'all' ? 'single-column-view' : ''}">
+      ${visibleColumns.map(col => {
+        const colTasks = col.id === 'done' ? displayDoneTasks : (columns[col.id] || []);
+        const otherCols = KANBAN_COLUMNS.filter(c => c.id !== col.id);
+
+        return `
+          <div class="kb-column" data-column="${col.id}">
+            <div class="kb-column-header" style="border-bottom-color: ${col.border};">
+              <div class="kb-column-title-row">
+                <span class="kb-column-emoji">${col.emoji}</span>
+                <span class="kb-column-label" style="color: ${col.color};">${col.label}</span>
+                <span class="kb-column-count" style="background: ${col.bg}; color: ${col.color}; border-color: ${col.border};">${colTasks.length}</span>
+                ${col.id === 'done' && activeDoneTasks.length > 0 ? `
+                  <button type="button" class="kb-clear-done-btn" onclick="clearDoneColumnWithRevive(10)" title="Delete done tasks with 10s Revive">
+                    <i data-lucide="trash-2" style="width:11px;height:11px;"></i> Clear All
+                  </button>
+                ` : ''}
+              </div>
+              ${col.id === 'done' && archivedDoneTasks.length > 0 ? `
+                <div class="kb-archived-notice-row">
+                  <span class="kb-archived-text">Auto-archived ${archivedDoneTasks.length} tasks (>24h)</span>
+                  <button type="button" class="kb-archived-toggle-btn" onclick="toggleArchivedDone()">
+                    ${state.showArchivedDone ? 'Hide' : 'Show'} (${archivedDoneTasks.length})
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+            <div class="kb-column-body" id="kb-body-${col.id}" data-column="${col.id}">
+              ${colTasks.length === 0 ? `<div class="kb-empty">No tasks in this column</div>` :
+                colTasks.map(t => {
+                  const isBkl = !!t.backlogId || !!t.isBacklog;
+                  const tierObj = TIERS.find(ti => ti.id === t.tier) || { emoji: isBkl ? '📥' : '📌', name: isBkl ? 'Backlog' : 'Task', color: '#64748b' };
+                  const subtasks = t.subtasks || [];
+                  const doneSubs = subtasks.filter(s => s.completed).length;
+                  const totalSubs = subtasks.length;
+                  const subPct = totalSubs > 0 ? Math.round((doneSubs / totalSubs) * 100) : -1;
+                  const isOldArchived = col.id === 'done' && t.completedAt && (now - new Date(t.completedAt).getTime()) >= TWENTY_FOUR_HOURS;
+
+                  return `
+                    <div class="kb-card ${isBkl ? 'kb-card-backlog' : ''} ${isOldArchived ? 'kb-card-archived' : ''}" data-id="${t.id}" data-column="${col.id}" draggable="true">
+                      <div class="kb-card-top">
+                        <div class="kb-card-title">${escapeHTML(t.title)}</div>
+                        <div class="kb-card-move-dropdown">
+                          <button type="button" class="kb-move-btn" title="Move to column">
+                            <i data-lucide="more-horizontal"></i>
+                          </button>
+                          <div class="kb-move-menu">
+                            ${otherCols.map(oc => `
+                              <button type="button" class="kb-move-option" onclick="moveTaskToKanban('${t.id}', '${oc.id}', event)" style="color: ${oc.color};">
+                                ${oc.emoji} ${oc.label}
+                              </button>
+                            `).join('')}
+                            <hr style="border-color: rgba(255,255,255,0.06); margin: 4px 0;">
+                            <button type="button" class="kb-move-option" onclick="openEditModal('${t.id}')" style="color: var(--text-secondary);">
+                              ✏️ Edit Task
+                            </button>
+                            <button type="button" class="kb-move-option" onclick="deleteTaskWithRevive('${t.id}', 10, event)" style="color: #ef4444;">
+                              🗑️ Delete (10s Revive)
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      ${t.description ? `<div class="kb-card-desc">${escapeHTML(t.description.substring(0, 80))}${t.description.length > 80 ? '...' : ''}</div>` : ''}
+                      <div class="kb-card-meta">
+                        ${isBkl ? `
+                          <span class="kb-backlog-badge" title="Executive Backlog Objective">
+                            <i data-lucide="layers" style="width:10px;height:10px;"></i> Backlog
+                          </span>
+                        ` : `
+                          <span class="kb-tier-pill" style="color: ${tierObj.color || '#888'}">${tierObj.emoji} ${tierObj.name}</span>
+                        `}
+                        <span class="kb-prio-pill kb-prio-${t.priority}">${t.priority}</span>
+                        ${t.dueDate ? `<span class="kb-due-pill"><i data-lucide="calendar" style="width:10px;height:10px;"></i> ${t.dueDate}</span>` : ''}
+                        ${isOldArchived ? `<span class="kb-archived-pill" title="Completed >24h ago">⏳ >24h</span>` : ''}
+                      </div>
+                      ${subPct >= 0 ? `
+                        <div class="kb-card-progress">
+                          <div class="kb-progress-track">
+                            <div class="kb-progress-fill" style="width: ${subPct}%; background: ${col.color};"></div>
+                          </div>
+                          <span class="kb-progress-label">${doneSubs}/${totalSubs}</span>
+                        </div>
+                      ` : ''}
+                      <div class="kb-card-footer">
+                        <span class="kb-category-tag">#${t.group ? (t.group.charAt(0).toUpperCase() + t.group.slice(1)) : (t.category || 'General')}</span>
+                        <div class="kb-card-footer-actions">
+                          ${col.id === 'done' ? `
+                            <button type="button" class="kb-card-revive-btn" onclick="deleteTaskWithRevive('${t.id}', 10, event)" title="Delete with 10s Revive option">
+                              <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+                              <span>10s Revive</span>
+                            </button>
+                          ` : `
+                            <button type="button" class="kb-focus-btn" onclick="if(typeof FocusEngine!=='undefined') FocusEngine.open('${t.id}')" title="Focus Mode">
+                              <i data-lucide="zap"></i>
+                            </button>
+                          `}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')
+              }
+              <!-- Dedicated Drop Target Zone at Bottom -->
+              <div class="kb-drop-target-zone" data-column="${col.id}">
+                <i data-lucide="arrow-down-circle" style="width:13px;height:13px;"></i>
+                <span>Drop into ${col.label}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  container.innerHTML = tabsHTML + columnsGridHTML;
   lucide.createIcons();
-
-  // Bind drag-and-drop for Kanban columns
   bindKanbanDragDrop();
 }
 
 function bindKanbanDragDrop() {
-  const columns = document.querySelectorAll('.kb-column-body');
+  const cards = document.querySelectorAll('.kb-card');
+  const columns = document.querySelectorAll('.kb-column');
 
-  columns.forEach(colBody => {
-    const cards = colBody.querySelectorAll('.kb-card');
-
-    cards.forEach(card => {
-      card.addEventListener('dragstart', (e) => {
-        if (e.target.closest('button, .kb-move-dropdown')) {
-          e.preventDefault();
-          return;
-        }
-        card.classList.add('kb-dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
-      });
-
-      card.addEventListener('dragend', () => {
-        card.classList.remove('kb-dragging');
-        document.querySelectorAll('.kb-column-body').forEach(c => c.classList.remove('kb-drag-over'));
-      });
+  cards.forEach(card => {
+    card.addEventListener('dragstart', (e) => {
+      if (e.target.closest('button, .kb-move-dropdown, .kb-card-move-dropdown')) {
+        e.preventDefault();
+        return;
+      }
+      card.classList.add('kb-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
     });
 
-    colBody.addEventListener('dragover', (e) => {
+    card.addEventListener('dragend', () => {
+      card.classList.remove('kb-dragging');
+      document.querySelectorAll('.kb-column-body, .kb-column, .kb-drop-target-zone').forEach(c => {
+        c.classList.remove('kb-drag-over', 'drag-hover');
+      });
+    });
+  });
+
+  columns.forEach(col => {
+    const colBody = col.querySelector('.kb-column-body');
+    const colId = col.getAttribute('data-column');
+
+    col.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      colBody.classList.add('kb-drag-over');
+      if (colBody) colBody.classList.add('kb-drag-over');
     });
 
-    colBody.addEventListener('dragleave', (e) => {
-      // Only remove if leaving the actual column body, not entering a child
-      if (!colBody.contains(e.relatedTarget)) {
-        colBody.classList.remove('kb-drag-over');
+    col.addEventListener('dragleave', (e) => {
+      if (!col.contains(e.relatedTarget)) {
+        if (colBody) colBody.classList.remove('kb-drag-over');
       }
     });
 
-    colBody.addEventListener('drop', (e) => {
+    col.addEventListener('drop', (e) => {
       e.preventDefault();
-      colBody.classList.remove('kb-drag-over');
+      if (colBody) colBody.classList.remove('kb-drag-over');
       const taskId = e.dataTransfer.getData('text/plain');
-      const targetColumn = colBody.getAttribute('data-column');
-      if (taskId && targetColumn) {
-        moveTaskToKanban(taskId, targetColumn);
+      if (taskId && colId) {
+        moveTaskToKanban(taskId, colId);
       }
     });
   });
@@ -2911,6 +3109,49 @@ function showToast(message, type = 'info') {
     toast.style.transition = 'all 0.25s ease';
     setTimeout(() => toast.remove(), 250);
   }, 3000);
+}
+
+function showActionToast(message, actionLabel, onAction, durationMs = 10000) {
+  const toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-with-action';
+  toast.innerHTML = `
+    <i data-lucide="info"></i>
+    <span class="toast-text">${escapeHTML(message)}</span>
+    <button class="toast-action-btn" type="button">${escapeHTML(actionLabel)}</button>
+  `;
+  const actionBtn = toast.querySelector('.toast-action-btn');
+  let timeoutId = null;
+  let remainingSec = Math.round(durationMs / 1000);
+
+  const countdownInterval = setInterval(() => {
+    remainingSec--;
+    if (remainingSec > 0 && actionBtn) {
+      actionBtn.textContent = `${actionLabel} (${remainingSec}s)`;
+    } else {
+      clearInterval(countdownInterval);
+    }
+  }, 1000);
+
+  actionBtn.addEventListener('click', () => {
+    clearInterval(countdownInterval);
+    clearTimeout(timeoutId);
+    toast.remove();
+    if (typeof onAction === 'function') onAction();
+  });
+
+  toastContainer.appendChild(toast);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  timeoutId = setTimeout(() => {
+    clearInterval(countdownInterval);
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    toast.style.transition = 'all 0.25s ease';
+    setTimeout(() => toast.remove(), 250);
+  }, durationMs);
 }
 
 function escapeHTML(str) {
