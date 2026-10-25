@@ -1938,116 +1938,117 @@ function renderKanbanBoard() {
 
   const columnsGridHTML = `
     <div class="kanban-grid-wrapper ${state.kanbanColumnFilter !== 'all' ? 'single-column-view' : ''}">
-      ${visibleColumns.map(col => {
-        const colTasks = col.id === 'done' ? displayDoneTasks : (columns[col.id] || []);
-        const otherCols = KANBAN_COLUMNS.filter(c => c.id !== col.id);
+      <div class="kanban-board" id="kanbanBoard">
+        ${visibleColumns.map(col => {
+          const colTasks = col.id === 'done' ? displayDoneTasks : (columns[col.id] || []);
+          const otherCols = KANBAN_COLUMNS.filter(c => c.id !== col.id);
 
-        return `
-          <div class="kb-column" data-column="${col.id}">
-            <div class="kb-column-header" style="border-bottom-color: ${col.border};">
-              <div class="kb-column-title-row">
-                <span class="kb-column-emoji">${col.emoji}</span>
-                <span class="kb-column-label" style="color: ${col.color};">${col.label}</span>
-                <span class="kb-column-count" style="background: ${col.bg}; color: ${col.color}; border-color: ${col.border};">${colTasks.length}</span>
-                ${col.id === 'done' && activeDoneTasks.length > 0 ? `
-                  <button type="button" class="kb-clear-done-btn" onclick="clearDoneColumnWithRevive(10)" title="Delete done tasks with 10s Revive">
-                    <i data-lucide="trash-2" style="width:11px;height:11px;"></i> Clear All
-                  </button>
+          return `
+            <div class="kb-column" data-column="${col.id}">
+              <div class="kb-column-header" style="border-bottom-color: ${col.border};">
+                <div class="kb-column-title-row">
+                  <span class="kb-column-emoji">${col.emoji}</span>
+                  <span class="kb-column-label" style="color: ${col.color};">${col.label}</span>
+                  <span class="kb-column-count" style="background: ${col.bg}; color: ${col.color}; border-color: ${col.border};">${colTasks.length}</span>
+                  ${col.id === 'done' && activeDoneTasks.length > 0 ? `
+                    <button type="button" class="kb-clear-done-btn" onclick="clearDoneColumnWithRevive(10)" title="Delete done tasks with 10s Revive">
+                      <i data-lucide="trash-2" style="width:11px;height:11px;"></i> Clear All
+                    </button>
+                  ` : ''}
+                </div>
+                ${col.id === 'done' && archivedDoneTasks.length > 0 ? `
+                  <div class="kb-archived-notice-row">
+                    <span class="kb-archived-text">Auto-archived ${archivedDoneTasks.length} tasks (>24h)</span>
+                    <button type="button" class="kb-archived-toggle-btn" onclick="toggleArchivedDone()">
+                      ${state.showArchivedDone ? 'Hide' : 'Show'} (${archivedDoneTasks.length})
+                    </button>
+                  </div>
                 ` : ''}
               </div>
-              ${col.id === 'done' && archivedDoneTasks.length > 0 ? `
-                <div class="kb-archived-notice-row">
-                  <span class="kb-archived-text">Auto-archived ${archivedDoneTasks.length} tasks (>24h)</span>
-                  <button type="button" class="kb-archived-toggle-btn" onclick="toggleArchivedDone()">
-                    ${state.showArchivedDone ? 'Hide' : 'Show'} (${archivedDoneTasks.length})
-                  </button>
-                </div>
-              ` : ''}
-            </div>
-            <div class="kb-column-body" id="kb-body-${col.id}" data-column="${col.id}">
-              ${colTasks.length === 0 ? `<div class="kb-empty">No tasks in this column</div>` :
-                colTasks.map(t => {
-                  const isBkl = !!t.backlogId || !!t.isBacklog;
-                  const tierObj = TIERS.find(ti => ti.id === t.tier) || { emoji: isBkl ? '📥' : '📌', name: isBkl ? 'Backlog' : 'Task', color: '#64748b' };
-                  const subtasks = t.subtasks || [];
-                  const doneSubs = subtasks.filter(s => s.completed).length;
-                  const totalSubs = subtasks.length;
-                  const subPct = totalSubs > 0 ? Math.round((doneSubs / totalSubs) * 100) : -1;
-                  const isOldArchived = col.id === 'done' && t.completedAt && (now - new Date(t.completedAt).getTime()) >= TWENTY_FOUR_HOURS;
+              <div class="kb-column-body" id="kb-body-${col.id}" data-column="${col.id}">
+                ${colTasks.length === 0 ? `<div class="kb-empty">No tasks in this column</div>` :
+                  colTasks.map(t => {
+                    const isBkl = !!t.backlogId || !!t.isBacklog;
+                    const tierObj = TIERS.find(ti => ti.id === t.tier) || { emoji: isBkl ? '📥' : '📌', name: isBkl ? 'Backlog' : 'Task', color: '#64748b' };
+                    const subtasks = t.subtasks || [];
+                    const doneSubs = subtasks.filter(s => s.completed).length;
+                    const totalSubs = subtasks.length;
+                    const subPct = totalSubs > 0 ? Math.round((doneSubs / totalSubs) * 100) : -1;
+                    const isOldArchived = col.id === 'done' && t.completedAt && (now - new Date(t.completedAt).getTime()) >= TWENTY_FOUR_HOURS;
 
-                  return `
-                    <div class="kb-card ${isBkl ? 'kb-card-backlog' : ''} ${isOldArchived ? 'kb-card-archived' : ''}" data-id="${t.id}" data-column="${col.id}" draggable="true">
-                      <div class="kb-card-top">
-                        <div class="kb-card-title">${escapeHTML(t.title)}</div>
-                        <div class="kb-card-move-dropdown">
-                          <button type="button" class="kb-move-btn" title="Move to column">
-                            <i data-lucide="more-horizontal"></i>
-                          </button>
-                          <div class="kb-move-menu">
-                            ${otherCols.map(oc => `
-                              <button type="button" class="kb-move-option" onclick="moveTaskToKanban('${t.id}', '${oc.id}', event)" style="color: ${oc.color};">
-                                ${oc.emoji} ${oc.label}
+                    return `
+                      <div class="kb-card ${isBkl ? 'kb-card-backlog' : ''} ${isOldArchived ? 'kb-card-archived' : ''}" data-id="${t.id}" data-column="${col.id}" draggable="true">
+                        <div class="kb-card-top">
+                          <div class="kb-card-title">${escapeHTML(t.title)}</div>
+                          <div class="kb-card-move-dropdown">
+                            <button type="button" class="kb-move-btn" title="Move to column">
+                              <i data-lucide="more-horizontal"></i>
+                            </button>
+                            <div class="kb-move-menu">
+                              ${otherCols.map(oc => `
+                                <button type="button" class="kb-move-option" onclick="moveTaskToKanban('${t.id}', '${oc.id}', event)" style="color: ${oc.color};">
+                                  ${oc.emoji} ${oc.label}
+                                </button>
+                              `).join('')}
+                              <hr style="border-color: rgba(255,255,255,0.06); margin: 4px 0;">
+                              <button type="button" class="kb-move-option" onclick="openEditModal('${t.id}')" style="color: var(--text-secondary);">
+                                ✏️ Edit Task
                               </button>
-                            `).join('')}
-                            <hr style="border-color: rgba(255,255,255,0.06); margin: 4px 0;">
-                            <button type="button" class="kb-move-option" onclick="openEditModal('${t.id}')" style="color: var(--text-secondary);">
-                              ✏️ Edit Task
-                            </button>
-                            <button type="button" class="kb-move-option" onclick="deleteTaskWithRevive('${t.id}', 10, event)" style="color: #ef4444;">
-                              🗑️ Delete (10s Revive)
-                            </button>
+                              <button type="button" class="kb-move-option" onclick="deleteTaskWithRevive('${t.id}', 10, event)" style="color: #ef4444;">
+                                🗑️ Delete (10s Revive)
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      ${t.description ? `<div class="kb-card-desc">${escapeHTML(t.description.substring(0, 80))}${t.description.length > 80 ? '...' : ''}</div>` : ''}
-                      <div class="kb-card-meta">
-                        ${isBkl ? `
-                          <span class="kb-backlog-badge" title="Executive Backlog Objective">
-                            <i data-lucide="layers" style="width:10px;height:10px;"></i> Backlog
-                          </span>
-                        ` : `
-                          <span class="kb-tier-pill" style="color: ${tierObj.color || '#888'}">${tierObj.emoji} ${tierObj.name}</span>
-                        `}
-                        <span class="kb-prio-pill kb-prio-${t.priority}">${t.priority}</span>
-                        ${t.dueDate ? `<span class="kb-due-pill"><i data-lucide="calendar" style="width:10px;height:10px;"></i> ${t.dueDate}</span>` : ''}
-                        ${isOldArchived ? `<span class="kb-archived-pill" title="Completed >24h ago">⏳ >24h</span>` : ''}
-                      </div>
-                      ${subPct >= 0 ? `
-                        <div class="kb-card-progress">
-                          <div class="kb-progress-track">
-                            <div class="kb-progress-fill" style="width: ${subPct}%; background: ${col.color};"></div>
-                          </div>
-                          <span class="kb-progress-label">${doneSubs}/${totalSubs}</span>
-                        </div>
-                      ` : ''}
-                      <div class="kb-card-footer">
-                        <span class="kb-category-tag">#${t.group ? (t.group.charAt(0).toUpperCase() + t.group.slice(1)) : (t.category || 'General')}</span>
-                        <div class="kb-card-footer-actions">
-                          ${col.id === 'done' ? `
-                            <button type="button" class="kb-card-revive-btn" onclick="deleteTaskWithRevive('${t.id}', 10, event)" title="Delete with 10s Revive option">
-                              <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
-                              <span>10s Revive</span>
-                            </button>
+                        ${t.description ? `<div class="kb-card-desc">${escapeHTML(t.description.substring(0, 80))}${t.description.length > 80 ? '...' : ''}</div>` : ''}
+                        <div class="kb-card-meta">
+                          ${isBkl ? `
+                            <span class="kb-backlog-badge" title="Executive Backlog Objective">
+                              <i data-lucide="layers" style="width:10px;height:10px;"></i> Backlog
+                            </span>
                           ` : `
-                            <button type="button" class="kb-focus-btn" onclick="if(typeof FocusEngine!=='undefined') FocusEngine.open('${t.id}')" title="Focus Mode">
-                              <i data-lucide="zap"></i>
-                            </button>
+                            <span class="kb-tier-pill" style="color: ${tierObj.color || '#888'}">${tierObj.emoji} ${tierObj.name}</span>
                           `}
+                          <span class="kb-prio-pill kb-prio-${t.priority}">${t.priority}</span>
+                          ${t.dueDate ? `<span class="kb-due-pill"><i data-lucide="calendar" style="width:10px;height:10px;"></i> ${t.dueDate}</span>` : ''}
+                          ${isOldArchived ? `<span class="kb-archived-pill" title="Completed >24h ago">⏳ >24h</span>` : ''}
+                        </div>
+                        ${subPct >= 0 ? `
+                          <div class="kb-card-progress">
+                            <div class="kb-progress-track">
+                              <div class="kb-progress-fill" style="width: ${subPct}%; background: ${col.color};"></div>
+                            </div>
+                            <span class="kb-progress-label">${doneSubs}/${totalSubs}</span>
+                          </div>
+                        ` : ''}
+                        <div class="kb-card-footer">
+                          <span class="kb-category-tag">#${t.group ? (t.group.charAt(0).toUpperCase() + t.group.slice(1)) : (t.category || 'General')}</span>
+                          <div class="kb-card-footer-actions">
+                            ${col.id === 'done' ? `
+                              <button type="button" class="kb-card-revive-btn" onclick="deleteTaskWithRevive('${t.id}', 10, event)" title="Delete with 10s Revive option">
+                                <i data-lucide="trash-2"></i>
+                              </button>
+                            ` : `
+                              <button type="button" class="kb-focus-btn" onclick="if(typeof FocusEngine!=='undefined') FocusEngine.open('${t.id}')" title="Focus Mode">
+                                <i data-lucide="zap"></i>
+                              </button>
+                            `}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  `;
-                }).join('')
-              }
-              <!-- Dedicated Drop Target Zone at Bottom -->
-              <div class="kb-drop-target-zone" data-column="${col.id}">
-                <i data-lucide="arrow-down-circle" style="width:13px;height:13px;"></i>
-                <span>Drop into ${col.label}</span>
+                    `;
+                  }).join('')
+                }
+                <!-- Dedicated Drop Target Zone at Bottom -->
+                <div class="kb-drop-target-zone" data-column="${col.id}">
+                  <i data-lucide="arrow-down-circle" style="width:13px;height:13px;"></i>
+                  <span>Drop into ${col.label}</span>
+                </div>
               </div>
             </div>
-          </div>
-        `;
-      }).join('')}
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
 
