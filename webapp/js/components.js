@@ -925,6 +925,30 @@ const Components = {
             </div>
           </div>
 
+          <!-- Firestore Security Rules Helper for Permission Denied Errors -->
+          <div class="sync-rules-helper" id="sync-rules-helper">
+            <div class="sync-rules-header">
+              <i data-lucide="key-round" style="width: 14px; height: 14px; color: #f59e0b;"></i>
+              <strong>Fix "Missing or insufficient permissions" error:</strong>
+            </div>
+            <p class="sync-rules-desc">
+              By default, Firestore locks database access. Go to <b><a href="https://console.firebase.google.com/" target="_blank" rel="noopener" style="color: var(--accent-primary); text-decoration: underline;">Firebase Console</a> &rarr; Firestore Database &rarr; Rules</b> and publish this rule:
+            </p>
+            <div class="sync-code-snippet-wrap">
+              <pre class="sync-code-block">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /workspaces/{roomId} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+              <button type="button" class="btn btn-secondary btn-xs sync-copy-rule-btn" onclick="SyncEngine.copyFirestoreRule()">
+                <i data-lucide="copy" style="width: 12px; height: 12px;"></i> Copy Rule
+              </button>
+            </div>
+          </div>
+
           <div class="sync-guarantee-note">
             <i data-lucide="shield-alert"></i>
             <span><strong>Zero-Knowledge Guarantee:</strong> Google Firestore only ever receives scrambled ciphertext. Even if their databases are inspected, your tasks, notes, habits, and streaks cannot be read without this exact passphrase.</span>
