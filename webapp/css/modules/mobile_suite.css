@@ -1671,6 +1671,83 @@
   user-select: all;
 }
 
+/* Firestore Rules Helper */
+.sync-rules-helper {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sync-rules-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #fbbf24;
+}
+
+.sync-rules-desc {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.sync-code-snippet-wrap {
+  position: relative;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sync-code-block {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: #38bdf8;
+  line-height: 1.4;
+  overflow-x: auto;
+}
+
+.sync-copy-rule-btn {
+  white-space: nowrap;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-left: 10px;
+  align-self: flex-start;
+}
+
+[data-theme="light"] .sync-rules-helper {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="light"] .sync-rules-header {
+  color: #b45309;
+}
+
+[data-theme="light"] .sync-rules-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .sync-code-snippet-wrap {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .sync-code-block {
+  color: #0284c7;
+}
+
 /* Guarantee Note */
 .sync-guarantee-note {
   display: flex;

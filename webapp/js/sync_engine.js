@@ -27,6 +27,7 @@ const SyncEngine = {
   unsubscribeListener: null,
   pushDebounceTimer: null,
   isApplyingRemote: false,
+  isPushing: false,
   lastRemoteUpdatedAt: 0,
   cachedKey: null,
   cachedPassphrase: null,
@@ -330,13 +331,6 @@ const SyncEngine = {
       this.firebaseApp = targetApp;
       this.db = this.firebaseApp.firestore();
 
-      // Enable offline persistence if available
-      try {
-        await this.db.enablePersistence({ synchronizeTabs: true });
-      } catch (e) {
-        // Ignore if already enabled or unsupported in current context
-      }
-
       // Unsubscribe any previous listener
       if (this.unsubscribeListener) {
         this.unsubscribeListener();
@@ -349,9 +343,9 @@ const SyncEngine = {
       this.unsubscribeListener = docRef.onSnapshot(
         async (snapshot) => {
           if (!snapshot.exists) {
-            // Workspace doesn't exist yet on Firestore, push local state as initial baseline
+            // Workspace doesn't exist yet on Firestore
             this.setStatus('synced', 'E2EE Cloud Connected (New Room)');
-            this.pushNow();
+            this.queuePush();
             return;
           }
 
@@ -391,14 +385,24 @@ const SyncEngine = {
         },
         (error) => {
           console.error('Firestore onSnapshot error:', error);
-          this.setStatus('error', 'Cloud sync connection error');
+          const isPerm = error.code === 'permission-denied' || (error.message && error.message.toLowerCase().includes('permission'));
+          if (isPerm) {
+            this.setStatus('error', 'Firestore Permission Denied: Allow /workspaces in Firebase Console Rules');
+          } else {
+            this.setStatus('error', 'Cloud sync connection error: ' + (error.message || ''));
+          }
         }
       );
 
       this.setStatus('synced', 'E2EE Cloud Connected');
     } catch (err) {
       console.error('Failed to initialize Firebase Sync:', err);
-      this.setStatus('error', err.message || 'Firebase Connection Error');
+      const isPerm = err.code === 'permission-denied' || (err.message && err.message.toLowerCase().includes('permission'));
+      if (isPerm) {
+        this.setStatus('error', 'Firestore Permission Denied: Update Firestore Security Rules');
+      } else {
+        this.setStatus('error', err.message || 'Firebase Connection Error');
+      }
     }
   },
 
@@ -422,15 +426,20 @@ const SyncEngine = {
    * Instantly encrypt and write complete executive state to Firestore
    */
   async pushNow() {
-    if (this.isApplyingRemote) return;
+    if (this.isApplyingRemote) return false;
+    if (this.isPushing) {
+      this.queuePush();
+      return true;
+    }
     const config = this.getConfig();
     const roomId = this.getRoomId();
     const passphrase = this.getPassphrase();
 
     if (!config || !roomId || !passphrase || !this.db) {
-      return;
+      return false;
     }
 
+    this.isPushing = true;
     try {
       this.setStatus('syncing', 'Encrypting & syncing to cloud...');
 
@@ -469,9 +478,22 @@ const SyncEngine = {
       const timeStr = new Date().toLocaleTimeString();
       localStorage.setItem(this.STORAGE_LAST_SYNCED, timeStr);
       this.setStatus('synced', `E2EE Synced at ${timeStr}`);
+      return true;
     } catch (err) {
       console.error('Sync push failed:', err);
-      this.setStatus('error', 'Sync push failed: ' + (err.message || 'Network error'));
+      const isAssertion = (err.message || '').includes('ASSERTION FAILED');
+      const isPerm = err.code === 'permission-denied' || (err.message && err.message.toLowerCase().includes('permission'));
+      
+      if (isAssertion) {
+        this.setStatus('error', 'Sync engine reset. Please refresh the page to reconnect.');
+      } else if (isPerm) {
+        this.setStatus('error', 'Missing or insufficient permissions: Update Firestore Security Rules in Firebase Console.');
+      } else {
+        this.setStatus('error', 'Sync push failed: ' + (err.message || 'Network error'));
+      }
+      return false;
+    } finally {
+      this.isPushing = false;
     }
   },
 
@@ -811,13 +833,23 @@ const SyncEngine = {
         showToast('🔒 Credentials saved! Connecting to E2EE Cloud...', 'info');
       }
       await this.connect();
-      await this.pushNow();
+      const pushSuccess = await this.pushNow();
       this.updatePairingSection();
-      if (typeof showToast === 'function') {
-        showToast('✨ Successfully connected & synchronized!', 'success');
+
+      if (pushSuccess && this.status === 'synced') {
+        if (typeof showToast === 'function') {
+          showToast('✨ Successfully connected & synchronized!', 'success');
+        }
+      } else {
+        if (typeof showToast === 'function') {
+          showToast('⚠️ Sync failed: ' + (this.statusMessage || 'Push rejected'), 'error');
+        }
       }
     } catch (err) {
-      alert('Setup error: ' + err.message);
+      this.setStatus('error', 'Setup error: ' + err.message);
+      if (typeof showToast === 'function') {
+        showToast('⚠️ Setup error: ' + err.message, 'error');
+      }
     }
   },
 
@@ -835,6 +867,17 @@ const SyncEngine = {
       if (typeof showToast === 'function') {
         showToast('📋 Copied to clipboard!', 'success');
       }
+    });
+  },
+
+  copyFirestoreRule() {
+    const rule = "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /workspaces/{roomId} {\n      allow read, write: if true;\n    }\n  }\n}";
+    navigator.clipboard.writeText(rule).then(() => {
+      if (typeof showToast === 'function') {
+        showToast('📋 Firestore Rules copied to clipboard!', 'success');
+      }
+    }).catch(() => {
+      prompt('Copy Firestore Rule:', rule);
     });
   }
 };
