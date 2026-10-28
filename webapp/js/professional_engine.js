@@ -1,7 +1,7 @@
 /**
  * Tesseract Professional Engine
  * Living career journal, dynamic resume generator, and professional milestone tracker.
- * Auto-populates from completed tasks & backlogs + manual career entries.
+ * Contains dedicated manual career entries (achievements, projects, certifications, etc.).
  */
 
 const PRO_STORAGE_KEY = 'tesseract_professional_data';
@@ -51,7 +51,10 @@ const ProfessionalEngine = {
       const raw = localStorage.getItem(PRO_STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
-        this.entries = Array.isArray(data.entries) ? data.entries : [];
+        // Retain only genuine manual entries (exclude any legacy auto-injected items)
+        this.entries = Array.isArray(data.entries)
+          ? data.entries.filter(e => e && !String(e.id || '').startsWith('auto_') && e.type !== 'auto')
+          : [];
       }
     } catch (e) {
       console.warn('[ProfessionalEngine] Load error:', e);
@@ -100,120 +103,18 @@ const ProfessionalEngine = {
     this.save();
   },
 
-  // ──────── Auto Entries (computed on the fly) ────────
+  // ──────── Auto Entries (Disabled) ────────
 
   getAutoEntries() {
-    const auto = [];
-
-    // 1. From state.tasks (completed ones with career-relevant categories)
-    let tasksList = [];
-    if (typeof state !== 'undefined' && Array.isArray(state.tasks)) {
-      tasksList = state.tasks;
-    } else if (typeof window !== 'undefined' && window.state && Array.isArray(window.state.tasks)) {
-      tasksList = window.state.tasks;
-    } else {
-      try {
-        const raw = localStorage.getItem('tesseract_goals_tasks_data');
-        if (raw) tasksList = JSON.parse(raw);
-      } catch (e) {}
-    }
-
-    if (Array.isArray(tasksList)) {
-      tasksList.forEach(task => {
-        if (!task.completed || !task.completedAt) return;
-        const d = new Date(task.completedAt);
-        if (isNaN(d.getTime())) return;
-        const dateStr = d.toISOString().slice(0, 10);
-
-        let autoCat = 'achievement';
-        let autoLabel = '✅ Task Completed';
-
-        const catLower = (task.category || '').toLowerCase();
-        const titleLower = (task.title || '').toLowerCase();
-        const isProjectTask = catLower.includes('project') || catLower.includes('engineering') || catLower.includes('tech') ||
-                             titleLower.includes('ship') || titleLower.includes('deploy') || titleLower.includes('launch') ||
-                             titleLower.includes('build') || task.tier === 'quarterly';
-
-        if (isProjectTask) {
-          autoCat = 'project';
-          autoLabel = task.tier === 'quarterly' ? '🎯 Quarterly Objective' : '🚀 Shipped Project';
-        } else if (task.tier === 'annual') {
-          autoCat = 'achievement';
-          autoLabel = '🏆 Annual Goal Achieved';
-        } else if (task.tier === 'monthly') {
-          autoCat = 'achievement';
-          autoLabel = '📋 Monthly Milestone';
-        } else if (task.tier === 'weekly') {
-          // Only include high-priority weekly tasks
-          if (task.priority !== 'urgent' && task.priority !== 'high') return;
-          autoCat = 'achievement';
-          autoLabel = '📅 Weekly Milestone';
-        } else {
-          // Skip daily tasks — too granular for professional journal
-          return;
-        }
-
-        auto.push({
-          id: 'auto_task_' + task.id,
-          type: 'auto',
-          source: 'tasks',
-          sourceLabel: autoLabel,
-          category: autoCat,
-          title: task.title || '',
-          description: task.description || '',
-          date: dateStr,
-          tags: Array.isArray(task.tags) ? task.tags : [],
-          impact: task.priority === 'urgent' ? 'high' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low',
-          tier: task.tier,
-          createdAt: task.createdAt || task.completedAt
-        });
-      });
-    }
-
-    // 2. From BacklogEngine.items (completed work backlogs)
-    let backlogList = [];
-    if (typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
-      backlogList = BacklogEngine.items;
-    } else {
-      try {
-        const raw = localStorage.getItem('tesseract_backlog_items');
-        if (raw) backlogList = JSON.parse(raw);
-      } catch (e) {}
-    }
-
-    if (Array.isArray(backlogList)) {
-      backlogList.forEach(item => {
-        if (!item.completed || !item.completedAt) return;
-        if (item.group !== 'work' && item.group !== 'tesseract' && item.group !== 'career') return;
-        const d = new Date(item.completedAt);
-        if (isNaN(d.getTime())) return;
-        const dateStr = d.toISOString().slice(0, 10);
-
-        auto.push({
-          id: 'auto_bkl_' + item.id,
-          type: 'auto',
-          source: 'backlogs',
-          sourceLabel: '✅ Work Backlog',
-          category: 'project',
-          title: item.objective || '',
-          description: item.notes || '',
-          date: dateStr,
-          tags: item.group ? [item.group] : [],
-          impact: item.severity === 'high' ? 'high' : item.severity === 'moderate' ? 'medium' : 'low',
-          createdAt: item.createdAt || item.completedAt
-        });
-      });
-    }
-
-    return auto;
+    // Disabled: Professional journal strictly contains dedicated manual career entries,
+    // excluding tasks, to-do list items, and backlogs per user preference.
+    return [];
   },
 
   // ──────── Merged & Filtered ────────
 
   getAllEntries() {
-    const manual = this.entries.map(e => ({ ...e, type: 'manual' }));
-    const auto = this.getAutoEntries();
-    return [...manual, ...auto];
+    return this.entries.map(e => ({ ...e, type: 'manual' }));
   },
 
   getEntriesForYear(year) {
