@@ -956,7 +956,7 @@ service cloud.firestore {
         </div>
 
         <div class="sync-modal-footer">
-          <button type="button" class="btn btn-ghost text-danger" onclick="if(confirm('Disconnect cloud sync from this device? (Local data will be kept)')) { SyncEngine.clearCredentials(); }">
+          <button type="button" class="btn btn-ghost text-danger" onclick="if(typeof SyncEngine !== 'undefined') { SyncEngine.confirmDisconnect(); }">
             Disconnect
           </button>
           <div class="sync-footer-actions">
@@ -1174,7 +1174,9 @@ service cloud.firestore {
                   `;
                 }
               }
-            } catch(e) {}
+            } catch (e) {
+                console.warn('[Components] Error resolving quick action:', e);
+              }
             return '';
           })()}
           <button class="tool-tile" onclick="Components.closeMobileToolsSheet(); if(typeof FocusEngine !== 'undefined') FocusEngine.open();">

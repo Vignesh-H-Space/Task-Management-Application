@@ -282,11 +282,20 @@ function checkAndUpdateStreak() {
   }
 }
 
-function promptEditStreak() {
+async function promptEditStreak() {
   const current = (typeof XPEngine !== 'undefined' && XPEngine.data) ? XPEngine.data.streak : (state.streak ? state.streak.count : 1);
-  const input = prompt('🔥 Set your current Execution Streak (Days):', current);
+  const input = typeof TesseractDialog !== 'undefined'
+    ? await TesseractDialog.prompt({
+        title: 'Execution Streak',
+        message: 'Set your active streak count in days:',
+        defaultValue: current,
+        inputType: 'number',
+        confirmLabel: 'Save Streak'
+      })
+    : prompt('🔥 Set your current Execution Streak (Days):', current);
+
   if (input !== null) {
-    const num = parseInt(input.trim(), 10);
+    const num = parseInt(String(input).trim(), 10);
     if (!isNaN(num) && num >= 0) {
       if (typeof XPEngine !== 'undefined' && typeof XPEngine.setManualStreak === 'function') {
         XPEngine.setManualStreak(num);
@@ -546,8 +555,17 @@ function bindEvents() {
 
   const btnEditName = document.getElementById('btn-edit-name');
   if (btnEditName) {
-    btnEditName.addEventListener('click', () => {
-      const newName = prompt("Enter your new profile name:", state.profile.name);
+    btnEditName.addEventListener('click', async () => {
+      const newName = typeof TesseractDialog !== 'undefined'
+        ? await TesseractDialog.prompt({
+            title: 'Edit Profile Name',
+            message: 'Enter your preferred display name:',
+            defaultValue: state.profile.name,
+            placeholder: 'e.g. Alex Morgan',
+            confirmLabel: 'Save Name'
+          })
+        : prompt("Enter your new profile name:", state.profile.name);
+
       if (newName && newName.trim() !== '') {
         state.profile.name = newName.trim();
         saveProfile();
@@ -633,7 +651,9 @@ function initSearchController() {
           return matchTitle || matchDesc || matchCat;
         }).slice(0, 3);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[Search] Failed to parse bucket list dreams:', e);
+    }
 
     return { tasks: taskMatches, dreams: dreamMatches };
   }
@@ -855,7 +875,9 @@ function toggleTaskCompletion(taskId, clickEvent = null) {
           localStorage.setItem('tesseract_backlog_data', JSON.stringify(bkls));
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[App] Failed to sync task completion to backlog storage:', e);
+    }
   }
 
   // Bi-directional synchronization with Today's Docket
@@ -881,7 +903,9 @@ function toggleTaskCompletion(taskId, clickEvent = null) {
           localStorage.setItem('tesseract_docket_today_items', JSON.stringify(dktItems));
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[App] Failed to sync task completion to docket storage:', e);
+    }
   }
 
   if (task.completed) {
@@ -930,11 +954,20 @@ if (typeof window !== 'undefined') {
 }
 
 // Delete Task
-function deleteTask(taskId) {
+async function deleteTask(taskId) {
   const task = state.tasks.find(t => t.id === taskId);
   if (!task) return;
 
-  if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
+  const confirmed = typeof TesseractDialog !== 'undefined'
+    ? await TesseractDialog.confirm({
+        title: 'Delete Task',
+        message: `Are you sure you want to delete "${task.title}"?`,
+        confirmLabel: 'Delete',
+        variant: 'danger'
+      })
+    : confirm(`Are you sure you want to delete "${task.title}"?`);
+
+  if (confirmed) {
     state.tasks = state.tasks.filter(t => t.id !== taskId);
     state.tasks.forEach(t => {
       if (t.parentId === taskId) t.parentId = null;
@@ -1528,7 +1561,9 @@ function switchView(mode) {
   state.viewMode = mode;
   try {
     localStorage.setItem('tesseract_view_mode', mode);
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[App] Failed to persist view mode preference:', e);
+  }
   const listBtn = document.getElementById('view-mode-list');
   const matrixBtn = document.getElementById('view-mode-matrix');
   const kanbanBtn = document.getElementById('view-mode-kanban');
@@ -2624,10 +2659,26 @@ function handleImportJSON(event) {
         renderAll();
         showToast(`Imported ${imported.length} tasks successfully!`, 'success');
       } else {
-        alert('Invalid JSON structure: Expected an array of task objects.');
+        if (typeof TesseractDialog !== 'undefined') {
+          TesseractDialog.alert({
+            title: 'Import Failed',
+            message: 'Invalid JSON structure: Expected an array of task objects.',
+            variant: 'danger'
+          });
+        } else {
+          alert('Invalid JSON structure: Expected an array of task objects.');
+        }
       }
     } catch (err) {
-      alert('Error parsing JSON file: ' + err.message);
+      if (typeof TesseractDialog !== 'undefined') {
+        TesseractDialog.alert({
+          title: 'Import Error',
+          message: 'Error parsing JSON file: ' + err.message,
+          variant: 'danger'
+        });
+      } else {
+        alert('Error parsing JSON file: ' + err.message);
+      }
     }
   };
   reader.readAsText(file);
@@ -3035,27 +3086,52 @@ function handleVaultImport(event) {
         saveData();
         showToast(`Imported ${data.length} tasks successfully!`, 'success');
       } else {
-        alert('Unrecognized JSON format. Please use a valid Tesseract export file.');
+        if (typeof TesseractDialog !== 'undefined') {
+          TesseractDialog.alert({
+            title: 'Unrecognized Backup',
+            message: 'Unrecognized JSON format. Please use a valid Tesseract export file.',
+            variant: 'warning'
+          });
+        } else {
+          alert('Unrecognized JSON format. Please use a valid Tesseract export file.');
+        }
         return;
       }
       renderAll();
       if (document.getElementById('profile-container')) renderProfileView();
     } catch (err) {
-      alert('Error parsing JSON backup file: ' + err.message);
+      if (typeof TesseractDialog !== 'undefined') {
+        TesseractDialog.alert({
+          title: 'Restore Error',
+          message: 'Error parsing JSON backup file: ' + err.message,
+          variant: 'danger'
+        });
+      } else {
+        alert('Error parsing JSON backup file: ' + err.message);
+      }
     }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
-function archiveCompletedTasks() {
+async function archiveCompletedTasks() {
   const completedDailyAndWeekly = (state.tasks || []).filter(t => (t.tier === 'daily' || t.tier === 'weekly') && t.completed);
   if (completedDailyAndWeekly.length === 0) {
     showToast('No completed daily or weekly tasks to archive.', 'info');
     return;
   }
 
-  if (confirm(`Archive ${completedDailyAndWeekly.length} completed daily/weekly tasks? They will be cleared from active matrix while preserving all your XP and stats.`)) {
+  const confirmed = typeof TesseractDialog !== 'undefined'
+    ? await TesseractDialog.confirm({
+        title: 'Archive Completed Tasks',
+        message: `Archive ${completedDailyAndWeekly.length} completed daily/weekly tasks? They will be cleared from active matrix while preserving all your XP and stats.`,
+        confirmLabel: 'Archive Tasks',
+        variant: 'default'
+      })
+    : confirm(`Archive ${completedDailyAndWeekly.length} completed daily/weekly tasks? They will be cleared from active matrix while preserving all your XP and stats.`);
+
+  if (confirmed) {
     state.tasks = state.tasks.filter(t => !((t.tier === 'daily' || t.tier === 'weekly') && t.completed));
     saveData();
     renderAll();
@@ -3082,8 +3158,17 @@ function getTimeAgo(date) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function resetToSampleData() {
-  if (confirm('Reset all tasks to original sample data? Custom additions will be overwritten.')) {
+async function resetToSampleData() {
+  const confirmed = typeof TesseractDialog !== 'undefined'
+    ? await TesseractDialog.confirm({
+        title: 'Reset to Sample Data',
+        message: 'Reset all tasks to original sample data? Custom additions will be overwritten.',
+        confirmLabel: 'Reset Data',
+        variant: 'danger'
+      })
+    : confirm('Reset all tasks to original sample data? Custom additions will be overwritten.');
+
+  if (confirmed) {
     state.tasks = typeof INITIAL_TASKS !== 'undefined' ? [...INITIAL_TASKS] : [];
     saveData();
     renderAll();
@@ -3224,10 +3309,30 @@ function copyShareFallback(text) {
     navigator.clipboard.writeText(text).then(() => {
       showToast('📋 Executive Debrief copied to clipboard!', 'success');
     }).catch(() => {
-      prompt('Copy Executive Debrief:', text);
+      if (typeof TesseractDialog !== 'undefined') {
+        TesseractDialog.prompt({
+          title: 'Executive Debrief',
+          message: 'Copy debrief summary below:',
+          defaultValue: text,
+          inputType: 'textarea',
+          confirmLabel: 'Done'
+        });
+      } else {
+        prompt('Copy Executive Debrief:', text);
+      }
     });
   } else {
-    prompt('Copy Executive Debrief:', text);
+    if (typeof TesseractDialog !== 'undefined') {
+      TesseractDialog.prompt({
+        title: 'Executive Debrief',
+        message: 'Copy debrief summary below:',
+        defaultValue: text,
+        inputType: 'textarea',
+        confirmLabel: 'Done'
+      });
+    } else {
+      prompt('Copy Executive Debrief:', text);
+    }
   }
 }
 
