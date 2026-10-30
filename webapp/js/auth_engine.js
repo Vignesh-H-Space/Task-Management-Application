@@ -204,7 +204,9 @@ const AuthEngine = {
       try {
         const parsed = JSON.parse(raw);
         return parsed.displayName || parsed.username || 'Executive';
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Auth] Handled exception:', e);
+    }
     }
     return 'Executive';
   },

@@ -424,7 +424,9 @@ const CommandPalette = {
     let habitsList = [];
     try {
       habitsList = JSON.parse(localStorage.getItem('tesseract_habits_data') || '[]');
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[CommandPalette] Handled exception:', e);
+    }
 
     habitsList.forEach(habit => {
       if ((habit.name || '').toLowerCase().includes(q) || (habit.category || '').toLowerCase().includes(q)) {
@@ -447,7 +449,9 @@ const CommandPalette = {
     let bucketList = [];
     try {
       bucketList = JSON.parse(localStorage.getItem('tesseract_bucketlist_data') || '[]');
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[CommandPalette] Handled exception:', e);
+    }
 
     bucketList.forEach(item => {
       if ((item.title || '').toLowerCase().includes(q) || (item.category || '').toLowerCase().includes(q)) {

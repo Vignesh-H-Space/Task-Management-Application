@@ -182,7 +182,9 @@ const PulseEngine = {
         try {
           picker.showPicker();
           return;
-        } catch (e) {}
+        } catch (e) {
+      console.warn('[Pulse] Handled exception:', e);
+    }
       }
       picker.focus();
       picker.click();

@@ -126,7 +126,9 @@ const DocketEngine = {
     this.isCollapsed = !this.isCollapsed;
     try {
       localStorage.setItem(DOCKET_COLLAPSED_KEY, this.isCollapsed ? 'true' : 'false');
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[Docket] Handled exception:', e);
+    }
     this.render();
   },
 
@@ -286,7 +288,9 @@ const DocketEngine = {
 
     try {
       localStorage.setItem(DOCKET_RADAR_ACKS_KEY, JSON.stringify(acks));
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[Docket] Handled exception:', e);
+    }
 
     const row = (typeof document !== 'undefined' && typeof document.querySelector === 'function') ? document.querySelector(`.docket-radar-row[data-id="${id}"]`) : null;
     if (row) {
@@ -796,7 +800,9 @@ const DocketEngine = {
       try {
         const raw = localStorage.getItem('tesseract_goals_tasks_data');
         if (raw) generalTasks = JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Docket] Handled exception:', e);
+    }
     }
 
     if (Array.isArray(generalTasks)) {
@@ -831,7 +837,9 @@ const DocketEngine = {
       try {
         const raw = localStorage.getItem('tesseract_trackers');
         if (raw) trackerItems = JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Docket] Handled exception:', e);
+    }
     }
 
     if (Array.isArray(trackerItems)) {
@@ -891,7 +899,9 @@ const DocketEngine = {
               }
             }
           }
-        } catch (e) {}
+        } catch (e) {
+      console.warn('[Docket] Handled exception:', e);
+    }
       }
       this.render();
       if (typeof showToast === 'function') {
@@ -921,7 +931,9 @@ const DocketEngine = {
               }
             }
           }
-        } catch (e) {}
+        } catch (e) {
+      console.warn('[Docket] Handled exception:', e);
+    }
       }
       this.render();
       if (typeof showToast === 'function') {

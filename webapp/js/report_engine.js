@@ -173,7 +173,9 @@ const ReportEngine = {
       try {
         const raw = localStorage.getItem('tesseract_focus_sessions');
         if (raw) sessions = JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Report] Handled exception:', e);
+    }
     }
 
     const sessionsInRange = sessions.filter(s => {
@@ -202,7 +204,9 @@ const ReportEngine = {
       try {
         const raw = localStorage.getItem('tesseract_habits_data');
         if (raw) habitsList = JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Report] Handled exception:', e);
+    }
     }
     if (habitsList.length === 0) {
       habitsList = [
