@@ -151,6 +151,7 @@
     </div>
   </div>
 
+  <script src="js/dialog_engine.js"></script>
   <script src="js/auth_engine.js"></script>
   <script>
     // Initialize page mode on load
@@ -278,12 +279,19 @@
       }
     }
 
-    function handleForgotPassword() {
-      const confirmReset = confirm(
-        "Forgot your Master Password?\n\n" +
-        "Click OK to reset your login credentials and create a new Master Key.\n\n" +
-        "NOTE: All your tasks, habits, pulses, routines, and data will remain 100% safe and intact."
-      );
+    async function handleForgotPassword() {
+      const confirmReset = typeof TesseractDialog !== 'undefined'
+        ? await TesseractDialog.confirm({
+            title: 'Reset Master Password',
+            message: "Forgot your Master Password?\n\nReset your login credentials and create a new Master Key.\n\nNOTE: All your tasks, habits, pulses, routines, and data will remain 100% safe and intact.",
+            confirmLabel: 'Reset Credentials',
+            variant: 'warning'
+          })
+        : confirm(
+            "Forgot your Master Password?\n\n" +
+            "Click OK to reset your login credentials and create a new Master Key.\n\n" +
+            "NOTE: All your tasks, habits, pulses, routines, and data will remain 100% safe and intact."
+          );
 
       if (confirmReset) {
         if (typeof AuthEngine !== 'undefined' && typeof AuthEngine.resetMaster === 'function') {
