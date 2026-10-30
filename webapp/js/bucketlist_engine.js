@@ -431,9 +431,18 @@ const BucketListEngine = {
     this.render();
   },
 
-  deleteDream(id, event) {
+  async deleteDream(id, event) {
     if (event) event.stopPropagation();
-    if (!confirm('Are you sure you want to remove this dream from your bucket list?')) return;
+    const confirmed = typeof TesseractDialog !== 'undefined'
+      ? await TesseractDialog.confirm({
+          title: 'Remove Dream',
+          message: 'Are you sure you want to remove this dream from your bucket list?',
+          confirmLabel: 'Remove Dream',
+          variant: 'danger'
+        })
+      : confirm('Are you sure you want to remove this dream from your bucket list?');
+
+    if (!confirmed) return;
 
     this.dreams = this.dreams.filter(d => d.id !== id);
     this.save();

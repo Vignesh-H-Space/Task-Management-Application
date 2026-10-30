@@ -870,6 +870,20 @@ const SyncEngine = {
     });
   },
 
+  async confirmDisconnect() {
+    const confirmed = typeof TesseractDialog !== 'undefined'
+      ? await TesseractDialog.confirm({
+          title: 'Disconnect Cloud Sync',
+          message: 'Disconnect cloud sync from this device? Local data on this device will be kept intact.',
+          confirmLabel: 'Disconnect',
+          variant: 'danger'
+        })
+      : confirm('Disconnect cloud sync from this device? (Local data will be kept)');
+    if (confirmed) {
+      this.clearCredentials();
+    }
+  },
+
   copyFirestoreRule() {
     const rule = "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /workspaces/{roomId} {\n      allow read, write: if true;\n    }\n  }\n}";
     navigator.clipboard.writeText(rule).then(() => {
@@ -877,7 +891,17 @@ const SyncEngine = {
         showToast('📋 Firestore Rules copied to clipboard!', 'success');
       }
     }).catch(() => {
-      prompt('Copy Firestore Rule:', rule);
+      if (typeof TesseractDialog !== 'undefined') {
+        TesseractDialog.prompt({
+          title: 'Firestore Security Rule',
+          message: 'Copy rule configuration below:',
+          defaultValue: rule,
+          inputType: 'textarea',
+          confirmLabel: 'Done'
+        });
+      } else {
+        prompt('Copy Firestore Rule:', rule);
+      }
     });
   }
 };

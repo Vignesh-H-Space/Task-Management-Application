@@ -274,16 +274,25 @@ const FocusEngine = {
     this.highlightActivePreset();
   },
 
-  promptCustomDuration() {
+  async promptCustomDuration() {
     const currentMins = Math.round(this.totalSeconds / 60);
-    const input = prompt("Set custom focus duration in minutes (1 to 360):", currentMins);
+    const input = typeof TesseractDialog !== 'undefined'
+      ? await TesseractDialog.prompt({
+          title: 'Custom Focus Timer',
+          message: 'Set focus duration in minutes (1 to 360):',
+          defaultValue: currentMins,
+          inputType: 'number',
+          confirmLabel: 'Set Timer'
+        })
+      : prompt("Set custom focus duration in minutes (1 to 360):", currentMins);
+
     if (input !== null) {
-      const parsed = parseInt(input.trim(), 10);
+      const parsed = parseInt(String(input).trim(), 10);
       if (!isNaN(parsed) && parsed >= 1 && parsed <= 360) {
         if (this.isRunning) this.pause();
         this.setDuration(parsed);
         showToast(`Focus timer set to ${parsed}m.`, 'info');
-      } else if (input.trim() !== '') {
+      } else if (String(input).trim() !== '') {
         showToast('Please enter a valid number of minutes between 1 and 360.', 'error');
       }
     }
@@ -601,7 +610,9 @@ const FocusEngine = {
         if (this.soundNodes.lfo) this.soundNodes.lfo.stop();
         if (this.soundNodes.osc1) this.soundNodes.osc1.stop();
         if (this.soundNodes.osc2) this.soundNodes.osc2.stop();
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Focus] Handled exception:', e);
+    }
       this.soundNodes = null;
     }
   },
@@ -672,7 +683,9 @@ const WeeklyReportEngine = {
       try {
         const raw = localStorage.getItem('tesseract_habits_data');
         if (raw) habitsList = JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Focus] Handled exception:', e);
+    }
     }
 
     // Calculate 7-day adherence for habits

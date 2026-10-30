@@ -518,8 +518,17 @@ const ProfessionalEngine = {
     }
   },
 
-  confirmDelete(id) {
-    if (confirm('Delete this career entry?')) {
+  async confirmDelete(id) {
+    const confirmed = typeof TesseractDialog !== 'undefined'
+      ? await TesseractDialog.confirm({
+          title: 'Delete Entry',
+          message: 'Are you sure you want to delete this career entry?',
+          confirmLabel: 'Delete Entry',
+          variant: 'danger'
+        })
+      : confirm('Delete this career entry?');
+
+    if (confirmed) {
       this.deleteEntry(id);
       this.render();
       if (typeof Components !== 'undefined' && Components.showToast) {

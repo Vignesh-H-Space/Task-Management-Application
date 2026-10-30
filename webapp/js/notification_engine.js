@@ -84,7 +84,15 @@ const NotificationEngine = {
    */
   async requestPermission() {
     if (!('Notification' in window)) {
-      alert('Native Web Notifications are not supported by this browser.');
+      if (typeof TesseractDialog !== 'undefined') {
+        await TesseractDialog.alert({
+          title: 'Notifications Unavailable',
+          message: 'Native Web Notifications are not supported by this browser.',
+          variant: 'warning'
+        });
+      } else {
+        alert('Native Web Notifications are not supported by this browser.');
+      }
       return false;
     }
 
@@ -104,7 +112,15 @@ const NotificationEngine = {
         this.saveConfig();
         this.updateUI();
         if (result === 'denied') {
-          alert('Notification permission was blocked. Please enable notifications in your browser/phone settings for this site.');
+          if (typeof TesseractDialog !== 'undefined') {
+            await TesseractDialog.alert({
+              title: 'Permission Denied',
+              message: 'Notification permission was blocked. Please enable notifications in your browser/device settings for this site to receive routine alarms.',
+              variant: 'warning'
+            });
+          } else {
+            alert('Notification permission was blocked. Please enable notifications in your browser/phone settings for this site.');
+          }
         }
         return false;
       }

@@ -283,10 +283,20 @@ const TrackerEngine = (() => {
     return trackers[index];
   }
 
-  function deleteTracker(id) {
+  async function deleteTracker(id) {
     const item = trackers.find(t => t.id === id);
     if (!item) return;
-    if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
+
+    const confirmed = typeof TesseractDialog !== 'undefined'
+      ? await TesseractDialog.confirm({
+          title: 'Delete Routine',
+          message: `Are you sure you want to delete "${item.title}"?`,
+          confirmLabel: 'Delete',
+          variant: 'danger'
+        })
+      : confirm(`Are you sure you want to delete "${item.title}"?`);
+
+    if (confirmed) {
       trackers = trackers.filter(t => t.id !== id);
       saveData();
       render();
@@ -330,7 +340,9 @@ const TrackerEngine = (() => {
           spread: 60,
           origin: { y: 0.7 }
         });
-      } catch (e) {}
+      } catch (e) {
+      console.warn('[Tracker] Handled exception:', e);
+    }
     }
 
     showToast(`⚡ Logged "${item.title}" for today! Dates shifted forward.`);
@@ -392,7 +404,9 @@ const TrackerEngine = (() => {
       if (typeof confetti === 'function') {
         try {
           confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 } });
-        } catch(e) {}
+        } catch (e) {
+      console.warn('[Tracker] Handled exception:', e);
+    }
       }
 
       const oldRecFmt = oldRecent ? formatDisplayDDMMYYYY(oldRecent) : 'None';
@@ -1203,7 +1217,15 @@ const TrackerEngine = (() => {
     const d3 = document.getElementById('tracker-form-prior-date').value;
 
     if (!title) {
-      alert('Please enter a routine title (e.g., "Nail cut - hands").');
+      if (typeof TesseractDialog !== 'undefined') {
+        TesseractDialog.alert({
+          title: 'Missing Routine Title',
+          message: 'Please enter a routine title (e.g., "Nail cut - hands").',
+          variant: 'warning'
+        });
+      } else {
+        alert('Please enter a routine title (e.g., "Nail cut - hands").');
+      }
       return;
     }
 
@@ -1328,11 +1350,21 @@ const TrackerEngine = (() => {
     showToast(`Added ${dateVal} to history`);
   }
 
-  function removeHistoryIndex(idx) {
+  async function removeHistoryIndex(idx) {
     const item = trackers.find(t => t.id === activeHistoryTrackerId);
     if (!item || !item.history) return;
 
-    if (confirm(`Remove date ${item.history[idx]} from history?`)) {
+    const dateVal = item.history[idx];
+    const confirmed = typeof TesseractDialog !== 'undefined'
+      ? await TesseractDialog.confirm({
+          title: 'Remove Date',
+          message: `Remove date ${dateVal} from history?`,
+          confirmLabel: 'Remove Date',
+          variant: 'danger'
+        })
+      : confirm(`Remove date ${dateVal} from history?`);
+
+    if (confirmed) {
       item.history.splice(idx, 1);
       item.updatedAt = new Date().toISOString();
       saveData();
@@ -1500,7 +1532,15 @@ const TrackerEngine = (() => {
     const id = select.value;
     const dateVal = dateInput.value;
     if (!dateVal) {
-      alert('Please choose a completion date.');
+      if (typeof TesseractDialog !== 'undefined') {
+        TesseractDialog.alert({
+          title: 'Date Required',
+          message: 'Please choose a completion date.',
+          variant: 'warning'
+        });
+      } else {
+        alert('Please choose a completion date.');
+      }
       return;
     }
 
@@ -1516,7 +1556,15 @@ const TrackerEngine = (() => {
     const id = select.value;
     const dateVal = dateInput.value;
     if (!dateVal) {
-      alert('Please choose a completion date.');
+      if (typeof TesseractDialog !== 'undefined') {
+        TesseractDialog.alert({
+          title: 'Date Required',
+          message: 'Please choose a completion date.',
+          variant: 'warning'
+        });
+      } else {
+        alert('Please choose a completion date.');
+      }
       return;
     }
 

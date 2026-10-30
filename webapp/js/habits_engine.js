@@ -214,11 +214,20 @@ const HabitsEngine = {
     }
   },
 
-  deleteHabit(habitId) {
+  async deleteHabit(habitId) {
     const habit = this.habits.find(h => h.id === habitId);
     if (!habit) return;
 
-    if (confirm(`Remove habit "${habit.title}"?`)) {
+    const confirmed = typeof TesseractDialog !== 'undefined'
+      ? await TesseractDialog.confirm({
+          title: 'Remove Habit',
+          message: `Are you sure you want to remove habit "${habit.title}"?`,
+          confirmLabel: 'Remove',
+          variant: 'danger'
+        })
+      : confirm(`Remove habit "${habit.title}"?`);
+
+    if (confirmed) {
       this.habits = this.habits.filter(h => h.id !== habitId);
       this.save();
       this.renderWidget();
@@ -333,10 +342,33 @@ const HabitsEngine = {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   },
 
-  promptAddHabit() {
-    const title = prompt("Enter new daily habit / routine title:\n(e.g., Morning Workout, Read 20 Pages, Meditate 10m)");
+  async promptAddHabit() {
+    let title = '';
+    if (typeof TesseractDialog !== 'undefined') {
+      title = await TesseractDialog.prompt({
+        title: 'New Daily Habit',
+        message: 'Enter daily habit or routine title:',
+        placeholder: 'e.g. Morning Workout, Deep Reading, Meditation',
+        confirmLabel: 'Next'
+      });
+    } else {
+      title = prompt("Enter new daily habit / routine title:\n(e.g., Morning Workout, Read 20 Pages, Meditate 10m)");
+    }
+
     if (title && title.trim()) {
-      const category = prompt("Category (Product, Engineering, Career, Finance, Health, Personal):", "Health") || "Personal";
+      let category = 'Health';
+      if (typeof TesseractDialog !== 'undefined') {
+        const catInput = await TesseractDialog.prompt({
+          title: 'Habit Category',
+          message: 'Choose Category (Health, Career, Engineering, Product, Finance, Personal):',
+          defaultValue: 'Health',
+          confirmLabel: 'Add Habit'
+        });
+        category = catInput && catInput.trim() ? catInput.trim() : 'Health';
+      } else {
+        category = prompt("Category (Product, Engineering, Career, Finance, Health, Personal):", "Health") || "Personal";
+      }
+
       this.addHabit(title.trim(), "⚡", category, 7);
     }
   }
