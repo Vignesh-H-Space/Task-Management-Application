@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tesseract-pwa-v13';
+const CACHE_NAME = 'tesseract-pwa-v14';
 const ASSETS_TO_CACHE = [
   './',
   './login.html',
@@ -14,6 +14,11 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './css/styles.css',
   './js/dialog_engine.js',
+  './js/streak_engine.js',
+  './js/search_controller.js',
+  './js/matrix_view.js',
+  './js/kanban_view.js',
+  './js/profile_engine.js',
   './js/auth_engine.js',
   './js/notification_engine.js',
   './js/sync_engine.js',
