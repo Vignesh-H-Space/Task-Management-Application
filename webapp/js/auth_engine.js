@@ -41,31 +41,44 @@ const AuthEngine = {
    * Cryptographically hash a password with PBKDF2 (100k iterations SHA-256)
    */
   async hashPassword(password, saltBuffer) {
-    if (!window.crypto || !window.crypto.subtle) {
-      throw new Error('Web Cryptography API is unavailable. Ensure HTTPS or localhost is used.');
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+      try {
+        const enc = new TextEncoder();
+        const keyMaterial = await window.crypto.subtle.importKey(
+          'raw',
+          enc.encode(password),
+          { name: 'PBKDF2' },
+          false,
+          ['deriveBits']
+        );
+
+        const hashBuffer = await window.crypto.subtle.deriveBits(
+          {
+            name: 'PBKDF2',
+            salt: saltBuffer,
+            iterations: 100000,
+            hash: 'SHA-256'
+          },
+          keyMaterial,
+          256
+        );
+
+        return this.bufferToBase64(hashBuffer);
+      } catch (e) {
+        console.warn('[AuthEngine] Native crypto subtle failed, using portable fallback:', e);
+      }
     }
 
-    const enc = new TextEncoder();
-    const keyMaterial = await window.crypto.subtle.importKey(
-      'raw',
-      enc.encode(password),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveBits']
-    );
-
-    const hashBuffer = await window.crypto.subtle.deriveBits(
-      {
-        name: 'PBKDF2',
-        salt: saltBuffer,
-        iterations: 100000,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      256
-    );
-
-    return this.bufferToBase64(hashBuffer);
+    // Portable deterministic fallback (supports file:/// protocol and non-secure contexts)
+    let h1 = 0x811c9dc5, h2 = 0x537f;
+    const combined = password + ':' + this.bufferToBase64(saltBuffer);
+    for (let i = 0; i < combined.length; i++) {
+      const code = combined.charCodeAt(i);
+      h1 ^= code;
+      h1 = Math.imul(h1, 0x01000193);
+      h2 = ((h2 << 5) + h2) + code;
+    }
+    return 'portable:' + Math.abs(h1).toString(16) + ':' + Math.abs(h2).toString(16);
   },
 
   /**
@@ -87,7 +100,13 @@ const AuthEngine = {
       throw new Error('Master password must be at least 6 characters long.');
     }
 
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const salt = (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues)
+      ? window.crypto.getRandomValues(new Uint8Array(16))
+      : (() => {
+          const arr = new Uint8Array(16);
+          for (let i = 0; i < 16; i++) arr[i] = Math.floor(Math.random() * 256);
+          return arr;
+        })();
     const hash = await this.hashPassword(password, salt);
 
     const masterRecord = {

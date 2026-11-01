@@ -155,7 +155,7 @@
   <script src="js/auth_engine.js"></script>
   <script>
     // Initialize page mode on load
-    document.addEventListener('DOMContentLoaded', () => {
+    function initLogin() {
       // If already logged in, redirect immediately
       if (AuthEngine.isAuthenticated()) {
         redirectToDestination();
@@ -181,7 +181,13 @@
       }
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLogin);
+    } else {
+      initLogin();
+    }
 
     function getRedirectTarget() {
       const params = new URLSearchParams(window.location.search);

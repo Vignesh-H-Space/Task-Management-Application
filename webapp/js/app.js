@@ -1158,6 +1158,164 @@ function renderTaskList() {
   }
 }
 
+
+function createTaskCardElement(task) {
+  const card = document.createElement('div');
+  card.className = `task-card ${task.completed ? 'completed' : ''}`;
+  card.setAttribute('data-tier', task.tier);
+  card.setAttribute('data-id', task.id);
+
+  const parentTask = task.parentId ? state.tasks.find(p => p.id === task.parentId) : null;
+  const isOrphan = task.tier !== 'annual' && !parentTask && !task.completed;
+  
+  let parentBadge = '';
+  if (parentTask) {
+    parentBadge = `<span class="meta-pill cascade-pill" title="Cascades up to: ${escapeHTML(parentTask.title)}" onclick="if(typeof AlignmentEngine!=='undefined') AlignmentEngine.openLinkModal('${task.id}', event);"><i data-lucide="arrow-up-right"></i> ${escapeHTML(parentTask.title.substring(0, 24))}...</span>`;
+  }
+
+  let orphanAlertHTML = '';
+  if (isOrphan) {
+    orphanAlertHTML = `
+      <div class="orphan-task-alert">
+        <div class="orphan-alert-text">
+          <i data-lucide="alert-triangle"></i>
+          <span>Tactical Busywork Alert: Unlinked to any higher horizon</span>
+        </div>
+        <button class="btn-link-parent" onclick="if(typeof AlignmentEngine!=='undefined') AlignmentEngine.openLinkModal('${task.id}', event);" title="Connect to an Annual Goal or Quarterly Objective">
+          <i data-lucide="link"></i>
+          <span>Link Parent Goal</span>
+        </button>
+      </div>
+    `;
+  }
+
+  const subtasks = task.subtasks || [];
+  const totalSubtasks = subtasks.length;
+  const doneSubtasks = subtasks.filter(s => s.completed).length;
+  const subtasksPct = totalSubtasks > 0 ? Math.round((doneSubtasks / totalSubtasks) * 100) : 0;
+
+  let subtasksHTML = '';
+  if (totalSubtasks > 0) {
+    subtasksHTML = `
+      <div class="task-subtasks-section">
+        <div class="subtasks-header">
+          <span>Milestones (${doneSubtasks}/${totalSubtasks})</span>
+          <span>${subtasksPct}%</span>
+        </div>
+        <div class="subtasks-progress-mini">
+          <div class="subtasks-progress-fill" style="width: ${subtasksPct}%;"></div>
+        </div>
+        <div class="subtask-list">
+          ${subtasks.map(st => `
+            <div class="subtask-item ${st.completed ? 'completed' : ''}" data-subtask-id="${st.id}">
+              <input type="checkbox" class="subtask-checkbox" ${st.completed ? 'checked' : ''} data-task-id="${task.id}" data-subtask-id="${st.id}" aria-label="Toggle subtask">
+              <span class="subtask-title">${escapeHTML(st.title)}</span>
+              <button type="button" class="subtask-delete-btn" title="Delete step" data-task-id="${task.id}" data-subtask-id="${st.id}">&times;</button>
+            </div>
+          `).join('')}
+        </div>
+        <div class="subtask-inline-add-row">
+          <input type="text" class="subtask-inline-input" placeholder="+ Add step and press Enter..." data-task-id="${task.id}">
+        </div>
+      </div>
+    `;
+  } else {
+    subtasksHTML = `
+      <div class="task-subtasks-section" style="border-top:none; padding-top:2px; margin-top:4px;">
+        <div class="subtask-inline-add-row" style="margin-top:0;">
+          <input type="text" class="subtask-inline-input" placeholder="+ Add milestone checklist step..." data-task-id="${task.id}">
+        </div>
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="drag-handle" title="Drag to reorder">
+      <i data-lucide="grip-vertical"></i>
+    </div>
+    <div class="checkbox-wrapper">
+      <input type="checkbox" class="custom-checkbox" id="chk-${task.id}" ${task.completed ? 'checked' : ''} aria-label="Mark ${task.title} complete" />
+    </div>
+
+    <div class="task-content">
+      <div class="task-header-row">
+        <div class="task-title">${escapeHTML(task.title)}</div>
+        <div class="task-actions">
+          <button class="action-btn focus-btn" title="Focus Mode" data-id="${task.id}"><i data-lucide="zap"></i></button>
+          <button class="action-btn edit-btn" title="Edit Task" data-id="${task.id}"><i data-lucide="edit-2"></i></button>
+          <button class="action-btn delete-btn" title="Delete Task" data-id="${task.id}"><i data-lucide="trash-2"></i></button>
+        </div>
+      </div>
+
+      ${task.description ? `<div class="task-desc">${escapeHTML(task.description)}</div>` : ''}
+
+      <div class="task-meta-row">
+        <span class="meta-pill prio-pill prio-${task.priority}">${task.priority}</span>
+        <span class="meta-pill category-pill">#${task.category || 'General'}</span>
+        ${task.dueDate ? `<span class="meta-pill due-pill"><i data-lucide="calendar"></i> ${task.dueDate}</span>` : ''}
+        ${parentBadge}
+        ${(task.tags || []).map(tg => `<span class="tag-pill">#${escapeHTML(tg)}</span>`).join(' ')}
+      </div>
+
+      ${orphanAlertHTML}
+
+      ${subtasksHTML}
+    </div>
+  `;
+
+  // Checkbox event
+  const chk = card.querySelector(`#chk-${task.id}`);
+  if (chk) {
+    chk.addEventListener('change', () => toggleTaskCompletion(task.id));
+  }
+
+  // Focus / Edit / Delete events
+  const focusBtn = card.querySelector('.focus-btn');
+  if (focusBtn) focusBtn.addEventListener('click', () => FocusEngine.open(task.id));
+
+  const editBtn = card.querySelector('.edit-btn');
+  if (editBtn) editBtn.addEventListener('click', () => openEditModal(task.id));
+
+  const deleteBtn = card.querySelector('.delete-btn');
+  if (deleteBtn) deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+  // Subtask Checkboxes
+  card.querySelectorAll('.subtask-checkbox').forEach(stChk => {
+    stChk.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const sId = stChk.getAttribute('data-subtask-id');
+      toggleSubtask(task.id, sId);
+    });
+  });
+
+  // Subtask Delete buttons
+  card.querySelectorAll('.subtask-delete-btn').forEach(delBtn => {
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const sId = delBtn.getAttribute('data-subtask-id');
+      deleteSubtaskInline(task.id, sId);
+    });
+  });
+
+  // Subtask Inline Input
+  const inlineInput = card.querySelector('.subtask-inline-input');
+  if (inlineInput) {
+    inlineInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = inlineInput.value.trim();
+        if (val) {
+          addSubtaskInline(task.id, val);
+        }
+      }
+    });
+  }
+
+  return card;
+}
+window.createTaskCardElement = createTaskCardElement;
+
+
 // ── Eisenhower Matrix & Kanban Board Views ─────────────────────
 // Modularized into js/matrix_view.js and js/kanban_view.js.
 
@@ -1795,5 +1953,10 @@ function dismissPwaInstall() {
 }
 
 // Start application on DOM load
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+window.init = init;
 
