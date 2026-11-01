@@ -844,6 +844,48 @@ function renderAll() {
   lucide.createIcons();
 }
 
+function switchView(mode) {
+  state.viewMode = mode;
+  try {
+    localStorage.setItem('tesseract_view_mode', mode);
+  } catch (e) {
+    console.warn('[App] Failed to persist view mode preference:', e);
+  }
+  const listBtn = document.getElementById('view-mode-list');
+  const matrixBtn = document.getElementById('view-mode-matrix');
+  const kanbanBtn = document.getElementById('view-mode-kanban');
+  const filterBar = document.querySelector('.filter-bar');
+  const matrixContainer = document.getElementById('eisenhower-matrix-container');
+  const kanbanContainer = document.getElementById('kanban-board-container');
+  const tasksContainer = document.getElementById('tasks-container');
+
+  // Reset all button states
+  if (listBtn) listBtn.classList.toggle('active', mode === 'list');
+  if (matrixBtn) matrixBtn.classList.toggle('active', mode === 'eisenhower');
+  if (kanbanBtn) kanbanBtn.classList.toggle('active', mode === 'kanban');
+
+  // Hide all views
+  if (tasksContainer) tasksContainer.style.display = 'none';
+  if (matrixContainer) matrixContainer.style.display = 'none';
+  if (kanbanContainer) kanbanContainer.style.display = 'none';
+  if (filterBar) filterBar.style.display = 'none';
+
+  // Show the selected view
+  if (mode === 'list') {
+    if (filterBar) filterBar.style.display = '';
+    if (tasksContainer) tasksContainer.style.display = '';
+    renderTaskList();
+  } else if (mode === 'eisenhower') {
+    if (matrixContainer) matrixContainer.style.display = 'grid';
+    if (typeof renderEisenhowerMatrix === 'function') renderEisenhowerMatrix();
+  } else if (mode === 'kanban') {
+    if (kanbanContainer) kanbanContainer.style.display = 'flex';
+    if (typeof renderKanbanBoard === 'function') renderKanbanBoard();
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+window.switchView = switchView;
+
 // Render Executive Command Hero on Home
 function renderHomeCommandHero() {
   const hero = document.getElementById('command-hero');
