@@ -1,0 +1,23 @@
+{
+  "name": "tesseract-executive-os",
+  "version": "2.1.0",
+  "description": "Multi-Horizon Strategic Goal & Execution Operating System",
+  "main": "js/app.js",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "lint": "node scripts/lint.js",
+    "check": "npm run lint && npm test",
+    "validate": "node scripts/validate.js"
+  },
+  "keywords": [
+    "productivity",
+    "task-management",
+    "eisenhower-matrix",
+    "kanban",
+    "e2ee",
+    "pwa",
+    "gamification"
+  ],
+  "author": "Tesseract Engineering",
+  "license": "MIT"
+}

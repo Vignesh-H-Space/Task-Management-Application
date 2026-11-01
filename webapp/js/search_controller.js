@@ -256,3 +256,4 @@ function selectSearchDream(dreamId) {
 window.initSearchController = initSearchController;
 window.selectSearchTask = selectSearchTask;
 window.selectSearchDream = selectSearchDream;
+

@@ -212,3 +212,4 @@ window.saveStreak = saveStreak;
 window.checkAndUpdateStreak = checkAndUpdateStreak;
 window.promptEditStreak = promptEditStreak;
 window.renderStreakUI = renderStreakUI;
+

@@ -451,3 +451,4 @@ window.setKanbanColumnFilter = setKanbanColumnFilter;
 window.toggleArchivedDone = toggleArchivedDone;
 window.renderKanbanBoard = renderKanbanBoard;
 window.bindKanbanDragDrop = bindKanbanDragDrop;
+

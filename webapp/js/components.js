@@ -938,7 +938,7 @@ const Components = {
               <pre class="sync-code-block">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /workspaces/{roomId} {
+    match /{document=**} {
       allow read, write: if true;
     }
   }

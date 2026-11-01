@@ -158,3 +158,4 @@ window.EISENHOWER_QUADRANTS = EISENHOWER_QUADRANTS;
 window.classifyTaskQuadrant = classifyTaskQuadrant;
 window.renderEisenhowerMatrix = renderEisenhowerMatrix;
 window.moveTaskToQuadrant = moveTaskToQuadrant;
+

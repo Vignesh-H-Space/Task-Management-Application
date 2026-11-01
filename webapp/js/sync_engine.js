@@ -75,7 +75,8 @@ const SyncEngine = {
   },
 
   getRoomId() {
-    return localStorage.getItem(this.STORAGE_ROOM_ID) || '';
+    const raw = localStorage.getItem(this.STORAGE_ROOM_ID) || '';
+    return raw.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-') || 'executive-matrix';
   },
 
   getPassphrase() {
@@ -92,12 +93,16 @@ const SyncEngine = {
     if (!roomId || !roomId.trim()) {
       throw new Error('Sync Room ID is required.');
     }
+    const cleanRoom = roomId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    if (!cleanRoom) {
+      throw new Error('Sync Room ID must contain valid alphanumeric characters.');
+    }
     if (!passphrase || passphrase.length < 6) {
       throw new Error('Master Passphrase must be at least 6 characters long.');
     }
 
     localStorage.setItem(this.STORAGE_FIREBASE_CONFIG, JSON.stringify(config));
-    localStorage.setItem(this.STORAGE_ROOM_ID, roomId.trim().toLowerCase());
+    localStorage.setItem(this.STORAGE_ROOM_ID, cleanRoom);
     localStorage.setItem(this.STORAGE_PASSPHRASE, passphrase.trim());
     
     // Invalidate cached crypto key
@@ -320,14 +325,18 @@ const SyncEngine = {
     this.setStatus('connecting', 'Connecting to Cloud Mesh...');
 
     try {
-      // Initialize Firebase App instance
+      // Cleanly re-initialize Firebase App instance to reset any previous denied connection
       const appName = 'tesseractSyncApp';
       let targetApp = null;
       try {
-        targetApp = firebase.app(appName);
+        const existing = firebase.app(appName);
+        if (existing) {
+          await existing.delete();
+        }
       } catch (e) {
-        targetApp = firebase.initializeApp(config, appName);
+        // App didn't exist yet, proceed to initialize
       }
+      targetApp = firebase.initializeApp(config, appName);
       this.firebaseApp = targetApp;
       this.db = this.firebaseApp.firestore();
 
@@ -885,7 +894,7 @@ const SyncEngine = {
   },
 
   copyFirestoreRule() {
-    const rule = "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /workspaces/{roomId} {\n      allow read, write: if true;\n    }\n  }\n}";
+    const rule = "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}";
     navigator.clipboard.writeText(rule).then(() => {
       if (typeof showToast === 'function') {
         showToast('📋 Firestore Rules copied to clipboard!', 'success');

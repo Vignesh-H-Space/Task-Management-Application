@@ -521,3 +521,4 @@ window.confirmResetData = confirmResetData;
 window.getTimeAgo = getTimeAgo;
 window.resetToSampleData = resetToSampleData;
 window.renderProfileView = renderProfileView;
+
