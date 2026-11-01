@@ -5,23 +5,8 @@
 
 const STORAGE_KEY = 'tesseract_goals_tasks_data';
 const THEME_KEY = 'tesseract_goals_theme';
-const STREAK_KEY = 'tesseract_streak_data';
-const PROFILE_KEY = 'tesseract_profile_data';
-
-// Streak milestone badges
-const STREAK_BADGES = [
-  { days: 7,   emoji: '🏅', name: '1 Week' },
-  { days: 14,  emoji: '⚡', name: '2 Weeks' },
-  { days: 30,  emoji: '🌟', name: '30 Days' },
-  { days: 50,  emoji: '💎', name: '50 Days' },
-  { days: 75,  emoji: '🔥', name: '75 Days' },
-  { days: 100, emoji: '👑', name: '100 Days' },
-  { days: 150, emoji: '🚀', name: '150 Days' },
-  { days: 200, emoji: '🏆', name: '200 Days' },
-  { days: 250, emoji: '💫', name: '250 Days' },
-  { days: 300, emoji: '🌈', name: '300 Days' },
-  { days: 365, emoji: '🎯', name: '1 Year' }
-];
+// Note: STREAK_KEY, STREAK_BADGES are defined in streak_engine.js
+// Note: PROFILE_KEY is defined in profile_engine.js
 
 const TIERS = [
   { id: 'daily', name: 'Daily Tasks', emoji: '🌅', color: '#3b82f6', desc: "Today's high-leverage execution items" },

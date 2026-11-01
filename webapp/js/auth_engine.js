@@ -241,7 +241,7 @@ const AuthEngine = {
       return;
     }
 
-    if (!this.isAuthenticated()) {
+    if (this.isSetup() && !this.isAuthenticated()) {
       const currentUrl = window.location.pathname + window.location.search;
       const redirectParam = encodeURIComponent(currentUrl);
       window.location.replace(`login.html?redirect=${redirectParam}`);

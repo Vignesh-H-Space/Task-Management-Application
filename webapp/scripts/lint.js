@@ -4,9 +4,10 @@
  * Tesseract Engineering Quality Linter
  * Zero-dependency automated quality gate that enforces:
  * 1. JavaScript Bytecode / Syntax validation across all engines
- * 2. Zero unhandled native dialogs (alert, confirm, prompt)
- * 3. Zero silent error swallowing (empty catch blocks)
- * 4. HTML script tag existence & integrity
+ * 2. Cross-script duplicate top-level declaration audit (prevents runtime collisions)
+ * 3. Zero unhandled native dialogs (alert, confirm, prompt)
+ * 4. Zero silent error swallowing (empty catch blocks)
+ * 5. HTML script tag existence & integrity
  */
 
 const fs = require('fs');
@@ -38,6 +39,26 @@ jsFiles.forEach(file => {
     totalErrors++;
   }
 });
+
+// Check for cross-script duplicate const/let declarations
+const declaredGlobals = new Map();
+jsFiles.forEach(file => {
+  const filePath = path.join(JS_DIR, file);
+  const fileCode = fs.readFileSync(filePath, 'utf8');
+  const matches = fileCode.matchAll(/^(const|let)\s+([a-zA-Z0-9_$]+)/gm);
+  for (const m of matches) {
+    const name = m[2];
+    if (!declaredGlobals.has(name)) declaredGlobals.set(name, []);
+    declaredGlobals.get(name).push(file);
+  }
+});
+declaredGlobals.forEach((files, name) => {
+  if (files.length > 1) {
+    console.error(`  ❌ DUPLICATE DECLARATION: '${name}' redeclared in: ${files.join(', ')}`);
+    totalErrors++;
+  }
+});
+
 console.log(`  ✓ Checked ${jsFiles.length} JavaScript files (${syntaxPassed} passed)`);
 
 // ── 2. Native Dialog Enforcement ────────────────────────────────
