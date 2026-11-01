@@ -68,7 +68,11 @@ const SyncEngine = {
     const raw = localStorage.getItem(this.STORAGE_FIREBASE_CONFIG);
     if (!raw) return null;
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed.apiKey && (parsed.projectId || parsed.authDomain)) {
+        return parsed;
+      }
+      return null;
     } catch (e) {
       return null;
     }
@@ -113,7 +117,7 @@ const SyncEngine = {
 
   clearCredentials() {
     if (this.unsubscribeListener) {
-      this.unsubscribeListener();
+      try { this.unsubscribeListener(); } catch (e) { /* ignore */ }
       this.unsubscribeListener = null;
     }
     localStorage.removeItem(this.STORAGE_FIREBASE_CONFIG);
@@ -123,7 +127,19 @@ const SyncEngine = {
     this.cachedKey = null;
     this.cachedPassphrase = null;
     this.cachedSaltStr = null;
-    this.setStatus('unconfigured', 'Cloud Sync Disconnected (Local Only)');
+
+    const configInput = document.getElementById('sync-config-input');
+    const roomInput = document.getElementById('sync-room-input');
+    const passInput = document.getElementById('sync-passphrase-input');
+    if (configInput) configInput.value = '';
+    if (roomInput) roomInput.value = 'executive-matrix';
+    if (passInput) passInput.value = '';
+
+    this.setStatus('unconfigured', 'Local Storage Only');
+    this.closeModal();
+    if (typeof showToast === 'function') {
+      showToast('☁️ Cloud Sync disconnected. Working in Local Storage mode.', 'info');
+    }
   },
 
   /**
@@ -207,68 +223,155 @@ const SyncEngine = {
   /**
    * Derive AES-GCM 256-bit key from passphrase and salt using PBKDF2 (SHA-256, 100k iterations)
    */
+  portableCipher(plainText, keyStr, saltBytes) {
+    const enc = new TextEncoder();
+    const data = enc.encode(plainText);
+    const keyBytes = enc.encode(keyStr);
+    const salt = new Uint8Array(saltBytes);
+
+    const s = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) s[i] = i;
+    let j = 0;
+    for (let i = 0; i < 256; i++) {
+      j = (j + s[i] + keyBytes[i % keyBytes.length] + salt[i % salt.length]) % 256;
+      const tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+    }
+
+    let i = 0; j = 0;
+    const out = new Uint8Array(data.length);
+    for (let k = 0; k < data.length; k++) {
+      i = (i + 1) % 256;
+      j = (j + s[i]) % 256;
+      const tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+      const K = s[(s[i] + s[j]) % 256];
+      out[k] = data[k] ^ K;
+    }
+    return out.buffer;
+  },
+
+  portableDecipher(ciphertextBuffer, keyStr, saltBytes) {
+    const data = new Uint8Array(ciphertextBuffer);
+    const keyBytes = new TextEncoder().encode(keyStr);
+    const salt = new Uint8Array(saltBytes);
+
+    const s = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) s[i] = i;
+    let j = 0;
+    for (let i = 0; i < 256; i++) {
+      j = (j + s[i] + keyBytes[i % keyBytes.length] + salt[i % salt.length]) % 256;
+      const tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+    }
+
+    let i = 0; j = 0;
+    const out = new Uint8Array(data.length);
+    for (let k = 0; k < data.length; k++) {
+      i = (i + 1) % 256;
+      j = (j + s[i]) % 256;
+      const tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+      const K = s[(s[i] + s[j]) % 256];
+      out[k] = data[k] ^ K;
+    }
+    return new TextDecoder().decode(out);
+  },
+
   async deriveKey(passphrase, saltBytes) {
     const saltStr = this.bufferToBase64(saltBytes);
     if (this.cachedKey && this.cachedPassphrase === passphrase && this.cachedSaltStr === saltStr) {
       return this.cachedKey;
     }
 
-    if (!window.crypto || !window.crypto.subtle) {
-      throw new Error('Web Cryptography API is unavailable. Ensure HTTPS or localhost is used.');
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+      try {
+        const enc = new TextEncoder();
+        const baseKey = await window.crypto.subtle.importKey(
+          'raw',
+          enc.encode(passphrase),
+          { name: 'PBKDF2' },
+          false,
+          ['deriveKey']
+        );
+
+        const derived = await window.crypto.subtle.deriveKey(
+          {
+            name: 'PBKDF2',
+            salt: saltBytes,
+            iterations: 100000,
+            hash: 'SHA-256'
+          },
+          baseKey,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt', 'decrypt']
+        );
+
+        this.cachedKey = derived;
+        this.cachedPassphrase = passphrase;
+        this.cachedSaltStr = saltStr;
+        return derived;
+      } catch (e) {
+        console.warn('[SyncEngine] SubtleCrypto deriveKey failed, using portable fallback:', e);
+      }
     }
 
-    const enc = new TextEncoder();
-    const baseKey = await window.crypto.subtle.importKey(
-      'raw',
-      enc.encode(passphrase),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveKey']
-    );
-
-    const derived = await window.crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: saltBytes,
-        iterations: 100000,
-        hash: 'SHA-256'
-      },
-      baseKey,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
-
-    this.cachedKey = derived;
+    this.cachedKey = { fallback: true, passphrase, saltStr };
     this.cachedPassphrase = passphrase;
     this.cachedSaltStr = saltStr;
-    return derived;
+    return this.cachedKey;
   },
 
   /**
    * Encrypt a JavaScript data object into zero-knowledge ciphertext
    */
   async encryptPayload(dataObject, passphrase) {
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-    const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 96-bit standard IV for AES-GCM
+    const salt = (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues)
+      ? window.crypto.getRandomValues(new Uint8Array(16))
+      : (() => {
+          const arr = new Uint8Array(16);
+          for (let i = 0; i < 16; i++) arr[i] = Math.floor(Math.random() * 256);
+          return arr;
+        })();
+
+    const iv = (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues)
+      ? window.crypto.getRandomValues(new Uint8Array(12))
+      : (() => {
+          const arr = new Uint8Array(12);
+          for (let i = 0; i < 12; i++) arr[i] = Math.floor(Math.random() * 256);
+          return arr;
+        })();
+
     const key = await this.deriveKey(passphrase, salt);
-
     const jsonString = JSON.stringify(dataObject);
-    const encodedData = new TextEncoder().encode(jsonString);
 
-    const ciphertextBuffer = await window.crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv },
-      key,
-      encodedData
-    );
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle && !key.fallback) {
+      try {
+        const encodedData = new TextEncoder().encode(jsonString);
+        const ciphertextBuffer = await window.crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv: iv },
+          key,
+          encodedData
+        );
 
+        return {
+          salt: this.bufferToBase64(salt),
+          iv: this.bufferToBase64(iv),
+          ciphertext: this.bufferToBase64(ciphertextBuffer),
+          updatedAt: Date.now(),
+          deviceId: this.getDeviceId(),
+          version: '2.0'
+        };
+      } catch (e) {
+        console.warn('[SyncEngine] Native encrypt failed, using portable stream cipher:', e);
+      }
+    }
+
+    const cipherBytes = this.portableCipher(jsonString, passphrase, salt);
     return {
       salt: this.bufferToBase64(salt),
       iv: this.bufferToBase64(iv),
-      ciphertext: this.bufferToBase64(ciphertextBuffer),
+      ciphertext: this.bufferToBase64(cipherBytes),
       updatedAt: Date.now(),
       deviceId: this.getDeviceId(),
-      version: '2.0'
+      version: '2.0-portable'
     };
   },
 
@@ -284,6 +387,11 @@ const SyncEngine = {
     const ivBytes = new Uint8Array(this.base64ToBuffer(encryptedRecord.iv));
     const ciphertextBytes = this.base64ToBuffer(encryptedRecord.ciphertext);
 
+    if (encryptedRecord.version === '2.0-portable' || !window.crypto || !window.crypto.subtle) {
+      const decryptedString = this.portableDecipher(ciphertextBytes, passphrase, saltBytes);
+      return JSON.parse(decryptedString);
+    }
+
     const key = await this.deriveKey(passphrase, saltBytes);
 
     try {
@@ -296,7 +404,12 @@ const SyncEngine = {
       const jsonString = new TextDecoder().decode(decryptedBuffer);
       return JSON.parse(jsonString);
     } catch (err) {
-      throw new Error('Decryption failed. Please verify your Master Passphrase matches the writing device.');
+      try {
+        const decryptedString = this.portableDecipher(ciphertextBytes, passphrase, saltBytes);
+        return JSON.parse(decryptedString);
+      } catch (fallbackErr) {
+        throw new Error('Decryption failed. Please verify your Master Passphrase matches the writing device.');
+      }
     }
   },
 
@@ -317,26 +430,22 @@ const SyncEngine = {
       return;
     }
 
-    if (typeof firebase === 'undefined') {
-      this.setStatus('offline', 'Firebase SDK loading or offline...');
+    if (typeof firebase === 'undefined' || typeof firebase.firestore === 'undefined') {
+      this.setStatus('offline', 'Firebase Firestore SDK offline or loading...');
       return;
     }
 
     this.setStatus('connecting', 'Connecting to Cloud Mesh...');
 
     try {
-      // Cleanly re-initialize Firebase App instance to reset any previous denied connection
       const appName = 'tesseractSyncApp';
       let targetApp = null;
-      try {
-        const existing = firebase.app(appName);
-        if (existing) {
-          await existing.delete();
-        }
-      } catch (e) {
-        // App didn't exist yet, proceed to initialize
+      const existingApp = (firebase.apps || []).find(a => a.name === appName);
+      if (existingApp) {
+        targetApp = existingApp;
+      } else {
+        targetApp = firebase.initializeApp(config, appName);
       }
-      targetApp = firebase.initializeApp(config, appName);
       this.firebaseApp = targetApp;
       this.db = this.firebaseApp.firestore();
 
@@ -418,9 +527,13 @@ const SyncEngine = {
   /**
    * Queue a debounced push (600ms) to cloud when local data changes
    */
+  pushLocalChange() {
+    this.queuePush();
+  },
+
   queuePush() {
     if (this.isApplyingRemote) return; // Never echo back during remote payload ingestion
-    if (this.status === 'unconfigured') return;
+    if (this.status === 'unconfigured' || this.status === 'error' || this.status === 'offline') return;
 
     if (this.pushDebounceTimer) {
       clearTimeout(this.pushDebounceTimer);
@@ -458,7 +571,7 @@ const SyncEngine = {
         exportedAt: new Date().toISOString(),
         tasks: window.state ? window.state.tasks : JSON.parse(localStorage.getItem('tesseract_goals_tasks_data') || '[]'),
         profile: window.state ? window.state.profile : JSON.parse(localStorage.getItem('tesseract_profile_data') || '{}'),
-        streak: window.state ? window.state.streak : JSON.parse(localStorage.getItem('tesseract_streak') || '{}'),
+        streak: window.state ? window.state.streak : JSON.parse(localStorage.getItem('tesseract_streak_data') || '{}'),
         xpData: (typeof XPEngine !== 'undefined') ? XPEngine.data : JSON.parse(localStorage.getItem('tesseract_xp_data') || '{}'),
         habits: (typeof HabitsEngine !== 'undefined') ? HabitsEngine.habits : JSON.parse(localStorage.getItem('tesseract_habits_data') || '[]'),
         bucketList: (typeof BucketListEngine !== 'undefined') ? BucketListEngine.dreams : JSON.parse(localStorage.getItem('tesseract_bucketlist_data') || '[]'),
@@ -529,6 +642,7 @@ const SyncEngine = {
       // 3. Streaks
       if (data.streak) {
         if (window.state) window.state.streak = data.streak;
+        localStorage.setItem('tesseract_streak_data', JSON.stringify(data.streak));
         localStorage.setItem('tesseract_streak', JSON.stringify(data.streak));
       }
 
@@ -765,6 +879,7 @@ const SyncEngine = {
         <div class="sync-banner-info">
           <div class="sync-banner-title">${text}</div>
           <div class="sync-banner-desc">${this.statusMessage}</div>
+          ${this.status === 'error' ? `<button type="button" class="btn btn-secondary btn-xs" style="margin-top: 8px;" onclick="SyncEngine.clearCredentials()"><i data-lucide="rotate-ccw"></i> Reset to Local Storage Only</button>` : ''}
         </div>
       `;
     }
