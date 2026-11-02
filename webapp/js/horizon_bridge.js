@@ -138,12 +138,31 @@ const HorizonBridge = {
       task.reminderDate = bkl.reminderDate || null;
       task.recurrence = bkl.recurrence || 'none';
       
-      // Reconcile completion: if either is completed, maintain completion across both
-      const isDone = !!(task.completed || bkl.completed);
-      task.completed = isDone;
-      bkl.completed = isDone;
-      task.completedAt = task.completedAt || bkl.completedAt || (isDone ? new Date().toISOString() : null);
-      bkl.completedAt = task.completedAt;
+      // Reconcile completion: account for daily rollover across calendar days
+      const nowStr = new Date();
+      const yr = nowStr.getFullYear();
+      const mo = String(nowStr.getMonth() + 1).padStart(2, '0');
+      const da = String(nowStr.getDate()).padStart(2, '0');
+      const todayDateStr = yr + '-' + mo + '-' + da;
+      const compDate = (task.completedAt || bkl.completedAt || '').split('T')[0];
+      const isPastDaily = (tier === 'daily' || bkl.recurrence === 'daily') && compDate && compDate < todayDateStr;
+
+      if (isPastDaily) {
+        task.completed = false;
+        bkl.completed = false;
+        task.completedAt = null;
+        bkl.completedAt = null;
+        task.dueDate = todayDateStr;
+        bkl.dueDate = todayDateStr;
+        task.kanbanStatus = 'todo';
+        bkl.kanbanStatus = 'todo';
+      } else {
+        const isDone = !!(task.completed || bkl.completed);
+        task.completed = isDone;
+        bkl.completed = isDone;
+        task.completedAt = task.completedAt || bkl.completedAt || (isDone ? new Date().toISOString() : null);
+        bkl.completedAt = task.completedAt;
+      }
 
       task.completionCount = bkl.completionCount || 0;
       task.isStandalone = isStandalone;
