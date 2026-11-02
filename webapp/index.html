@@ -253,7 +253,11 @@
       <div class="view-mode-switcher">
         <span class="view-mode-label">View:</span>
         <div class="segmented-control view-mode-control">
-          <button class="segment active" id="view-mode-list" onclick="switchView('list')" title="Standard List View">
+          <button class="segment active" id="view-mode-flight" onclick="switchView('flight_plan')" title="3-Day Rolling Flight Plan (Yesterday • Today • Tomorrow)">
+            <i data-lucide="calendar-range"></i>
+            <span>3-Day Plan</span>
+          </button>
+          <button class="segment" id="view-mode-list" onclick="switchView('list')" title="Standard List View">
             <i data-lucide="list"></i>
             <span>List</span>
           </button>
@@ -267,6 +271,11 @@
           </button>
         </div>
       </div>
+
+      <!-- 3-Day Rolling Flight Plan Container (Primary Default) -->
+      <section class="flight-plan-container" id="flight-plan-container">
+        <!-- Rendered by renderFlightPlanView() -->
+      </section>
 
       <!-- Eisenhower Matrix Container (hidden by default) -->
       <section class="eisenhower-matrix" id="eisenhower-matrix-container" style="display: none;">
@@ -372,6 +381,7 @@
   <script src="js/search_controller.js"></script>
   <script src="js/matrix_view.js"></script>
   <script src="js/kanban_view.js"></script>
+  <script src="js/flight_plan_view.js"></script>
   <script src="js/profile_engine.js"></script>
   <script src="js/app.js"></script>
 </body>

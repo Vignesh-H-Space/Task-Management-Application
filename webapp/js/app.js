@@ -24,7 +24,7 @@ let state = {
   priorityFilter: 'all',
   searchQuery: '',
   editingTaskId: null,
-  viewMode: (typeof localStorage !== 'undefined' && localStorage.getItem('tesseract_view_mode')) || 'list', // 'list' | 'eisenhower' | 'kanban'
+  viewMode: (typeof localStorage !== 'undefined' && localStorage.getItem('tesseract_view_mode')) || 'flight_plan', // 'list' | 'eisenhower' | 'kanban'
   kanbanColumnFilter: 'all', // 'all' | 'backlog' | 'todo' | 'in_progress' | 'done'
   showArchivedDone: false,
   profile: {
@@ -107,8 +107,8 @@ function init() {
   if (typeof ProfessionalEngine !== 'undefined') ProfessionalEngine.init();
   if (typeof TrackerEngine !== 'undefined') TrackerEngine.init();
 
-  if (page === 'index' && state.viewMode && state.viewMode !== 'list') {
-    switchView(state.viewMode);
+  if (page === 'index') {
+    switchView(state.viewMode || 'flight_plan');
   } else {
     renderAll();
   }
@@ -931,7 +931,9 @@ function renderAll() {
     syncHorizonUI();
     updateHeaderTitle();
     updateProgressCards();
-    if (state.viewMode === 'eisenhower') {
+    if (state.viewMode === 'flight_plan') {
+      if (typeof renderFlightPlanView === 'function') renderFlightPlanView();
+    } else if (state.viewMode === 'eisenhower') {
       renderEisenhowerMatrix();
     } else if (state.viewMode === 'kanban') {
       renderKanbanBoard();
@@ -976,27 +978,34 @@ function switchView(mode) {
   } catch (e) {
     console.warn('[App] Failed to persist view mode preference:', e);
   }
+  const flightBtn = document.getElementById('view-mode-flight');
   const listBtn = document.getElementById('view-mode-list');
   const matrixBtn = document.getElementById('view-mode-matrix');
   const kanbanBtn = document.getElementById('view-mode-kanban');
   const filterBar = document.querySelector('.filter-bar');
+  const flightContainer = document.getElementById('flight-plan-container');
   const matrixContainer = document.getElementById('eisenhower-matrix-container');
   const kanbanContainer = document.getElementById('kanban-board-container');
   const tasksContainer = document.getElementById('tasks-container');
 
   // Reset all button states
+  if (flightBtn) flightBtn.classList.toggle('active', mode === 'flight_plan');
   if (listBtn) listBtn.classList.toggle('active', mode === 'list');
   if (matrixBtn) matrixBtn.classList.toggle('active', mode === 'eisenhower');
   if (kanbanBtn) kanbanBtn.classList.toggle('active', mode === 'kanban');
 
   // Hide all views
+  if (flightContainer) flightContainer.style.display = 'none';
   if (tasksContainer) tasksContainer.style.display = 'none';
   if (matrixContainer) matrixContainer.style.display = 'none';
   if (kanbanContainer) kanbanContainer.style.display = 'none';
   if (filterBar) filterBar.style.display = 'none';
 
   // Show the selected view
-  if (mode === 'list') {
+  if (mode === 'flight_plan') {
+    if (flightContainer) flightContainer.style.display = 'block';
+    if (typeof renderFlightPlanView === 'function') renderFlightPlanView();
+  } else if (mode === 'list') {
     if (filterBar) filterBar.style.display = '';
     if (tasksContainer) tasksContainer.style.display = '';
     renderTaskList();
