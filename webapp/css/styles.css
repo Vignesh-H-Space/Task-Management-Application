@@ -13133,10 +13133,73 @@ body {
   opacity: 0.9;
 }
 
-/* Col 6: Actions */
+/* Col 2: Actions (Sticky Left alongside Done) */
 .col-actions {
-  width: 90px;
-  text-align: right;
+  width: 82px;
+  min-width: 82px;
+  text-align: center;
+}
+
+/* Sticky Left Columns for Done & Actions */
+.backlog-notion-table .col-select {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  text-align: center;
+  padding: 0.75rem 0.35rem !important;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #111116;
+}
+
+.backlog-notion-table thead th.col-select {
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  background: #18181f;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  text-align: center;
+  padding: 0.85rem 0.35rem !important;
+}
+
+.backlog-notion-table .col-actions {
+  position: sticky;
+  left: 44px;
+  z-index: 2;
+  background: #111116;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.25);
+}
+
+.backlog-notion-table thead th.col-actions {
+  position: sticky;
+  left: 44px;
+  z-index: 6;
+  background: #18181f;
+  text-align: center;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.25);
+}
+
+.backlog-notion-table tbody tr:hover .col-select,
+.backlog-notion-table tbody tr:hover .col-actions {
+  background: #191924;
+}
+
+[data-theme="light"] .backlog-notion-table .col-select,
+[data-theme="light"] .backlog-notion-table .col-actions {
+  background: #ffffff;
+}
+
+[data-theme="light"] .backlog-notion-table thead th.col-select,
+[data-theme="light"] .backlog-notion-table thead th.col-actions {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .backlog-notion-table tbody tr:hover .col-select,
+[data-theme="light"] .backlog-notion-table tbody tr:hover .col-actions {
+  background: #f1f5f9;
 }
 
 /* 5-Second Vanishing Countdown Row States (Completion) */
@@ -13246,7 +13309,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .btn-restore-item {
@@ -13389,7 +13452,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .btn-inline-submit, .btn-inline-cancel {

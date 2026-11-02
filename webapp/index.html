@@ -327,6 +327,10 @@
         </div>
 
         <div class="filter-actions">
+          <button class="btn btn-ghost btn-sm" id="btn-refresh-daily" onclick="if(typeof refreshDailyTasks==='function') refreshDailyTasks(true);" title="Reset daily completed tasks for today's flight plan">
+            <i data-lucide="rotate-ccw"></i>
+            <span>Refresh Daily</span>
+          </button>
           <button class="btn btn-ghost btn-sm" id="btn-export-markdown" title="Copy Markdown Summary to Clipboard">
             <i data-lucide="clipboard-copy"></i>
             <span>Export Markdown</span>

@@ -184,6 +184,146 @@ function saveProfile() {
   if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
 }
 
+
+/**
+ * Daily Task Rollover & Midnight Refresh Engine
+ * Automatically detects new calendar day and resets daily recurring goals for today's flight plan.
+ * Preserves historical completion records in localStorage for long-term analytics & streaks.
+ * 
+ * @param {boolean} [force=false] Force refresh even if same day (e.g. manual refresh action)
+ * @returns {number} Number of daily tasks refreshed for today
+ */
+function checkDailyTasksRollover(force = false) {
+  if (!state.tasks || !Array.isArray(state.tasks)) return 0;
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+
+  const LAST_ROLLOVER_KEY = 'tesseract_last_daily_rollover';
+  const lastRollover = localStorage.getItem(LAST_ROLLOVER_KEY);
+
+  let refreshedCount = 0;
+  let rolledOverCount = 0;
+  let hasChanges = false;
+
+  state.tasks.forEach(task => {
+    const isDaily = task.tier === 'daily' || task.recurrence === 'daily';
+    if (!isDaily) return;
+
+    // Check if task was completed on a previous date (or forced)
+    if (task.completed) {
+      const completedDate = task.completedAt ? task.completedAt.split('T')[0] : (task.dueDate || '');
+      const isPastCompletion = !completedDate || completedDate < todayStr;
+
+      if (force || isPastCompletion) {
+        // 1. Archive previous completion for history & reports
+        try {
+          const archiveRaw = localStorage.getItem('tesseract_daily_completions_archive');
+          const archive = archiveRaw ? JSON.parse(archiveRaw) : [];
+          archive.push({
+            taskId: task.id,
+            title: task.title,
+            category: task.category,
+            tier: task.tier,
+            completedAt: task.completedAt || new Date().toISOString(),
+            date: completedDate || todayStr
+          });
+          if (archive.length > 300) archive.splice(0, archive.length - 300);
+          localStorage.setItem('tesseract_daily_completions_archive', JSON.stringify(archive));
+        } catch (e) {
+          console.warn('[App] Failed to record daily completion archive:', e);
+        }
+
+        // 2. Reset task for the fresh day
+        task.completed = false;
+        task.completedAt = null;
+        task.dueDate = todayStr;
+        if (task.kanbanStatus === 'done') task.kanbanStatus = 'todo';
+
+        // 3. Reset subtasks checklist
+        if (Array.isArray(task.subtasks)) {
+          task.subtasks.forEach(st => {
+            st.completed = false;
+          });
+        }
+
+        // 4. Mirror reset to linked Backlog item if bridged
+        if (task.backlogId) {
+          try {
+            const rawBkl = localStorage.getItem('tesseract_backlog_data');
+            if (rawBkl) {
+              const bkls = JSON.parse(rawBkl);
+              const b = bkls.find(x => x.id === task.backlogId);
+              if (b) {
+                b.completed = false;
+                b.completedAt = null;
+                b.dueDate = todayStr;
+                b.kanbanStatus = 'todo';
+                localStorage.setItem('tesseract_backlog_data', JSON.stringify(bkls));
+              }
+            }
+            if (typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
+              const b = BacklogEngine.items.find(x => x.id === task.backlogId);
+              if (b) {
+                b.completed = false;
+                b.completedAt = null;
+                b.dueDate = todayStr;
+                b.kanbanStatus = 'todo';
+              }
+            }
+          } catch (e) {
+            console.warn('[App] Failed to sync daily rollover to backlog:', e);
+          }
+        }
+
+        // 5. Mirror reset to Today's Docket if bridged
+        if (typeof DocketEngine !== 'undefined' && Array.isArray(DocketEngine.items)) {
+          const dkt = DocketEngine.items.find(x => x.id === task.id || x.backlogId === task.backlogId || (task.backlogId && x.id === task.backlogId));
+          if (dkt) {
+            dkt.completed = false;
+            dkt.completedAt = null;
+            dkt.date = todayStr;
+            if (typeof DocketEngine.save === 'function') DocketEngine.save();
+          }
+        }
+
+        refreshedCount++;
+        hasChanges = true;
+      }
+    } else {
+      // Uncompleted daily task from a prior day: rollover dueDate to today
+      if (task.dueDate && task.dueDate < todayStr) {
+        task.dueDate = todayStr;
+        rolledOverCount++;
+        hasChanges = true;
+      }
+    }
+  });
+
+  localStorage.setItem(LAST_ROLLOVER_KEY, todayStr);
+
+  if (hasChanges) {
+    saveData();
+    if (typeof renderAll === 'function' && typeof state !== 'undefined' && state.tasks) {
+      renderAll();
+    }
+
+    if (force && typeof showToast === 'function') {
+      showToast(`🌅 Refreshed ${refreshedCount} daily task${refreshedCount === 1 ? '' : 's'} for today!`, 'success');
+    } else if (refreshedCount > 0 && typeof showToast === 'function') {
+      showToast(`🌅 New Day Refresh: ${refreshedCount} daily task${refreshedCount === 1 ? '' : 's'} ready for today's flight plan!`, 'info');
+    }
+  }
+
+  return refreshedCount;
+}
+
+window.checkDailyTasksRollover = checkDailyTasksRollover;
+window.refreshDailyTasks = (force = true) => checkDailyTasksRollover(force);
+
 // ── Streak Engine ──────────────────────────────────────────
 // Modularized into js/streak_engine.js for high separation of concerns.
 
@@ -826,7 +966,7 @@ function renderAll() {
   }
 
   updateAppBadge();
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function switchView(mode) {
@@ -1808,7 +1948,7 @@ function escapeHTML(str) {
  * Sets the badge on the device home screen showing open Daily Goals
  */
 function updateAppBadge() {
-  if ('setAppBadge' in navigator) {
+  if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator) {
     const dailyOpen = state.tasks ? state.tasks.filter(t => t.tier === 'daily' && !t.completed).length : 0;
     if (dailyOpen > 0) {
       navigator.setAppBadge(dailyOpen).catch(() => {});

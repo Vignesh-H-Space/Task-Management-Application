@@ -1346,7 +1346,36 @@ const BacklogEngine = {
             `}
           </td>
 
-          <!-- Col 2: Objective Name (Inline Editable on Active Page) -->
+          <!-- Col 2: Actions (Delete / Undo / Restore / Save) -->
+          <td class="col-actions">
+            ${isDeleting ? `
+              <button class="btn-retrieve-undo" onclick="BacklogEngine.cancelDelete('${item.id}')" title="Retrieve deleted objective">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Retrieve (5s)</span>
+              </button>
+            ` : isPending ? `
+              <button class="btn-vanish-undo" onclick="BacklogEngine.cancelVanish('${item.id}')" title="Undo completion">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Undo (5s)</span>
+              </button>
+            ` : isCompleted ? `
+              <div class="completed-actions-row">
+                <button class="btn-restore-item" onclick="BacklogEngine.restoreItem('${item.id}')" title="Restore to active backlogs">
+                  <i data-lucide="rotate-ccw"></i>
+                  <span>Restore</span>
+                </button>
+                <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete permanently (5s undo)">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </div>
+            ` : `
+              <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete objective (5s undo)">
+                <i data-lucide="trash-2"></i>
+              </button>
+            `}
+          </td>
+
+          <!-- Col 3: Objective Name (Inline Editable on Active Page) -->
           <td class="col-objective">
             <div class="objective-cell">
               <span class="objective-text ${item.completed ? 'completed-text' : ''}" 
@@ -1466,34 +1495,7 @@ const BacklogEngine = {
             `}
           </td>
 
-          <!-- Col 6: Actions (Retrieve during delete countdown, Undo during vanish countdown, Restore, Delete) -->
-          <td class="col-actions">
-            ${isDeleting ? `
-              <button class="btn-retrieve-undo" onclick="BacklogEngine.cancelDelete('${item.id}')" title="Retrieve deleted objective">
-                <i data-lucide="rotate-ccw"></i>
-                <span>Retrieve (5s)</span>
-              </button>
-            ` : isPending ? `
-              <button class="btn-vanish-undo" onclick="BacklogEngine.cancelVanish('${item.id}')" title="Undo completion">
-                <i data-lucide="rotate-ccw"></i>
-                <span>Undo (5s)</span>
-              </button>
-            ` : isCompleted ? `
-              <div class="completed-actions-row">
-                <button class="btn-restore-item" onclick="BacklogEngine.restoreItem('${item.id}')" title="Restore to active backlogs">
-                  <i data-lucide="rotate-ccw"></i>
-                  <span>Restore</span>
-                </button>
-                <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete permanently (5s undo)">
-                  <i data-lucide="trash-2"></i>
-                </button>
-              </div>
-            ` : `
-              <button class="backlog-delete-btn" onclick="BacklogEngine.deleteItem('${item.id}')" title="Delete objective (5s undo)">
-                <i data-lucide="trash-2"></i>
-              </button>
-            `}
-          </td>
+
         </tr>
       `;
     }).join('');
@@ -1509,6 +1511,7 @@ const BacklogEngine = {
           <td class="col-select">
             <span class="inline-add-badge">+</span>
           </td>
+
           <td class="col-objective">
             <input type="text" 
                    id="inline-add-objective" 

@@ -210,6 +210,22 @@ const CommandPalette = {
         }
       },
       {
+        id: 'act-refresh-daily',
+        category: 'POWER ACTIONS',
+        title: 'Refresh Daily Tasks for Today',
+        desc: 'Reset completed daily goals for a clean slate today',
+        icon: 'rotate-ccw',
+        badge: 'DAILY',
+        action: () => {
+          this.close();
+          if (typeof refreshDailyTasks === 'function') {
+            refreshDailyTasks(true);
+          } else {
+            window.location.href = 'index.html';
+          }
+        }
+      },
+      {
         id: 'act-weekly-report',
         category: 'POWER ACTIONS',
         title: 'View Executive Intelligence Reports',
