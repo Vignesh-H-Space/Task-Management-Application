@@ -542,6 +542,140 @@ const SyncEngine = {
     }
   },
 
+  
+  /**
+   * Emergency rescue helper to recover November 2 tasks & objectives
+   * that were overwritten by a mobile phone sync with a Nov 3 timestamp
+   */
+  restoreNov2Data() {
+    try {
+      const currentTasks = (window.state && Array.isArray(window.state.tasks)) ? [...window.state.tasks] : [];
+      const taskMap = new Map();
+      currentTasks.forEach(t => { if (t && t.id) taskMap.set(t.id, t); });
+
+      // 1. Recover known Nov 2 Backlog & Flight Plan tasks
+      const nov2Tasks = [
+        {
+          id: 'bkl_trim_pubic_nov2',
+          title: 'Trim Pubic',
+          category: 'Health',
+          group: 'physical',
+          tier: 'daily',
+          priority: 'high',
+          severity: 'high',
+          dueDate: '2026-11-02',
+          completed: true,
+          completedAt: '2026-11-02T21:30:00.000Z',
+          updatedAt: Date.now(),
+          recurrence: 'none'
+        },
+        {
+          id: 'bkl_dumbell_lift_nov2',
+          title: 'Dumbell Lift',
+          category: 'Health',
+          group: 'physical',
+          tier: 'daily',
+          priority: 'high',
+          severity: 'high',
+          dueDate: '2026-11-03',
+          completed: false,
+          updatedAt: Date.now(),
+          recurrence: 'weekly'
+        }
+      ];
+
+      // 2. Read archive for any additional Nov 2 completed tasks
+      try {
+        const archRaw = localStorage.getItem('tesseract_daily_completions_archive');
+        if (archRaw) {
+          const arch = JSON.parse(archRaw);
+          if (Array.isArray(arch)) {
+            arch.forEach(item => {
+              if (item.date === '2026-11-02' || (item.completedAt && item.completedAt.startsWith('2026-11-02'))) {
+                nov2Tasks.push({
+                  id: item.taskId || ('task_arch_' + Date.now() + Math.random().toString(36).slice(2, 6)),
+                  title: item.title,
+                  category: item.category || 'General',
+                  tier: item.tier || 'daily',
+                  priority: 'medium',
+                  dueDate: '2026-11-02',
+                  completed: true,
+                  completedAt: item.completedAt || '2026-11-02T20:00:00.000Z',
+                  updatedAt: Date.now()
+                });
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('[SyncEngine] Handled archive rescue read error:', e);
+      }
+
+      // 3. Read backlogs from localStorage to ensure all items are represented
+      try {
+        const bklRaw = localStorage.getItem('tesseract_backlog_data');
+        if (bklRaw) {
+          const bkls = JSON.parse(bklRaw);
+          if (Array.isArray(bkls)) {
+            bkls.forEach(b => {
+              if (b && b.objective && !taskMap.has(b.id) && !taskMap.has('task_bkl_' + b.id)) {
+                nov2Tasks.push({
+                  id: b.id.startsWith('task_') ? b.id : 'task_bkl_' + b.id,
+                  backlogId: b.id,
+                  title: b.objective,
+                  category: b.group === 'physical' ? 'Health' : (b.group === 'work' ? 'Career' : 'Personal'),
+                  group: b.group || 'other',
+                  tier: b.recurrence === 'daily' ? 'daily' : (b.recurrence === 'weekly' ? 'weekly' : 'general'),
+                  priority: b.severity === 'high' ? 'high' : 'medium',
+                  severity: b.severity || 'moderate',
+                  dueDate: b.dueDate || '2026-11-02',
+                  completed: !!b.completed,
+                  completedAt: b.completedAt || (b.completed ? '2026-11-02T21:00:00.000Z' : null),
+                  recurrence: b.recurrence || 'none',
+                  updatedAt: Date.now()
+                });
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('[SyncEngine] Handled backlog rescue read error:', e);
+      }
+
+      // Merge into map
+      nov2Tasks.forEach(t => {
+        taskMap.set(t.id, t);
+      });
+
+      const restoredTasks = Array.from(taskMap.values());
+      if (window.state) window.state.tasks = restoredTasks;
+      localStorage.setItem('tesseract_goals_tasks_data', JSON.stringify(restoredTasks));
+
+      // 4. Protect against remote overwrite by bumping local modified timestamp forward
+      const futureTimestamp = Date.now() + 86400000; // +24 hours ahead
+      localStorage.setItem('tesseract_sync_last_local_modified', String(futureTimestamp));
+      this.lastRemoteUpdatedAt = futureTimestamp;
+      localStorage.setItem('tesseract_sync_last_remote_updated', String(futureTimestamp));
+
+      // 5. Force push this rescued state to Firestore
+      this.hasInitialPullCompleted = true;
+      this.pushNow();
+
+      if (typeof renderAll === 'function') renderAll();
+      if (typeof renderFlightPlanView === 'function') renderFlightPlanView();
+      if (typeof showToast === 'function') {
+        showToast('🎉 Successfully restored November 2 tasks and locked cloud master state!', 'success');
+      }
+      return true;
+    } catch (err) {
+      console.error('[SyncEngine] Error restoring Nov 2 data:', err);
+      if (typeof showToast === 'function') {
+        showToast('Error restoring data: ' + err.message, 'error');
+      }
+      return false;
+    }
+  },
+
   forcePushLaptopAsMaster() {
     this.markLocalModified();
     this.hasInitialPullCompleted = true;

@@ -960,6 +960,9 @@ service cloud.firestore {
             Disconnect
           </button>
           <div class="sync-footer-actions">
+            <button type="button" class="btn btn-warning" onclick="SyncEngine.restoreNov2Data()" title="Recover November 2 tasks overwritten by mobile sync">
+              <i data-lucide="rotate-ccw"></i> Rescue Nov 2 Work
+            </button>
             <button type="button" class="btn btn-secondary" onclick="SyncEngine.restorePreSyncSafetySnapshot()" title="Restore the local snapshot taken right before the last cloud sync">
               <i data-lucide="history"></i> Restore Pre-Sync State
             </button>
