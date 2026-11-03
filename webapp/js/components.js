@@ -963,8 +963,8 @@ service cloud.firestore {
             <button type="button" class="btn btn-secondary" onclick="SyncEngine.restorePreSyncSafetySnapshot()" title="Restore the local snapshot taken right before the last cloud sync">
               <i data-lucide="history"></i> Restore Pre-Sync State
             </button>
-            <button type="button" class="btn btn-secondary" onclick="SyncEngine.pushNow()">
-              <i data-lucide="upload-cloud"></i> Push Local Data
+            <button type="button" class="btn btn-secondary" onclick="SyncEngine.forcePushLaptopAsMaster()" title="Force-push this device's state to cloud and make it the master record">
+              <i data-lucide="upload-cloud"></i> Push Local as Master
             </button>
             <button type="button" class="btn btn-primary" onclick="SyncEngine.handleSaveSettings()">
               <i data-lucide="check"></i> Save & Connect

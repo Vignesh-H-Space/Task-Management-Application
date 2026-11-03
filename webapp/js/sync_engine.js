@@ -18,6 +18,8 @@ const SyncEngine = {
   STORAGE_PASSPHRASE: 'tesseract_sync_passphrase',
   STORAGE_DEVICE_ID: 'tesseract_device_id',
   STORAGE_LAST_SYNCED: 'tesseract_sync_last_synced',
+  STORAGE_LAST_REMOTE_UPDATED: 'tesseract_sync_last_remote_updated',
+  STORAGE_LAST_LOCAL_MODIFIED: 'tesseract_sync_last_local_modified',
 
   // Active State
   status: 'unconfigured', // 'unconfigured' | 'connecting' | 'synced' | 'syncing' | 'error' | 'offline'
@@ -39,6 +41,7 @@ const SyncEngine = {
    */
   async init() {
     this.hasInitialPullCompleted = false;
+    this.lastRemoteUpdatedAt = parseInt(localStorage.getItem(this.STORAGE_LAST_REMOTE_UPDATED) || '0', 10);
     this.checkPairingUrl();
     this.updateUIStatus();
 
@@ -488,6 +491,7 @@ const SyncEngine = {
             this.setStatus('syncing', 'Decrypting incoming cloud update...');
             const decryptedState = await this.decryptPayload(remoteData, passphrase);
             this.lastRemoteUpdatedAt = remoteData.updatedAt;
+            localStorage.setItem(this.STORAGE_LAST_REMOTE_UPDATED, String(remoteData.updatedAt));
             localStorage.setItem(this.STORAGE_LAST_SYNCED, new Date(remoteData.updatedAt).toLocaleTimeString());
 
             this.applyRemoteState(decryptedState);
@@ -530,6 +534,24 @@ const SyncEngine = {
   /**
    * Queue a debounced push (600ms) to cloud when local data changes
    */
+  markLocalModified() {
+    try {
+      localStorage.setItem(this.STORAGE_LAST_LOCAL_MODIFIED, String(Date.now()));
+    } catch (e) {
+      console.warn('[SyncEngine] Failed to mark local modification:', e);
+    }
+  },
+
+  forcePushLaptopAsMaster() {
+    this.markLocalModified();
+    this.hasInitialPullCompleted = true;
+    const res = this.pushNow();
+    if (typeof showToast === 'function') {
+      showToast('🚀 Pushed local device as master to cloud!', 'success');
+    }
+    return res;
+  },
+
   pushLocalChange() {
     this.queuePush();
   },
@@ -601,6 +623,8 @@ const SyncEngine = {
       // Encrypt with native AES-256-GCM
       const encryptedRecord = await this.encryptPayload(payload, passphrase);
       this.lastRemoteUpdatedAt = encryptedRecord.updatedAt;
+      localStorage.setItem(this.STORAGE_LAST_REMOTE_UPDATED, String(encryptedRecord.updatedAt));
+      localStorage.setItem(this.STORAGE_LAST_LOCAL_MODIFIED, String(encryptedRecord.updatedAt));
 
       // Push zero-knowledge ciphertext to Firestore
       const docRef = this.db.collection('workspaces').doc(roomId);

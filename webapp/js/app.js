@@ -164,6 +164,7 @@ function loadData() {
 
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+  if (typeof SyncEngine !== 'undefined') SyncEngine.markLocalModified();
   updateAppBadge();
   if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
 }
@@ -181,6 +182,7 @@ function loadProfile() {
 
 function saveProfile() {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile));
+  if (typeof SyncEngine !== 'undefined') SyncEngine.markLocalModified();
   if (typeof SyncEngine !== 'undefined') SyncEngine.queuePush();
 }
 
