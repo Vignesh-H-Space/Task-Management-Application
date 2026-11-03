@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tesseract-pwa-v14';
+const CACHE_NAME = 'tesseract-pwa-v16';
 const ASSETS_TO_CACHE = [
   './',
   './login.html',
@@ -11,8 +11,24 @@ const ASSETS_TO_CACHE = [
   './completed_backlogs.html',
   './profile.html',
   './report.html',
+  './pulse.html',
+  './professional.html',
+  './tracker.html',
   './manifest.json',
   './css/styles.css',
+  './css/modules/variables.css',
+  './css/modules/base.css',
+  './css/modules/sidebar.css',
+  './css/modules/dashboard.css',
+  './css/modules/pulse.css',
+  './css/modules/professional.css',
+  './css/modules/tracker.css',
+  './js/flight_plan_view.js',
+  './js/pulse_engine.js',
+  './js/professional_engine.js',
+  './js/tracker_engine.js',
+  './js/focus_engine.js',
+  './js/types.js',
   './js/dialog_engine.js',
   './js/streak_engine.js',
   './js/search_controller.js',
@@ -47,22 +63,24 @@ const ASSETS_TO_CACHE = [
   './icons/shortcut-roadmap.svg'
 ];
 
-// Install Event - Cache Core Assets
+// Install Event - Pre-cache Assets & Immediately Skip Waiting
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate Event - Clean Up Old Caches
+// Activate Event - Clean Up Old Caches & Claim Clients Immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Purging outdated cache:', key);
             return caches.delete(key);
           }
         })
@@ -96,7 +114,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For Local Assets: Network First, fallback to Cache
+  // For Local Assets (HTML, JS, CSS): Always Network First to avoid stale mobile views
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
@@ -152,4 +170,3 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('notificationclose', (event) => {
   console.log('Tesseract notification dismissed:', event.notification.tag);
 });
-

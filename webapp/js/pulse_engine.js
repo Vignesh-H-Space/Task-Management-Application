@@ -21,6 +21,8 @@ const PULSE_CATEGORIES = {
       lesson: { key: 'lesson', label: 'Lesson', icon: 'lightbulb', color: '#fbbf24' },
       feedback: { key: 'feedback', label: 'Feedback', icon: 'message-square', color: '#a78bfa' },
       setback: { key: 'setback', label: 'Setback', icon: 'alert-triangle', color: '#f87171' },
+      humiliation: { key: 'humiliation', label: 'Humiliation', icon: 'shield-alert', color: '#f43f5e' },
+      scolding: { key: 'scolding', label: 'Scoldings', icon: 'megaphone', color: '#f97316' },
       observation: { key: 'observation', label: 'Observation', icon: 'eye', color: '#38bdf8' }
     }
   },
@@ -34,6 +36,8 @@ const PULSE_CATEGORIES = {
       growth: { key: 'growth', label: 'Growth', icon: 'trending-up', color: '#34d399' },
       connection: { key: 'connection', label: 'Connection', icon: 'users', color: '#818cf8' },
       mistake: { key: 'mistake', label: 'Mistake', icon: 'zap-off', color: '#fb923c' },
+      humiliation: { key: 'humiliation', label: 'Humiliation', icon: 'shield-alert', color: '#f43f5e' },
+      scolding: { key: 'scolding', label: 'Scoldings', icon: 'megaphone', color: '#f97316' },
       observation: { key: 'observation', label: 'Observation', icon: 'eye', color: '#2dd4bf' }
     }
   }
@@ -527,6 +531,24 @@ const PulseEngine = {
     if (!container) return;
 
     const total = this.entries.length;
+    const isCustomSubcat = !['all', 'career', 'personal', 'pinned'].includes(this.activeFilter);
+    let customSubcatHTML = '';
+    if (isCustomSubcat) {
+      const allSubs = {
+        ...PULSE_CATEGORIES.career.subcategories,
+        ...PULSE_CATEGORIES.personal.subcategories
+      };
+      const subInfo = allSubs[this.activeFilter] || { label: this.activeFilter, icon: 'tag' };
+      const subCount = this.entries.filter(p => p.subcategory === this.activeFilter).length;
+      customSubcatHTML = `
+        <button class="pulse-filter-pill active" onclick="PulseEngine.setFilter('all')" title="Click to clear filter">
+          <i data-lucide="${subInfo.icon}"></i>
+          <span>${subInfo.label}</span>
+          <span class="pulse-filter-count">${subCount}</span>
+          <i data-lucide="x" style="width:11px;height:11px;margin-left:2px;"></i>
+        </button>
+      `;
+    }
     const careerCount = this.entries.filter(p => p.category === 'career').length;
     const personalCount = this.entries.filter(p => p.category === 'personal').length;
     const pinnedCount = this.entries.filter(p => p.pinned).length;
@@ -551,6 +573,7 @@ const PulseEngine = {
         <span>Pinned</span>
         <span class="pulse-filter-count">${pinnedCount}</span>
       </button>
+      ${customSubcatHTML}
     `;
 
     if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
@@ -574,6 +597,8 @@ const PulseEngine = {
       filtered = filtered.filter(p => p.category === 'personal');
     } else if (this.activeFilter === 'pinned') {
       filtered = filtered.filter(p => p.pinned);
+    } else if (this.activeFilter && this.activeFilter !== 'all') {
+      filtered = filtered.filter(p => p.subcategory === this.activeFilter);
     }
 
     // Filter by search query
@@ -797,7 +822,7 @@ const PulseEngine = {
               <i data-lucide="${cat.icon}"></i>
               <span>${cat.label}</span>
             </span>
-            <span class="pulse-subcat-badge ${pulse.category}">
+            <span class="pulse-subcat-badge ${pulse.category} subcat-${pulse.subcategory}" style="cursor: pointer; ${sub.color ? `color: ${sub.color}; border-color: ${sub.color}40; background: ${sub.color}15;` : ''}" onclick="PulseEngine.setFilter('${sub.key}')" title="Filter by ${sub.label}">
               <i data-lucide="${sub.icon}"></i>
               <span>${sub.label}</span>
             </span>

@@ -960,6 +960,9 @@ service cloud.firestore {
             Disconnect
           </button>
           <div class="sync-footer-actions">
+            <button type="button" class="btn btn-secondary" onclick="SyncEngine.restorePreSyncSafetySnapshot()" title="Restore the local snapshot taken right before the last cloud sync">
+              <i data-lucide="history"></i> Restore Pre-Sync State
+            </button>
             <button type="button" class="btn btn-secondary" onclick="SyncEngine.pushNow()">
               <i data-lucide="upload-cloud"></i> Push Local Data
             </button>
@@ -1295,12 +1298,24 @@ if (typeof Components !== 'undefined' && typeof Components.initTheme === 'functi
   Components.initTheme();
 }
 
-// Register PWA Service Worker
+// Register PWA Service Worker with Auto-Update
 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then((reg) => console.log('Tesseract PWA Service Worker Registered:', reg.scope))
+      .then((reg) => {
+        console.log('Tesseract PWA Service Worker Registered:', reg.scope);
+        if (reg) reg.update().catch(() => {});
+      })
       .catch((err) => console.log('Tesseract PWA Service Worker Registration Failed:', err));
+  });
+
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      console.log('[PWA] New service worker activated - refreshing page to load latest updates');
+      window.location.reload();
+    }
   });
 }
 

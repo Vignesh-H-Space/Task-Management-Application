@@ -28,6 +28,7 @@ const SyncEngine = {
   pushDebounceTimer: null,
   isApplyingRemote: false,
   isPushing: false,
+  hasInitialPullCompleted: false,
   lastRemoteUpdatedAt: 0,
   cachedKey: null,
   cachedPassphrase: null,
@@ -37,6 +38,7 @@ const SyncEngine = {
    * Initialize Sync Engine on page boot
    */
   async init() {
+    this.hasInitialPullCompleted = false;
     this.checkPairingUrl();
     this.updateUIStatus();
 
@@ -460,6 +462,7 @@ const SyncEngine = {
       // Real-time WebSocket snapshot listener
       this.unsubscribeListener = docRef.onSnapshot(
         async (snapshot) => {
+          this.hasInitialPullCompleted = true;
           if (!snapshot.exists) {
             // Workspace doesn't exist yet on Firestore
             this.setStatus('synced', 'E2EE Cloud Connected (New Room)');
@@ -534,6 +537,12 @@ const SyncEngine = {
   queuePush() {
     if (this.isApplyingRemote) return; // Never echo back during remote payload ingestion
     if (this.status === 'unconfigured' || this.status === 'error' || this.status === 'offline') return;
+
+    // Safety guard: Never push to cloud before this device has completed its initial snapshot check
+    if (!this.hasInitialPullCompleted && this.db && this.getRoomId()) {
+      console.log('[SyncEngine] Initial cloud pull pending - deferring push until server state is verified.');
+      return;
+    }
 
     if (this.pushDebounceTimer) {
       clearTimeout(this.pushDebounceTimer);
@@ -622,15 +631,133 @@ const SyncEngine = {
   /**
    * Ingest decrypted remote state into local storage & memory
    */
-  applyRemoteState(data) {
+  
+  /**
+   * Automatically create a safety snapshot in localStorage before applying incoming remote sync
+   */
+  createPreSyncSafetySnapshot() {
+    try {
+      const snapshot = {
+        timestamp: Date.now(),
+        dateStr: new Date().toLocaleString(),
+        tasks: window.state && Array.isArray(window.state.tasks) ? window.state.tasks : JSON.parse(localStorage.getItem('tesseract_goals_tasks_data') || '[]'),
+        profile: window.state && window.state.profile ? window.state.profile : JSON.parse(localStorage.getItem('tesseract_profile_data') || '{}'),
+        streak: window.state && window.state.streak ? window.state.streak : JSON.parse(localStorage.getItem('tesseract_streak_data') || '{}'),
+        xpData: (typeof XPEngine !== 'undefined') ? XPEngine.data : JSON.parse(localStorage.getItem('tesseract_xp_data') || '{}'),
+        habits: (typeof HabitsEngine !== 'undefined') ? HabitsEngine.habits : JSON.parse(localStorage.getItem('tesseract_habits_data') || '[]'),
+        bucketList: (typeof BucketListEngine !== 'undefined') ? BucketListEngine.dreams : JSON.parse(localStorage.getItem('tesseract_bucketlist_data') || '[]'),
+        backlogs: (typeof BacklogEngine !== 'undefined') ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]'),
+        pulse: (typeof PulseEngine !== 'undefined') ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]'),
+        docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]'),
+        trackers: (typeof TrackerEngine !== 'undefined') ? TrackerEngine.getTrackers() : JSON.parse(localStorage.getItem('tesseract_trackers') || '[]')
+      };
+      localStorage.setItem('tesseract_pre_sync_safety_backup', JSON.stringify(snapshot));
+    } catch (e) {
+      console.warn('[SyncEngine] Failed to create pre-sync safety snapshot:', e);
+    }
+  },
+
+  /**
+   * 1-Click recovery of local state taken before the last remote cloud sync
+   */
+  restorePreSyncSafetySnapshot() {
+    try {
+      const raw = localStorage.getItem('tesseract_pre_sync_safety_backup');
+      if (!raw) {
+        if (typeof showToast === 'function') showToast('⚠️ No pre-sync safety backup found in browser memory.', 'warning');
+        return false;
+      }
+      const snapshot = JSON.parse(raw);
+      this.applyRemoteState(snapshot, true); // true = force restore without merging
+      this.hasInitialPullCompleted = true;
+      this.queuePush(); // Push the restored state to Firestore so all devices recover
+      if (typeof showToast === 'function') {
+        showToast(`✅ Successfully restored pre-sync state from ${snapshot.dateStr || 'backup'}!`, 'success');
+      }
+      return true;
+    } catch (e) {
+      console.error('[SyncEngine] Failed to restore pre-sync safety snapshot:', e);
+      if (typeof showToast === 'function') showToast('Failed to restore snapshot: ' + e.message, 'error');
+      return false;
+    }
+  },
+
+  /**
+   * Non-destructively merge local tasks with remote tasks (Union + Last-Modified-Wins)
+   */
+  mergeTasks(localTasks, remoteTasks) {
+    if (!Array.isArray(localTasks) || localTasks.length === 0) return Array.isArray(remoteTasks) ? remoteTasks : [];
+    if (!Array.isArray(remoteTasks) || remoteTasks.length === 0) return localTasks;
+
+    const map = new Map();
+    // 1. Add all remote tasks
+    remoteTasks.forEach(rt => {
+      if (rt && rt.id) map.set(rt.id, rt);
+    });
+
+    // 2. Non-destructively preserve and merge local tasks
+    localTasks.forEach(lt => {
+      if (!lt || !lt.id) return;
+      const rt = map.get(lt.id);
+      if (!rt) {
+        // Local task doesn't exist on remote yet -> PRESERVE IT!
+        map.set(lt.id, lt);
+      } else {
+        // Conflict resolution: pick the version with the newer timestamp
+        const ltTime = new Date(lt.updatedAt || lt.completedAt || lt.createdAt || 0).getTime();
+        const rtTime = new Date(rt.updatedAt || rt.completedAt || rt.createdAt || 0).getTime();
+        if (ltTime > rtTime) {
+          map.set(lt.id, lt);
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  },
+
+  /**
+   * Generic entity union merge by ID and timestamp
+   */
+  mergeEntityList(localList, remoteList, idProp = 'id', timeProp = 'updatedAt') {
+    if (!Array.isArray(localList) || localList.length === 0) return Array.isArray(remoteList) ? remoteList : [];
+    if (!Array.isArray(remoteList) || remoteList.length === 0) return localList;
+
+    const map = new Map();
+    remoteList.forEach(item => {
+      if (item && item[idProp]) map.set(item[idProp], item);
+    });
+
+    localList.forEach(localItem => {
+      if (!localItem || !localItem[idProp]) return;
+      const remoteItem = map.get(localItem[idProp]);
+      if (!remoteItem) {
+        map.set(localItem[idProp], localItem);
+      } else {
+        const lTime = new Date(localItem[timeProp] || localItem.createdAt || 0).getTime();
+        const rTime = new Date(remoteItem[timeProp] || remoteItem.createdAt || 0).getTime();
+        if (lTime > rTime) {
+          map.set(localItem[idProp], localItem);
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  },
+
+  applyRemoteState(data, isForceRestore = false) {
     if (!data) return;
+    if (!isForceRestore) {
+      this.createPreSyncSafetySnapshot();
+    }
     this.isApplyingRemote = true;
 
     try {
       // 1. Tasks
       if (Array.isArray(data.tasks)) {
-        if (window.state) window.state.tasks = data.tasks;
-        localStorage.setItem('tesseract_goals_tasks_data', JSON.stringify(data.tasks));
+        const localTasks = (window.state && Array.isArray(window.state.tasks)) ? window.state.tasks : JSON.parse(localStorage.getItem('tesseract_goals_tasks_data') || '[]');
+        const finalTasks = isForceRestore ? data.tasks : this.mergeTasks(localTasks, data.tasks);
+        if (window.state) window.state.tasks = finalTasks;
+        localStorage.setItem('tesseract_goals_tasks_data', JSON.stringify(finalTasks));
       }
 
       // 2. Profile
@@ -686,7 +813,9 @@ const SyncEngine = {
       // 9. Backlogs
       if (data.backlogs && Array.isArray(data.backlogs)) {
         const rawCount = data.backlogs.length;
-        const cleanedBacklogs = data.backlogs.filter(i => {
+        const localBacklogs = (typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]');
+        const mergedBacklogs = isForceRestore ? data.backlogs : this.mergeEntityList(localBacklogs, data.backlogs, 'id', 'updatedAt');
+        const cleanedBacklogs = mergedBacklogs.filter(i => {
           if (!i) return false;
           if (['bkl_01', 'bkl_02', 'bkl_03', 'bkl_04', 'bkl_05', 'bkl_06'].includes(i.id)) return false;
           const t = (i.objective || '').trim().toLowerCase();
@@ -718,12 +847,16 @@ const SyncEngine = {
       // 10. Pulse
       if (data.pulse && Array.isArray(data.pulse)) {
         if (typeof PulseEngine !== 'undefined') {
-          PulseEngine.entries = data.pulse;
-          if (typeof Components !== 'undefined' && Components.getCurrentPage() === 'pulse') {
-            PulseEngine.render();
+          const localPulse = (typeof PulseEngine !== 'undefined' && Array.isArray(PulseEngine.entries)) ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]');
+          const mergedPulse = isForceRestore ? data.pulse : this.mergeEntityList(localPulse, data.pulse, 'id', 'createdAt');
+          if (typeof PulseEngine !== 'undefined') {
+            PulseEngine.entries = mergedPulse;
+            if (typeof Components !== 'undefined' && Components.getCurrentPage() === 'pulse') {
+              PulseEngine.render();
+            }
           }
+          localStorage.setItem('tesseract_pulse_data', JSON.stringify(mergedPulse));
         }
-        localStorage.setItem('tesseract_pulse_data', JSON.stringify(data.pulse));
       }
 
       // 11. Docket Radar Acks

@@ -1211,3 +1211,31 @@
   }
 }
 
+
+
+/* ── Custom Subcategory Styles for Humiliation and Scolding ── */
+.pulse-subcat-pill[data-sub="humiliation"].active {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+  font-weight: 600;
+}
+
+.pulse-subcat-pill[data-sub="scolding"].active {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.4);
+  color: #fdba74;
+  font-weight: 600;
+}
+
+.pulse-subcat-badge.subcat-humiliation {
+  color: #fda4af !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  background: rgba(244, 63, 94, 0.1) !important;
+}
+
+.pulse-subcat-badge.subcat-scolding {
+  color: #fdba74 !important;
+  border-color: rgba(249, 115, 22, 0.3) !important;
+  background: rgba(249, 115, 22, 0.1) !important;
+}
