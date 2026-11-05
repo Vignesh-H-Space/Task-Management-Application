@@ -24,6 +24,7 @@ const ASSETS_TO_CACHE = [
   './css/modules/professional.css',
   './css/modules/tracker.css',
   './js/flight_plan_view.js',
+  './js/vault_inspector.js',
   './js/pulse_engine.js',
   './js/professional_engine.js',
   './js/tracker_engine.js',

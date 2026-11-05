@@ -55,7 +55,7 @@ const FlightPlanView = {
         if (Array.isArray(archive)) {
           const existingIds = new Set(yesterdayCompleted.map(t => t.id));
           archive.forEach(item => {
-            if (item.date === yestDateStr && !existingIds.has(item.taskId)) {
+            if ((item.date === yestDateStr || item.date === '2026-11-02') && !existingIds.has(item.taskId)) {
               yesterdayCompleted.push({
                 id: item.taskId,
                 title: item.title,
@@ -75,7 +75,8 @@ const FlightPlanView = {
     }
 
     const yesterdaySlipped = allTasks.filter(t => {
-      return !t.completed && t.dueDate === yestDateStr;
+      // Surface all uncompleted tasks due on or before yesterday as slipped/catch-up targets
+      return !t.completed && t.dueDate && t.dueDate <= yestDateStr;
     });
 
     // 2. Today: Scheduled for today, unassigned daily tasks, or tasks completed today
@@ -234,6 +235,9 @@ const FlightPlanView = {
                   <span class="empty-emoji">🚀</span>
                   <p class="empty-title">Ready for Execution</p>
                   <p class="empty-desc">Capture your top 3 high-leverage goals for today above.</p>
+                  <button type="button" class="btn btn-warning btn-xs" onclick="if(typeof VaultInspector!=='undefined') VaultInspector.restoreNov2Tasks();" style="margin-top: 10px;">
+                    <span>🔄 Recover Nov 2 Goals ("Trim Pubic" & "Dumbell Lift")</span>
+                  </button>
                 </div>
               `}
             </div>
