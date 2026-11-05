@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tesseract-pwa-v16';
+const CACHE_NAME = 'tesseract-pwa-v17';
 const ASSETS_TO_CACHE = [
   './',
   './login.html',

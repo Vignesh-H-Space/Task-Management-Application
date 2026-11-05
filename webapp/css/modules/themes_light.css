@@ -889,7 +889,14 @@ html[data-theme="light"] body,
 
 [data-theme="light"] .backlog-scroll-bar-panel {
   background-color: #f8fafc;
-  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  border-top: none;
+}
+
+[data-theme="light"] .top-scroll-fixed-cols-hint {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.09);
+  color: #475569;
 }
 
 [data-theme="light"] .table-scroll-track {

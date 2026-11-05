@@ -112,6 +112,29 @@
 
         <!-- Notion-Style Table View (Completed Archive) -->
         <div class="backlog-table-container">
+          <!-- Top Column Scroll Controller (Positioned after Done, Actions, Objective) -->
+          <div class="backlog-scroll-bar-panel backlog-top-scroll-panel" id="backlog-scroll-bar-panel">
+            <div class="top-scroll-fixed-cols-hint" title="Pinned anchor columns">
+              <span class="hint-dot"></span>
+              <span>Done · Objective Name</span>
+            </div>
+            <div class="top-scroll-controls">
+              <button class="table-scroll-btn scroll-btn-left" id="btn-table-scroll-left" onclick="BacklogEngine.scrollTable('left')" title="Scroll columns left" aria-label="Scroll columns left">
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <div class="table-scroll-track" id="table-scroll-track" onclick="BacklogEngine.handleScrollTrackClick(event)" title="Click or drag to scroll columns">
+                <div class="table-scroll-thumb" id="table-scroll-thumb"></div>
+              </div>
+              <button class="table-scroll-btn scroll-btn-right" id="btn-table-scroll-right" onclick="BacklogEngine.scrollTable('right')" title="Scroll columns right" aria-label="Scroll columns right">
+                <i data-lucide="chevron-right"></i>
+              </button>
+              <span class="table-scroll-hint-text">
+                <i data-lucide="chevrons-right"></i>
+                <span>Columns: Group, Completed Date, Severity, Due Date, Actions</span>
+              </span>
+            </div>
+          </div>
+
           <div class="backlog-table-scroller" id="backlog-table-scroller">
             <table class="backlog-notion-table" id="backlog-table">
               <thead>
@@ -160,23 +183,6 @@
                 <!-- Dynamically populated by BacklogEngine.renderTable() -->
               </tbody>
             </table>
-          </div>
-
-          <!-- Prominent Horizontal Scroll Bar / Controller at Table Bottom -->
-          <div class="backlog-scroll-bar-panel" id="backlog-scroll-bar-panel">
-            <button class="table-scroll-btn scroll-btn-left" id="btn-table-scroll-left" onclick="BacklogEngine.scrollTable('left')" title="Scroll table left" aria-label="Scroll table left">
-              <i data-lucide="chevron-left"></i>
-            </button>
-            <div class="table-scroll-track" id="table-scroll-track" onclick="BacklogEngine.handleScrollTrackClick(event)" title="Click or drag to scroll columns">
-              <div class="table-scroll-thumb" id="table-scroll-thumb"></div>
-            </div>
-            <button class="table-scroll-btn scroll-btn-right" id="btn-table-scroll-right" onclick="BacklogEngine.scrollTable('right')" title="Scroll table right" aria-label="Scroll table right">
-              <i data-lucide="chevron-right"></i>
-            </button>
-            <span class="table-scroll-hint-text">
-              <i data-lucide="move-horizontal"></i>
-              <span>Scroll horizontally to view Group, Severity, Due Date, Reminder Date &amp; Actions</span>
-            </span>
           </div>
 
           <!-- Empty State -->
