@@ -14,7 +14,7 @@ const VaultInspector = {
    */
   inspect() {
     const memTasks = (typeof state !== 'undefined' && Array.isArray(state.tasks)) ? state.tasks : [];
-    
+
     let storageTasks = [];
     try {
       storageTasks = JSON.parse(localStorage.getItem('tesseract_goals_tasks_data') || '[]');
@@ -125,7 +125,7 @@ const VaultInspector = {
         const bklRaw = localStorage.getItem('tesseract_backlog_data');
         let bkls = bklRaw ? JSON.parse(bklRaw) : [];
         if (!Array.isArray(bkls)) bkls = [];
-        
+
         const existingBklTitles = new Set(bkls.map(b => (b.objective || '').trim().toLowerCase()));
         if (!existingBklTitles.has('trim pubic')) {
           bkls.unshift({
@@ -271,25 +271,25 @@ const VaultInspector = {
           <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 18px;">
             <strong style="font-size: 0.85rem; color: #93c5fd; display: block; margin-bottom: 4px;">🎯 Forensic Finding:</strong>
             <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">
-              ${report.tasksInMemory === 0 ? 
-                'Your current view has 0 tasks loaded in active memory (possibly due to mobile sync overwrite or strict rolling date filters). You can recover your November 2 work in 1 click below.' :
-                `Found ${report.tasksInMemory} tasks in memory and ${report.backlogsInStorage} items in backlogs. If they are hidden on the home page, the 3-day flight plan is filtering for Today / Yesterday only.`
-              }
+              ${report.tasksInMemory === 0 ?
+        'Your current view has 0 tasks loaded in active memory (possibly due to mobile sync overwrite or strict rolling date filters). You can recover your November 2 work in 1 click below.' :
+        `Found ${report.tasksInMemory} tasks in memory and ${report.backlogsInStorage} items in backlogs. If they are hidden on the home page, the 3-day flight plan is filtering for Today / Yesterday only.`
+      }
             </p>
           </div>
 
           <div style="margin-bottom: 18px;">
             <h4 style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0 0 8px 0;">Found Task Records</h4>
             <div style="max-height: 140px; overflow-y: auto; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-color); padding: 8px 12px;">
-              ${report.activeTasks.length > 0 ? 
-                report.activeTasks.map(t => `
+              ${report.activeTasks.length > 0 ?
+        report.activeTasks.map(t => `
                   <div style="display: flex; justify-content: space-between; font-size: 0.75rem; padding: 4px 0; border-bottom: 1px solid var(--border-subtle);">
                     <span style="color: var(--text-primary); font-weight: 500;">${t.completed ? '✅' : '⏳'} ${t.title}</span>
                     <span style="color: var(--text-muted); font-size: 0.7rem;">${t.dueDate || t.tier}</span>
                   </div>
                 `).join('') :
-                '<span style="color: var(--text-muted); font-size: 0.75rem;">No tasks currently stored in active task list.</span>'
-              }
+        '<span style="color: var(--text-muted); font-size: 0.75rem;">No tasks currently stored in active task list.</span>'
+      }
             </div>
           </div>
 

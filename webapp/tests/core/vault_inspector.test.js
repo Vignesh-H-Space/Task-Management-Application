@@ -69,3 +69,4 @@ describe('Data Vault Inspector & Recovery Tests', () => {
     assert.ok(lastModified > Date.now(), 'Timestamp must be bumped into future to prevent phone overwrite');
   });
 });
+
