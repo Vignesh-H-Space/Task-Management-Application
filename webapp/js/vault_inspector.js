@@ -51,6 +51,24 @@ const VaultInspector = {
       console.warn('[VaultInspector] Error reading pulse:', e);
     }
 
+    // Scan all tesseract keys in localStorage
+    const allKeys = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k) {
+          try {
+            const v = JSON.parse(localStorage.getItem(k));
+            allKeys[k] = Array.isArray(v) ? `Array(${v.length})` : typeof v;
+          } catch {
+            allKeys[k] = (localStorage.getItem(k) || '').slice(0, 30);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[VaultInspector] Error scanning localStorage:', e);
+    }
+
     const report = {
       timestamp: new Date().toISOString(),
       tasksInMemory: memTasks.length,
@@ -59,6 +77,7 @@ const VaultInspector = {
       archiveInStorage: archive.length,
       hasPreSyncBackup: !!preSync,
       pulseEntries: pulse.length,
+      allKeys,
       activeTasks: memTasks.map(t => ({ id: t.id, title: t.title, tier: t.tier, dueDate: t.dueDate, completed: !!t.completed })),
       backlogItems: backlogs.map(b => ({ id: b.id, title: b.objective, group: b.group, dueDate: b.dueDate, completed: !!b.completed }))
     };
@@ -294,15 +313,15 @@ const VaultInspector = {
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button type="button" class="btn btn-warning" onclick="VaultInspector.restoreNov2Tasks()" style="width: 100%; justify-content: center; padding: 10px; font-weight: 600;">
-              <span>🔄 Recover November 2 Tasks ("Trim Pubic" & "Dumbell Lift")</span>
+            <button type="button" class="btn btn-primary" onclick="VaultInspector.restoreSeedRoadmap()" style="width: 100%; justify-content: center; padding: 10px; font-weight: 600;">
+              <span>🚀 Restore Default 35 Master Roadmap Goals</span>
             </button>
             <div style="display: flex; gap: 8px;">
               <button type="button" class="btn btn-secondary" onclick="VaultInspector.resyncFromBacklogs()" style="flex: 1; justify-content: center; font-size: 0.78rem;">
                 <span>Resync from Backlogs Table</span>
               </button>
-              <button type="button" class="btn btn-secondary" onclick="VaultInspector.restoreSeedRoadmap()" style="flex: 1; justify-content: center; font-size: 0.78rem;">
-                <span>Restore 35 Seed Goals</span>
+              <button type="button" class="btn btn-secondary" onclick="VaultInspector.restoreNov2Tasks()" style="flex: 1; justify-content: center; font-size: 0.78rem;">
+                <span>Rescue Nov 2 Tasks</span>
               </button>
             </div>
           </div>
