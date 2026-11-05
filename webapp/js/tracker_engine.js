@@ -819,6 +819,18 @@ const TrackerEngine = (() => {
 
     bindTableScroll();
 
+    if (typeof ColumnResizer !== 'undefined') {
+      const trackerTable = mount.querySelector('.tracker-table');
+      if (trackerTable) {
+        ColumnResizer.attach(trackerTable, 'tesseract_tracker_col_widths', {
+          onResize: () => {
+            const scroller = document.getElementById('tracker-table-scroller');
+            if (scroller) handleTableScroll(scroller);
+          }
+        });
+      }
+    }
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 

@@ -1591,6 +1591,10 @@ const BacklogEngine = {
     this.updateHeaderSortIndicators();
     this.renderSortBadge();
     this.updateTableScrollIndicator();
+    if (typeof ColumnResizer !== 'undefined') {
+      const storageKey = this.isCompletedView() ? 'tesseract_completed_backlog_col_widths' : 'tesseract_backlog_col_widths';
+      ColumnResizer.attach(document.getElementById('backlog-table'), storageKey);
+    }
   },
 
   submitInlineAdd() {

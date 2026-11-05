@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tesseract-pwa-v17';
+const CACHE_NAME = 'tesseract-pwa-v18';
 const ASSETS_TO_CACHE = [
   './',
   './login.html',
@@ -25,6 +25,7 @@ const ASSETS_TO_CACHE = [
   './css/modules/tracker.css',
   './js/flight_plan_view.js',
   './js/vault_inspector.js',
+  './js/column_resizer.js',
   './js/pulse_engine.js',
   './js/professional_engine.js',
   './js/tracker_engine.js',

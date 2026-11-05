@@ -526,6 +526,52 @@
   white-space: nowrap;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
+  position: relative;
+  overflow: visible !important;
+}
+
+/* ── Interactive Column Resizing System ── */
+.tracker-table .col-resizer-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 9px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 30;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tracker-table .col-resizer-handle::after {
+  content: '';
+  display: block;
+  width: 2.5px;
+  height: 55%;
+  background: transparent;
+  border-radius: 2px;
+  transition: background 0.15s ease, height 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tracker-table th:hover > .col-resizer-handle::after,
+.tracker-table .col-resizer-handle:hover::after,
+.tracker-table .col-resizer-handle.is-resizing::after {
+  background: #3b82f6;
+  height: 100%;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.85);
+}
+
+.tracker-table .col-resizer-handle:hover,
+.tracker-table .col-resizer-handle.is-resizing {
+  background: rgba(59, 130, 246, 0.14);
+}
+
+.tracker-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Sticky Col 1: Header */
