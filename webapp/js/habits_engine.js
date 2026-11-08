@@ -300,6 +300,10 @@ const HabitsEngine = {
     const container = document.getElementById('habits-widget-container');
     if (!container) return;
 
+    const esc = typeof escapeHTML === 'function' 
+      ? escapeHTML 
+      : (s => (s ? String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])) : ''));
+
     const weekDays = this.getWeekDays();
     const todayStr = new Date().toISOString().split('T')[0];
 
@@ -346,8 +350,8 @@ const HabitsEngine = {
                     <button class="habit-delete-btn" onclick="HabitsEngine.deleteHabit('${habit.id}')" title="Delete habit" aria-label="Delete habit">&times;</button>
                     <span class="habit-emoji">${habit.icon || '⚡'}</span>
                     <div class="habit-text">
-                      <span class="habit-name">${escapeHTML(habit.title)}</span>
-                      <span class="habit-meta">#${habit.category || 'Personal'}</span>
+                      <span class="habit-name">${esc(habit.title)}</span>
+                      <span class="habit-meta">#${esc(habit.category || 'Personal')}</span>
                     </div>
                   </div>
 

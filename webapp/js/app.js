@@ -61,7 +61,7 @@ function init() {
   const page = typeof Components !== 'undefined' ? Components.getCurrentPage() : 'index';
   if (typeof Components !== 'undefined') {
     Components.renderSidebar(state.activeHorizon);
-    
+
     let headerConfig = { title: 'Executive Command Center', subtitle: 'Unified multi-horizon cockpit & execution launchpad.', showSearch: true };
     if (page === 'cascade') {
       headerConfig = { title: 'Strategic Goal Cascade', subtitle: 'Multi-horizon vertical alignment linking daily actions to annual goals.', showSearch: false };
@@ -516,12 +516,12 @@ function bindEvents() {
     btnEditName.addEventListener('click', async () => {
       const newName = typeof TesseractDialog !== 'undefined'
         ? await TesseractDialog.prompt({
-            title: 'Edit Profile Name',
-            message: 'Enter your preferred display name:',
-            defaultValue: state.profile.name,
-            placeholder: 'e.g. Alex Morgan',
-            confirmLabel: 'Save Name'
-          })
+          title: 'Edit Profile Name',
+          message: 'Enter your preferred display name:',
+          defaultValue: state.profile.name,
+          placeholder: 'e.g. Alex Morgan',
+          confirmLabel: 'Save Name'
+        })
         : prompt("Enter your new profile name:", state.profile.name);
 
       if (newName && newName.trim() !== '') {
@@ -629,7 +629,7 @@ function toggleTaskCompletion(taskId, clickEvent = null) {
 
   if (task.completed) {
     triggerConfetti();
-    
+
     // Gamified XP Awarding
     if (typeof XPEngine !== 'undefined') {
       const xpMap = {
@@ -642,7 +642,7 @@ function toggleTaskCompletion(taskId, clickEvent = null) {
       const xp = xpMap[task.tier] || 10;
       const tierObj = TIERS.find(t => t.id === task.tier) || { name: 'Task' };
       const sourceEl = clickEvent ? clickEvent.target : null;
-      
+
       XPEngine.award(xp, `${tierObj.name} Completed`, sourceEl);
 
       // Quest updates
@@ -679,11 +679,11 @@ async function deleteTask(taskId) {
 
   const confirmed = typeof TesseractDialog !== 'undefined'
     ? await TesseractDialog.confirm({
-        title: 'Delete Task',
-        message: `Are you sure you want to delete "${task.title}"?`,
-        confirmLabel: 'Delete',
-        variant: 'danger'
-      })
+      title: 'Delete Task',
+      message: `Are you sure you want to delete "${task.title}"?`,
+      confirmLabel: 'Delete',
+      variant: 'danger'
+    })
     : confirm(`Are you sure you want to delete "${task.title}"?`);
 
   if (confirmed) {
@@ -1156,7 +1156,7 @@ function updateHeaderTitle() {
 }
 
 function updateSidebarBadges() {
-  const generalCount = state.tasks.filter(task => ['daily', 'weekly', 'monthly'].includes(task.tier)).length;
+  const generalCount = state.tasks.filter(task => !task.tier || ['general', 'daily', 'weekly', 'monthly'].includes(task.tier)).length;
   const badgeGeneral = document.getElementById('badge-general');
   if (badgeGeneral) badgeGeneral.textContent = generalCount;
 
@@ -1214,7 +1214,7 @@ function renderTaskList() {
     if (!hasSearch) {
       // Horizon filter
       if (state.activeHorizon === 'general') {
-        if (!['daily', 'weekly', 'monthly'].includes(task.tier)) return false;
+        if (task.tier && !['general', 'daily', 'weekly', 'monthly'].includes(task.tier)) return false;
       } else if (state.activeHorizon !== 'all') {
         if (task.tier !== state.activeHorizon) return false;
       }
@@ -1303,7 +1303,7 @@ function createTaskCardElement(task) {
 
   const parentTask = task.parentId ? state.tasks.find(p => p.id === task.parentId) : null;
   const isOrphan = task.tier !== 'annual' && !parentTask && !task.completed;
-  
+
   let parentBadge = '';
   if (parentTask) {
     parentBadge = `<span class="meta-pill cascade-pill" title="Cascades up to: ${escapeHTML(parentTask.title)}" onclick="if(typeof AlignmentEngine!=='undefined') AlignmentEngine.openLinkModal('${task.id}', event);"><i data-lucide="arrow-up-right"></i> ${escapeHTML(parentTask.title.substring(0, 24))}...</span>`;
@@ -1938,7 +1938,7 @@ function showActionToast(message, actionLabel, onAction, durationMs = 10000) {
 
 function escapeHTML(str) {
   if (!str) return '';
-  return str.replace(/[&<>'"]/g, 
+  return str.replace(/[&<>'"]/g,
     tag => ({
       '&': '&amp;',
       '<': '&lt;',
@@ -1962,9 +1962,9 @@ function updateAppBadge() {
   if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator) {
     const dailyOpen = state.tasks ? state.tasks.filter(t => t.tier === 'daily' && !t.completed).length : 0;
     if (dailyOpen > 0) {
-      navigator.setAppBadge(dailyOpen).catch(() => {});
+      navigator.setAppBadge(dailyOpen).catch(() => { });
     } else if ('clearAppBadge' in navigator) {
-      navigator.clearAppBadge().catch(() => {});
+      navigator.clearAppBadge().catch(() => { });
     }
   }
 }
