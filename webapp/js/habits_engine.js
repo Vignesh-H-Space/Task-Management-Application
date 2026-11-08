@@ -32,6 +32,24 @@ const INITIAL_HABITS = [
     targetDaysPerWeek: 7,
     history: {},
     createdAt: new Date().toISOString()
+  },
+  {
+    id: 'habit_chess',
+    title: 'Chess Game',
+    icon: '♟️',
+    category: 'Mind',
+    targetDaysPerWeek: 7,
+    history: {},
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'habit_linkedin',
+    title: 'LinkedIn Game',
+    icon: '💼',
+    category: 'Career',
+    targetDaysPerWeek: 7,
+    history: {},
+    createdAt: new Date().toISOString()
   }
 ];
 
@@ -40,6 +58,7 @@ const HabitsEngine = {
 
   init() {
     this.load();
+    this.ensureDefaultHabits();
     this.seedDefaultHistoryIfNeeded();
     this.renderWidget();
   },
@@ -55,6 +74,43 @@ const HabitsEngine = {
       }
     } else {
       this.habits = JSON.parse(JSON.stringify(INITIAL_HABITS));
+      this.save();
+    }
+    this.ensureDefaultHabits();
+  },
+
+  ensureDefaultHabits() {
+    if (!Array.isArray(this.habits)) this.habits = [];
+    const titles = new Set(this.habits.map(h => (h.title || '').trim().toLowerCase()));
+    let updated = false;
+
+    if (!titles.has('chess game')) {
+      this.habits.push({
+        id: 'habit_chess',
+        title: 'Chess Game',
+        icon: '♟️',
+        category: 'Mind',
+        targetDaysPerWeek: 7,
+        history: {},
+        createdAt: new Date().toISOString()
+      });
+      updated = true;
+    }
+
+    if (!titles.has('linkedin game')) {
+      this.habits.push({
+        id: 'habit_linkedin',
+        title: 'LinkedIn Game',
+        icon: '💼',
+        category: 'Career',
+        targetDaysPerWeek: 7,
+        history: {},
+        createdAt: new Date().toISOString()
+      });
+      updated = true;
+    }
+
+    if (updated) {
       this.save();
     }
   },
@@ -373,3 +429,7 @@ const HabitsEngine = {
     }
   }
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { HabitsEngine, INITIAL_HABITS, HABITS_STORAGE_KEY };
+}
