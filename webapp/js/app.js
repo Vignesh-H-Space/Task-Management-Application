@@ -94,6 +94,7 @@ function init() {
   FocusEngine.init();
   if (typeof XPEngine !== 'undefined') XPEngine.init();
   if (typeof HabitsEngine !== 'undefined') HabitsEngine.init();
+  if (typeof ScreentimeEngine !== 'undefined') ScreentimeEngine.init();
   if (typeof RoadmapEngine !== 'undefined') RoadmapEngine.init();
   if (typeof RitualsEngine !== 'undefined') RitualsEngine.init();
   if (typeof BucketListEngine !== 'undefined') BucketListEngine.init();
@@ -943,6 +944,7 @@ function renderAll() {
       renderTaskList();
     }
     if (typeof HabitsEngine !== 'undefined') HabitsEngine.renderWidget();
+    if (typeof ScreentimeEngine !== 'undefined') ScreentimeEngine.renderWidget();
     if (typeof RitualsEngine !== 'undefined') RitualsEngine.renderMorningBanner();
   } else if (page === 'cascade') {
     renderCascadeView();

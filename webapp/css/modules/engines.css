@@ -2692,3 +2692,281 @@
   color: #ef4444 !important;
 }
 
+
+/* ══════════════════════════════════════════════════════════
+   DIGITAL WELLBEING & SCREEN TIME ENGINE WIDGET
+   ══════════════════════════════════════════════════════════ */
+.screentime-widget-container {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.screentime-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.screentime-card:hover {
+  border-color: var(--border-hover);
+}
+
+.screentime-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.screentime-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.screentime-header-icon {
+  font-size: 1.5rem;
+}
+
+.screentime-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.screentime-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 2px 0 0 0;
+}
+
+.screentime-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.screentime-pill.pill-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.screentime-pill.pill-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.screentime-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.screentime-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .screentime-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .screentime-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.screentime-stat-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.screentime-stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.screentime-stat-val {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.screentime-stat-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.screentime-mini-bar {
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.screentime-mini-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.screentime-distribution-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-input);
+  width: 100%;
+  gap: 2px;
+}
+
+.screentime-dist-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.screentime-apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.screentime-app-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.screentime-app-card:hover {
+  border-color: var(--border-color);
+}
+
+.screentime-app-card.active {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.screentime-app-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.screentime-app-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.screentime-app-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.screentime-app-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.screentime-app-cat {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.screentime-app-time {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.screentime-app-progress {
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.screentime-app-bar {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.screentime-app-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.screentime-adj-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.screentime-adj-btn:hover {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+  border-color: var(--accent-border);
+}
+
+.screentime-empty-state {
+  text-align: center;
+  padding: 24px;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
