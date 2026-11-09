@@ -751,7 +751,8 @@ const SyncEngine = {
         docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]'),
         pulse: (typeof PulseEngine !== 'undefined') ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]'),
         radarAcks: JSON.parse(localStorage.getItem('tesseract_docket_radar_acks') || '{}'),
-        trackers: (typeof TrackerEngine !== 'undefined') ? TrackerEngine.getTrackers() : JSON.parse(localStorage.getItem('tesseract_trackers') || '[]')
+        trackers: (typeof TrackerEngine !== 'undefined') ? TrackerEngine.getTrackers() : JSON.parse(localStorage.getItem('tesseract_trackers') || '[]'),
+        screentime: (typeof ScreentimeEngine !== 'undefined') ? ScreentimeEngine.data : JSON.parse(localStorage.getItem('tesseract_screentime_data') || '{}')
       };
 
       // Encrypt with native AES-256-GCM
@@ -807,7 +808,8 @@ const SyncEngine = {
         backlogs: (typeof BacklogEngine !== 'undefined') ? BacklogEngine.items : JSON.parse(localStorage.getItem('tesseract_backlog_data') || '[]'),
         pulse: (typeof PulseEngine !== 'undefined') ? PulseEngine.entries : JSON.parse(localStorage.getItem('tesseract_pulse_data') || '[]'),
         docket: (typeof DocketEngine !== 'undefined') ? DocketEngine.items : JSON.parse(localStorage.getItem('tesseract_docket_data') || '[]'),
-        trackers: (typeof TrackerEngine !== 'undefined') ? TrackerEngine.getTrackers() : JSON.parse(localStorage.getItem('tesseract_trackers') || '[]')
+        trackers: (typeof TrackerEngine !== 'undefined') ? TrackerEngine.getTrackers() : JSON.parse(localStorage.getItem('tesseract_trackers') || '[]'),
+        screentime: (typeof ScreentimeEngine !== 'undefined') ? ScreentimeEngine.data : JSON.parse(localStorage.getItem('tesseract_screentime_data') || '{}')
       };
       localStorage.setItem('tesseract_pre_sync_safety_backup', JSON.stringify(snapshot));
     } catch (e) {
@@ -1025,6 +1027,15 @@ const SyncEngine = {
       // 12. Routine & Cadence Trackers
       if (Array.isArray(data.trackers)) {
         localStorage.setItem('tesseract_trackers', JSON.stringify(data.trackers));
+      }
+
+      // 13. Digital Wellbeing Screen Time
+      if (data.screentime && typeof data.screentime === 'object') {
+        localStorage.setItem('tesseract_screentime_data', JSON.stringify(data.screentime));
+        if (typeof ScreentimeEngine !== 'undefined') {
+          ScreentimeEngine.load();
+          ScreentimeEngine.renderWidget();
+        }
       }
 
       // 9. Re-render UI views dynamically
