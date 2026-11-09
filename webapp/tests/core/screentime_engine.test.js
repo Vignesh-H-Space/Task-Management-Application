@@ -26,6 +26,7 @@ describe('Digital Wellbeing & Screen Time Engine Tests', () => {
   beforeEach(() => {
     global.localStorage.clear();
     global.__lastAwardedXP = null;
+    ScreentimeEngine.selectedDate = null;
     ScreentimeEngine.init();
   });
 
@@ -104,6 +105,65 @@ describe('Digital Wellbeing & Screen Time Engine Tests', () => {
     assert.strictEqual(chess.minutes, 50);
     const linkedin = todayData.apps.find(a => a.name === 'LinkedIn');
     assert.strictEqual(linkedin.minutes, 60);
+  });
+
+  it('navigates dates backward and forward properly', () => {
+    const today = ScreentimeEngine.getToday();
+    assert.strictEqual(ScreentimeEngine.selectedDate, today);
+
+    // Navigate to yesterday
+    ScreentimeEngine.navigateDate(-1);
+    const yesterday = ScreentimeEngine.selectedDate;
+    assert.notStrictEqual(yesterday, today);
+
+    // Quick adjust on yesterday
+    ScreentimeEngine.quickAdjustApp('app_chess', 40);
+    const yesterdayData = ScreentimeEngine.getDateData(yesterday);
+    assert.strictEqual(yesterdayData.totalMinutes, 40);
+
+    // Jump back to today
+    ScreentimeEngine.goToToday();
+    assert.strictEqual(ScreentimeEngine.selectedDate, today);
+    assert.strictEqual(ScreentimeEngine.getTodayData().totalMinutes, 0); // Today is independent!
+  });
+
+  it('calculates range dates for 7d, 30d, and 90d (up to 3 months)', () => {
+    const dates7 = ScreentimeEngine.getRangeDates('7d');
+    assert.strictEqual(dates7.length, 7);
+    assert.strictEqual(dates7[dates7.length - 1], ScreentimeEngine.getToday());
+
+    const dates30 = ScreentimeEngine.getRangeDates('30d');
+    assert.strictEqual(dates30.length, 30);
+
+    const dates90 = ScreentimeEngine.getRangeDates('90d');
+    assert.strictEqual(dates90.length, 90);
+  });
+
+  it('retains history for up to 120 days and prunes older entries safely', () => {
+    // Populate an entry from 40 days ago, 85 days ago, and 150 days ago
+    const now = new Date();
+    const d40 = new Date(now.getTime() - 40 * 86400000).toISOString().split('T')[0];
+    const d85 = new Date(now.getTime() - 85 * 86400000).toISOString().split('T')[0];
+    const d150 = new Date(now.getTime() - 150 * 86400000).toISOString().split('T')[0];
+
+    ScreentimeEngine.data.history[d40] = { totalMinutes: 120, apps: [] };
+    ScreentimeEngine.data.history[d85] = { totalMinutes: 90, apps: [] };
+    ScreentimeEngine.data.history[d150] = { totalMinutes: 200, apps: [] };
+
+    ScreentimeEngine.pruneOldData(120);
+
+    assert.ok(ScreentimeEngine.data.history[d40], '40-day data must be preserved (> 1 month)');
+    assert.ok(ScreentimeEngine.data.history[d85], '85-day data must be preserved (> 50 days, within 3 months)');
+    assert.strictEqual(ScreentimeEngine.data.history[d150], undefined, '150-day data should be pruned (> 120 days)');
+  });
+
+  it('generates responsive SVG chart with goal markers', () => {
+    const svg7 = ScreentimeEngine.renderTrendChartSVG('7d');
+    assert.ok(svg7.includes('<svg'), 'SVG chart should be generated');
+    assert.ok(svg7.includes('Goal ('), 'Goal marker should be included');
+
+    const svg90 = ScreentimeEngine.renderTrendChartSVG('90d');
+    assert.ok(svg90.includes('<svg'), '90-day SVG chart should be generated');
   });
 
   it('persists data across reloads via localStorage', () => {

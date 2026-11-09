@@ -2970,3 +2970,227 @@
   align-items: center;
   gap: 12px;
 }
+
+
+/* ── Screen Time Date Navigation & Multi-Month Trend Chart ── */
+.screentime-viewing-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 2px 7px;
+  border-radius: 8px;
+}
+
+.screentime-date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.screentime-date-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.screentime-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.screentime-nav-btn:hover {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+  border-color: var(--accent-border);
+}
+
+.screentime-nav-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.screentime-date-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  position: relative;
+}
+
+.screentime-date-display svg {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-primary);
+}
+
+.screentime-date-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.screentime-date-picker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.screentime-date-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Screen Time Multi-Month Chart Section */
+.screentime-chart-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.screentime-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.screentime-chart-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.screentime-chart-title svg {
+  width: 15px;
+  height: 15px;
+  color: var(--accent-primary);
+}
+
+.screentime-chart-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  display: block;
+}
+
+.screentime-range-switcher {
+  display: flex;
+  background: var(--bg-input);
+  border-radius: 8px;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.screentime-range-switcher .segment {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.screentime-range-switcher .segment.active {
+  background: var(--accent-primary);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.screentime-trend-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background: var(--bg-card);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 650px) {
+  .screentime-trend-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.screentime-trend-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.screentime-trend-stat .trend-stat-val {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.screentime-trend-stat .trend-stat-lbl {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
+.screentime-chart-canvas {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+}
+
+.screentime-svg-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.screentime-chart-bar-group rect {
+  transition: opacity 0.2s ease, transform 0.2s ease, stroke-width 0.2s ease;
+}
+
+.screentime-chart-bar-group:hover rect {
+  opacity: 1 !important;
+  filter: brightness(1.15);
+}
