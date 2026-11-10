@@ -21,6 +21,34 @@ const DEFAULT_SCREENTIME_DATA = {
   history: {}
 };
 
+const PACKAGE_NAME_MAP = {
+  'com.chess': { name: 'Chess Game', icon: '♟️', category: 'Focus / Mind' },
+  'com.chess.android': { name: 'Chess Game', icon: '♟️', category: 'Focus / Mind' },
+  'org.lichess.mobileapp': { name: 'Lichess', icon: '♟️', category: 'Focus / Mind' },
+  'com.linkedin.android': { name: 'LinkedIn', icon: '💼', category: 'Career' },
+  'com.whatsapp': { name: 'WhatsApp', icon: '💬', category: 'Communication' },
+  'com.google.android.youtube': { name: 'YouTube', icon: '▶️', category: 'Media' },
+  'com.android.chrome': { name: 'Chrome / Web', icon: '🌐', category: 'Research' },
+  'com.instagram.android': { name: 'Instagram', icon: '📸', category: 'Social' },
+  'com.twitter.android': { name: 'X / Twitter', icon: '🐦', category: 'Social' },
+  'org.telegram.messenger': { name: 'Telegram', icon: '✈️', category: 'Communication' },
+  'com.reddit.frontpage': { name: 'Reddit', icon: '🤖', category: 'Media' },
+  'com.spotify.music': { name: 'Spotify', icon: '🎵', category: 'Media' },
+  'com.amazon.kindle': { name: 'Kindle', icon: '📖', category: 'Reading' },
+  'com.google.android.gm': { name: 'Gmail', icon: '✉️', category: 'Productivity' },
+  'com.slack': { name: 'Slack', icon: '💬', category: 'Work' }
+};
+
+const SYSTEM_PACKAGES_IGNORE = [
+  'android',
+  'com.android.systemui',
+  'com.google.android.gms',
+  'com.google.android.googlequicksearchbox',
+  'com.android.vending',
+  'com.sec.android.app.launcher',
+  'com.google.android.apps.nexuslauncher'
+];
+
 const ScreentimeEngine = {
   data: {
     dailyGoalMinutes: 180,
@@ -45,7 +73,38 @@ const ScreentimeEngine = {
     if (!this.selectedDate) {
       this.selectedDate = this.getToday();
     }
+    this.checkUrlImport();
     this.renderWidget();
+  },
+
+  checkUrlImport() {
+    if (typeof window === 'undefined' || !window.location || !window.location.search) return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const stParam = urlParams.get('screentime') || urlParams.get('st');
+      if (stParam) {
+        let payload = null;
+        try {
+          payload = JSON.parse(decodeURIComponent(stParam));
+        } catch (e1) {
+          try {
+            payload = JSON.parse(atob(stParam));
+          } catch (e2) {
+            console.warn('[ScreentimeEngine] URL param parse failed', e1, e2);
+          }
+        }
+        if (payload) {
+          this.importFromPayload(payload);
+          const cleanUrl = window.location.pathname + window.location.hash;
+          window.history.replaceState(null, '', cleanUrl);
+          if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
+            Components.showToast('📱 Auto-imported screen time from mobile bridge!', 'success');
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[ScreentimeEngine] URL import error:', e);
+    }
   },
 
   load() {
@@ -274,6 +333,30 @@ const ScreentimeEngine = {
     this.renderWidget();
   },
 
+  cleanPackageName(pkg) {
+    if (!pkg) return 'Unknown App';
+    if (PACKAGE_NAME_MAP[pkg]) return PACKAGE_NAME_MAP[pkg].name;
+    const parts = pkg.split('.').filter(p => !['com', 'org', 'net', 'io', 'android', 'app', 'mobile'].includes(p.toLowerCase()));
+    if (parts.length > 0) {
+      const main = parts[parts.length - 1] || parts[0];
+      return main.charAt(0).toUpperCase() + main.slice(1);
+    }
+    return pkg;
+  },
+
+  resolveAppMeta(rawName) {
+    const pkg = (rawName || '').toLowerCase().trim();
+    if (PACKAGE_NAME_MAP[pkg]) {
+      return PACKAGE_NAME_MAP[pkg];
+    }
+    const cleanName = this.cleanPackageName(pkg);
+    return {
+      name: cleanName,
+      icon: '📱',
+      category: 'App'
+    };
+  },
+
   importFromPayload(payload) {
     if (!payload || typeof payload !== 'object') {
       throw new Error('Invalid payload: expected JSON object');
@@ -295,11 +378,32 @@ const ScreentimeEngine = {
     this.ensureDate(date);
     const target = this.data.history[date];
 
-    if (Array.isArray(payload.apps)) {
-      payload.apps.forEach(incoming => {
-        if (!incoming.name) return;
-        const incId = incoming.id || ('app_' + incoming.name.toLowerCase().replace(/[^a-z0-9]/g, '_'));
-        const existing = target.apps.find(a => a.id === incId || a.name.toLowerCase() === incoming.name.toLowerCase());
+    // Allow apps to be either an Array or an Object/Dictionary of { "pkg_or_name": minutes }
+    let rawApps = payload.apps;
+    if (!rawApps && typeof payload === 'object') {
+      const keys = Object.keys(payload).filter(k => !['date', 'totalMinutes', 'dailyGoalMinutes', 'history'].includes(k));
+      if (keys.length > 0 && typeof payload[keys[0]] === 'number') {
+        rawApps = payload;
+      }
+    }
+
+    if (rawApps && typeof rawApps === 'object' && !Array.isArray(rawApps)) {
+      rawApps = Object.entries(rawApps).map(([k, v]) => ({
+        name: k,
+        minutes: typeof v === 'number' ? v : (v && v.minutes ? v.minutes : 0)
+      }));
+    }
+
+    if (Array.isArray(rawApps)) {
+      rawApps.forEach(incoming => {
+        if (!incoming || !incoming.name) return;
+        const rawKey = incoming.name.trim();
+        if (SYSTEM_PACKAGES_IGNORE.includes(rawKey.toLowerCase())) return;
+
+        const meta = this.resolveAppMeta(rawKey);
+        const appName = incoming.displayName || (meta.name !== 'Unknown App' ? meta.name : rawKey);
+        const incId = incoming.id || ('app_' + appName.toLowerCase().replace(/[^a-z0-9]/g, '_'));
+        const existing = target.apps.find(a => a.id === incId || a.name.toLowerCase() === appName.toLowerCase());
         const mins = Math.max(0, parseInt(incoming.minutes, 10) || 0);
 
         if (existing) {
@@ -309,10 +413,10 @@ const ScreentimeEngine = {
         } else {
           target.apps.push({
             id: incId,
-            name: incoming.name,
-            icon: incoming.icon || '📱',
+            name: appName,
+            icon: incoming.icon || meta.icon || '📱',
             minutes: mins,
-            category: incoming.category || 'App'
+            category: incoming.category || meta.category || 'App'
           });
         }
       });

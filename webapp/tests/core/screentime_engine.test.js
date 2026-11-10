@@ -107,6 +107,42 @@ describe('Digital Wellbeing & Screen Time Engine Tests', () => {
     assert.strictEqual(linkedin.minutes, 60);
   });
 
+  it('dynamically imports Android usage stats dictionary and resolves package names without manual configuration', () => {
+    // Dynamic raw dictionary from Android / MacroDroid
+    const rawAndroidDict = {
+      'com.whatsapp': 45,
+      'com.chess': 35,
+      'com.duolingo': 20, // Future unknown app
+      'com.android.systemui': 100 // System background to ignore
+    };
+
+    const res = ScreentimeEngine.importFromPayload(rawAndroidDict);
+    assert.strictEqual(res, true);
+
+    const todayData = ScreentimeEngine.getTodayData();
+    // System UI must be filtered out
+    assert.strictEqual(todayData.apps.some(a => a.name.includes('systemui')), false);
+
+    // Mapped apps
+    const whatsapp = todayData.apps.find(a => a.name === 'WhatsApp');
+    assert.ok(whatsapp);
+    assert.strictEqual(whatsapp.minutes, 45);
+    assert.strictEqual(whatsapp.icon, '💬');
+
+    const chess = todayData.apps.find(a => a.name === 'Chess Game');
+    assert.ok(chess);
+    assert.strictEqual(chess.minutes, 35);
+    assert.strictEqual(chess.icon, '♟️');
+
+    // Future newly installed app is dynamically resolved!
+    const duolingo = todayData.apps.find(a => a.name.toLowerCase().includes('duolingo'));
+    assert.ok(duolingo, 'Newly installed app should be dynamically tracked');
+    assert.strictEqual(duolingo.minutes, 20);
+
+    // Total minutes recalculated: 45 + 35 + 20 = 100
+    assert.strictEqual(todayData.totalMinutes, 100);
+  });
+
   it('navigates dates backward and forward properly', () => {
     const today = ScreentimeEngine.getToday();
     assert.strictEqual(ScreentimeEngine.selectedDate, today);
@@ -175,5 +211,34 @@ describe('Digital Wellbeing & Screen Time Engine Tests', () => {
     const todayData = ScreentimeEngine.getTodayData();
     const linkedin = todayData.apps.find(a => a.id === 'app_linkedin');
     assert.strictEqual(linkedin.minutes, 40);
+  });
+
+  it('imports data from URL search parameters if opened via mobile bridge', () => {
+    const today = ScreentimeEngine.getToday();
+    const payload = {
+      date: today,
+      totalMinutes: 135,
+      apps: [{ name: 'Chess Game', minutes: 60, icon: '♟️' }]
+    };
+    const param = encodeURIComponent(JSON.stringify(payload));
+
+    global.window = {
+      location: {
+        search: `?st=${param}`,
+        pathname: '/index.html',
+        hash: ''
+      },
+      history: {
+        replaceState: () => {}
+      }
+    };
+
+    ScreentimeEngine.checkUrlImport();
+    const todayData = ScreentimeEngine.getTodayData();
+    assert.strictEqual(todayData.totalMinutes, 135);
+    const chess = todayData.apps.find(a => a.name === 'Chess Game');
+    assert.strictEqual(chess.minutes, 60);
+
+    delete global.window;
   });
 });
