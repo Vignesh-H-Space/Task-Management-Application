@@ -300,6 +300,12 @@ const HabitsEngine = {
     const container = document.getElementById('habits-widget-container');
     if (!container) return;
 
+    if (typeof state !== 'undefined' && state.activeHorizon && state.activeHorizon !== 'daily') {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = 'block';
+
     const esc = typeof escapeHTML === 'function' 
       ? escapeHTML 
       : (s => (s ? String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])) : ''));
