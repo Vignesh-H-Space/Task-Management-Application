@@ -78,25 +78,43 @@ const ScreentimeEngine = {
   },
 
   checkUrlImport() {
-    if (typeof window === 'undefined' || !window.location || !window.location.search) return;
+    if (typeof window === 'undefined') return;
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const stParam = urlParams.get('screentime') || urlParams.get('st');
+      let stParam = null;
+      if (window.location && window.location.search) {
+        const urlParams = new URLSearchParams(window.location.search);
+        stParam = urlParams.get('screentime') || urlParams.get('st');
+      }
+
+      // Also check if stashed before password authentication redirect
+      if (!stParam && typeof localStorage !== 'undefined') {
+        stParam = localStorage.getItem('tesseract_pending_screentime');
+        if (stParam) {
+          localStorage.removeItem('tesseract_pending_screentime');
+        }
+      }
+
       if (stParam) {
         let payload = null;
         try {
           payload = JSON.parse(decodeURIComponent(stParam));
         } catch (e1) {
           try {
-            payload = JSON.parse(atob(stParam));
+            payload = JSON.parse(stParam);
           } catch (e2) {
-            console.warn('[ScreentimeEngine] URL param parse failed', e1, e2);
+            try {
+              payload = JSON.parse(atob(stParam));
+            } catch (e3) {
+              console.warn('[ScreentimeEngine] URL param parse failed', e1, e2, e3);
+            }
           }
         }
         if (payload) {
           this.importFromPayload(payload);
-          const cleanUrl = window.location.pathname + window.location.hash;
-          window.history.replaceState(null, '', cleanUrl);
+          if (window.location && window.history && window.history.replaceState) {
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState(null, '', cleanUrl);
+          }
           if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
             Components.showToast('📱 Auto-imported screen time from mobile bridge!', 'success');
           }

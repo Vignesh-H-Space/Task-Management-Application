@@ -242,6 +242,13 @@ const AuthEngine = {
     }
 
     if (this.isSetup() && !this.isAuthenticated()) {
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const st = p.get('st') || p.get('screentime');
+        if (st) localStorage.setItem('tesseract_pending_screentime', st);
+      } catch (e) {
+        console.warn('Failed to stash pending screentime in auth_engine', e);
+      }
       const currentUrl = window.location.pathname + window.location.search;
       const redirectParam = encodeURIComponent(currentUrl);
       window.location.replace(`login.html?redirect=${redirectParam}`);
