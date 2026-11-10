@@ -943,8 +943,18 @@ function renderAll() {
     } else {
       renderTaskList();
     }
-    if (typeof HabitsEngine !== 'undefined') HabitsEngine.renderWidget();
-    if (typeof ScreentimeEngine !== 'undefined') ScreentimeEngine.renderWidget();
+    // Habits & Digital Wellbeing Screen Time only appear when Daily horizon is selected
+    const isDaily = state.activeHorizon === 'daily';
+    const habitsEl = document.getElementById('habits-widget-container');
+    const screentimeEl = document.getElementById('screentime-widget-container');
+
+    if (habitsEl) habitsEl.style.display = isDaily ? 'block' : 'none';
+    if (screentimeEl) screentimeEl.style.display = isDaily ? 'block' : 'none';
+
+    if (isDaily) {
+      if (typeof HabitsEngine !== 'undefined') HabitsEngine.renderWidget();
+      if (typeof ScreentimeEngine !== 'undefined') ScreentimeEngine.renderWidget();
+    }
     if (typeof RitualsEngine !== 'undefined') RitualsEngine.renderMorningBanner();
   } else if (page === 'cascade') {
     renderCascadeView();

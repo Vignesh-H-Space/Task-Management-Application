@@ -644,6 +644,12 @@ const ScreentimeEngine = {
     const container = document.getElementById('screentime-widget-container');
     if (!container) return;
 
+    if (typeof state !== 'undefined' && state.activeHorizon && state.activeHorizon !== 'daily') {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = 'block';
+
     const todayStr = this.getToday();
     const activeDate = this.selectedDate || todayStr;
     const isToday = activeDate === todayStr;
