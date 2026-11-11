@@ -108,6 +108,15 @@ const ScreentimeEngine = {
         stParam = hashParams.get('screentime') || hashParams.get('st');
       }
 
+      // Fallback regex in case URLSearchParams missed unencoded characters
+      if (!stParam && typeof window !== 'undefined' && window.location) {
+        const fullHref = window.location.href || '';
+        const match = fullHref.match(/[?&#](?:screentime|st)=([^&#]+)/);
+        if (match && match[1]) {
+          stParam = match[1];
+        }
+      }
+
       // Also check if stashed before password authentication redirect
       if (!stParam && typeof localStorage !== 'undefined') {
         stParam = localStorage.getItem('tesseract_pending_screentime');
@@ -121,7 +130,9 @@ const ScreentimeEngine = {
       // Handle unpopulated MacroDroid template string
       if (stParam === '{lv=all_apps}' || stParam === 'all_apps' || stParam === '[screen_on_time_minutes]') {
         console.warn('[ScreentimeEngine] MacroDroid variable was not populated:', stParam);
-        if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
+        if (typeof showToast === 'function') {
+          showToast('⚠️ Mobile data was empty. MacroDroid variable needs setup.', 'warning');
+        } else if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
           Components.showToast('⚠️ Mobile data was empty. MacroDroid variable needs setup.', 'warning');
         }
         return;
@@ -137,20 +148,41 @@ const ScreentimeEngine = {
           try {
             payload = JSON.parse(atob(stParam));
           } catch (e3) {
-            console.warn('[ScreentimeEngine] URL param parse failed', e1, e2, e3);
+            try {
+              payload = JSON.parse(atob(decodeURIComponent(stParam)));
+            } catch (e4) {
+              console.warn('[ScreentimeEngine] URL param parse failed', e1, e2, e3, e4);
+            }
           }
         }
       }
 
       if (payload) {
         this.importFromPayload(payload);
+        if (typeof state !== 'undefined') {
+          state.activeHorizon = 'daily';
+          if (typeof syncHorizonUI === 'function') syncHorizonUI();
+        }
+        if (typeof switchHorizon === 'function') {
+          switchHorizon('daily');
+        }
+        const screentimeEl = document.getElementById('screentime-widget-container');
+        if (screentimeEl) screentimeEl.style.display = 'block';
+        const habitsEl = document.getElementById('habits-widget-container');
+        if (habitsEl) habitsEl.style.display = 'block';
+        if (typeof HabitsEngine !== 'undefined') HabitsEngine.renderWidget();
         this.renderWidget();
+
         if (window.location && window.history && window.history.replaceState) {
           const cleanUrl = window.location.pathname + (window.location.hash && !window.location.hash.includes('st=') ? window.location.hash : '');
           window.history.replaceState(null, '', cleanUrl);
         }
-        if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
-          Components.showToast('📱 Auto-imported screen time from mobile bridge!', 'success');
+
+        const toastMsg = `📱 Mobile Screen Time Imported: ${this.formatDuration(payload.totalMinutes || 0)} today!`;
+        if (typeof showToast === 'function') {
+          showToast(toastMsg, 'success');
+        } else if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
+          Components.showToast(toastMsg, 'success');
         }
       }
     } catch (e) {

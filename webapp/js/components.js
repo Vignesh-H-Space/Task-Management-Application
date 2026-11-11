@@ -50,6 +50,17 @@ const Components = {
   },
 
   /**
+   * Display toast notification (proxies to global showToast)
+   */
+  showToast(message, type = 'info') {
+    if (typeof showToast === 'function') {
+      showToast(message, type);
+    } else {
+      console.log(`[Toast ${type}] ${message}`);
+    }
+  },
+
+  /**
    * Update theme toggle button tooltips and icon states across header and sidebar
    */
   updateThemeUI(theme) {

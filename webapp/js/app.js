@@ -53,8 +53,13 @@ function init() {
   const urlParams = new URLSearchParams(window.location.search);
   const horizonParam = urlParams.get('horizon');
   const actionParam = urlParams.get('action');
+  const hasScreenTimeParam = urlParams.has('st') || urlParams.has('screentime') ||
+    (window.location.hash && (window.location.hash.includes('st=') || window.location.hash.includes('screentime='))) ||
+    (typeof localStorage !== 'undefined' && localStorage.getItem('tesseract_pending_screentime'));
   if (horizonParam && ['general', 'daily', 'weekly', 'monthly', 'quarterly', 'annual', 'all'].includes(horizonParam)) {
     state.activeHorizon = horizonParam;
+  } else if (hasScreenTimeParam) {
+    state.activeHorizon = 'daily';
   }
 
   // Inject shared layout components
@@ -110,6 +115,7 @@ function init() {
 
   if (page === 'index') {
     switchView(state.viewMode || 'flight_plan');
+    renderAll();
   } else {
     renderAll();
   }
