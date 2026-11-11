@@ -166,10 +166,12 @@ const ScreentimeEngine = {
         if (typeof switchHorizon === 'function') {
           switchHorizon('daily');
         }
-        const screentimeEl = document.getElementById('screentime-widget-container');
-        if (screentimeEl) screentimeEl.style.display = 'block';
-        const habitsEl = document.getElementById('habits-widget-container');
-        if (habitsEl) habitsEl.style.display = 'block';
+        if (typeof document !== 'undefined') {
+          const screentimeEl = document.getElementById('screentime-widget-container');
+          if (screentimeEl) screentimeEl.style.display = 'block';
+          const habitsEl = document.getElementById('habits-widget-container');
+          if (habitsEl) habitsEl.style.display = 'block';
+        }
         if (typeof HabitsEngine !== 'undefined') HabitsEngine.renderWidget();
         this.renderWidget();
 
