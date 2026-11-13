@@ -21985,27 +21985,48 @@ html[data-theme="light"] body,
 /* Responsive Behavior */
 @media (max-width: 960px) {
   .flight-mobile-nav {
-    display: flex;
+    display: flex !important;
   }
 
   .flight-plan-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .flight-col {
+    min-height: auto !important;
+    padding: 14px !important;
   }
 
   .flight-plan-grid.flight-tab-yesterday .flight-col-today,
   .flight-plan-grid.flight-tab-yesterday .flight-col-tomorrow {
-    display: none;
+    display: none !important;
   }
 
   .flight-plan-grid.flight-tab-today .flight-col-yesterday,
   .flight-plan-grid.flight-tab-today .flight-col-tomorrow {
-    display: none;
+    display: none !important;
   }
 
   .flight-plan-grid.flight-tab-tomorrow .flight-col-yesterday,
   .flight-plan-grid.flight-tab-tomorrow .flight-col-today {
-    display: none;
+    display: none !important;
   }
+}
+
+.flight-add-btn {
+  padding: 4px 10px;
+  font-weight: 600;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.flight-empty-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
 
 
