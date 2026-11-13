@@ -678,7 +678,7 @@ const ScreentimeEngine = {
     const container = document.getElementById('screentime-widget-container');
     if (!container) return;
 
-    if (typeof state !== 'undefined' && state.activeHorizon && state.activeHorizon !== 'daily') {
+    if (typeof state !== 'undefined' && state.activeHorizon && state.activeHorizon !== 'general' && state.activeHorizon !== 'daily') {
       container.style.display = 'none';
       return;
     }

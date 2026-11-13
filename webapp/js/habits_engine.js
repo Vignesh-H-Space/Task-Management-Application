@@ -300,7 +300,7 @@ const HabitsEngine = {
     const container = document.getElementById('habits-widget-container');
     if (!container) return;
 
-    if (typeof state !== 'undefined' && state.activeHorizon && state.activeHorizon !== 'daily') {
+    if (typeof state !== 'undefined' && state.activeHorizon && state.activeHorizon !== 'general' && state.activeHorizon !== 'daily') {
       container.style.display = 'none';
       return;
     }

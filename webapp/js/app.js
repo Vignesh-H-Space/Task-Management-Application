@@ -970,14 +970,14 @@ function renderAll() {
       renderTaskList();
     }
     // Habits & Digital Wellbeing Screen Time only appear when Daily horizon is selected
-    const isDaily = state.activeHorizon === 'daily';
+    const isHomeOrDaily = state.activeHorizon === 'general' || state.activeHorizon === 'daily';
     const habitsEl = document.getElementById('habits-widget-container');
     const screentimeEl = document.getElementById('screentime-widget-container');
 
-    if (habitsEl) habitsEl.style.display = isDaily ? 'block' : 'none';
-    if (screentimeEl) screentimeEl.style.display = isDaily ? 'block' : 'none';
+    if (habitsEl) habitsEl.style.display = isHomeOrDaily ? 'block' : 'none';
+    if (screentimeEl) screentimeEl.style.display = isHomeOrDaily ? 'block' : 'none';
 
-    if (isDaily) {
+    if (isHomeOrDaily) {
       if (typeof HabitsEngine !== 'undefined') HabitsEngine.renderWidget();
       if (typeof ScreentimeEngine !== 'undefined') ScreentimeEngine.renderWidget();
     }
