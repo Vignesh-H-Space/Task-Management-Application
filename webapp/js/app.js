@@ -46,6 +46,7 @@ window.STORAGE_KEY = STORAGE_KEY;
 function init() {
   loadTheme();
   loadData();
+  checkDailyTasksRollover(false);
   loadStreak();
   loadProfile();
 
@@ -124,6 +125,21 @@ function init() {
   lucide.createIcons();
   initPwaInstallPrompt();
   updateAppBadge();
+
+  if (typeof window !== 'undefined' && !window._rolloverListenersAttached) {
+    window._rolloverListenersAttached = true;
+    window.addEventListener('visibilitychange', () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        checkDailyTasksRollover(false);
+      }
+    });
+    window.addEventListener('focus', () => {
+      checkDailyTasksRollover(false);
+    });
+    setInterval(() => {
+      checkDailyTasksRollover(false);
+    }, 60000);
+  }
 
   // Handle Quick Action shortcuts from PWA manifest or launcher links
   if (actionParam) {
@@ -303,10 +319,14 @@ function checkDailyTasksRollover(force = false) {
         hasChanges = true;
       }
     } else {
-      // Uncompleted daily task from a prior day: rollover dueDate to today
-      if (task.dueDate && task.dueDate < todayStr) {
+      // Uncompleted daily task from a prior day or unassigned: rollover dueDate to today
+      if (!task.dueDate || task.dueDate < todayStr) {
         task.dueDate = todayStr;
         rolledOverCount++;
+        hasChanges = true;
+      }
+      if (!task.kanbanStatus || task.kanbanStatus === 'backlog' || task.kanbanStatus === 'done') {
+        task.kanbanStatus = 'todo';
         hasChanges = true;
       }
     }

@@ -208,6 +208,9 @@ const FlightPlanView = {
               <div class="flight-today-metric">
                 <span class="flight-metric-text">${todayDone}/${todayTotal} done</span>
                 <span class="flight-metric-pct">${todayPct}%</span>
+                <button type="button" class="btn btn-ghost btn-xs" onclick="if(typeof refreshDailyTasks==='function') refreshDailyTasks(true);" title="Reset & refresh daily tasks for today" style="margin-left: 6px; padding: 2px 6px;">
+                  <i data-lucide="rotate-ccw" style="width: 12px; height: 12px;"></i>
+                </button>
               </div>
             </div>
 
@@ -234,10 +237,16 @@ const FlightPlanView = {
                 <div class="flight-empty-state">
                   <span class="empty-emoji">🚀</span>
                   <p class="empty-title">Ready for Execution</p>
-                  <p class="empty-desc">Capture your top 3 high-leverage goals for today above.</p>
-                  <button type="button" class="btn btn-warning btn-xs" onclick="if(typeof VaultInspector!=='undefined') VaultInspector.restoreNov2Tasks();" style="margin-top: 10px;">
-                    <span>🔄 Recover Nov 2 Goals ("Trim Pubic" & "Dumbell Lift")</span>
-                  </button>
+                  <p class="empty-desc">Capture your top 3 high-leverage goals for today above, or refresh daily recurring routines.</p>
+                  <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                    <button type="button" class="btn btn-secondary btn-xs" onclick="if(typeof refreshDailyTasks==='function') refreshDailyTasks(true);">
+                      <i data-lucide="rotate-ccw" style="width: 12px; height: 12px; vertical-align: middle;"></i>
+                      <span>Refresh Daily Tasks</span>
+                    </button>
+                    <button type="button" class="btn btn-warning btn-xs" onclick="if(typeof VaultInspector!=='undefined') VaultInspector.restoreNov2Tasks();">
+                      <span>🔄 Recover Nov 2 Goals</span>
+                    </button>
+                  </div>
                 </div>
               `}
             </div>
