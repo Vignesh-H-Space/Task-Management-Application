@@ -3194,3 +3194,18 @@
   opacity: 1 !important;
   filter: brightness(1.15);
 }
+
+
+.screentime-delete-btn,
+.btn-screentime-delete {
+  color: var(--danger, #ef4444) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  transition: all 0.2s ease;
+}
+.screentime-delete-btn:hover,
+.btn-screentime-delete:hover {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: var(--danger, #ef4444) !important;
+  color: #dc2626 !important;
+}

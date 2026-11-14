@@ -215,6 +215,17 @@ const ScreentimeEngine = {
 
   save() {
     try {
+      const today = this.getToday();
+      if (this.data && this.data.history) {
+        Object.keys(this.data.history).forEach(dt => {
+          if (dt !== today) {
+            const rec = this.data.history[dt];
+            if (!rec || (rec.totalMinutes === 0 && (!rec.apps || rec.apps.every(a => (a.minutes || 0) === 0)))) {
+              delete this.data.history[dt];
+            }
+          }
+        });
+      }
       localStorage.setItem(SCREENTIME_STORAGE_KEY, JSON.stringify(this.data));
       if (typeof SyncEngine !== 'undefined' && typeof SyncEngine.queuePush === 'function') {
         SyncEngine.queuePush();
@@ -416,6 +427,60 @@ const ScreentimeEngine = {
     this.recalculateTotal(dateData);
     this.save();
     this.renderWidget();
+  },
+
+  async confirmDeleteDay(dateStr, fromModal = false) {
+    const targetDate = dateStr || this.selectedDate || this.getToday();
+    const formatted = this.formatDisplayDate(targetDate);
+
+    let confirmed = false;
+    if (typeof TesseractDialog !== 'undefined' && typeof TesseractDialog.confirm === 'function') {
+      confirmed = await TesseractDialog.confirm({
+        title: 'Delete Screen Time Data',
+        message: `Are you sure you want to delete all screen time and app usage data for ${formatted}? This will reset the day's record to zero.`,
+        confirmLabel: 'Delete Data',
+        cancelLabel: 'Cancel',
+        variant: 'danger'
+      });
+    } else {
+      confirmed = true;
+    }
+
+    if (!confirmed) return;
+
+    if (fromModal) {
+      this.closeModal('screentime-log-modal');
+    }
+
+    this.deleteDayData(targetDate);
+  },
+
+  deleteDayData(dateStr) {
+    const targetDate = dateStr || this.selectedDate || this.getToday();
+    const isToday = targetDate === this.getToday();
+
+    if (this.data && this.data.history) {
+      if (isToday) {
+        this.data.history[targetDate] = {
+          totalMinutes: 0,
+          apps: JSON.parse(JSON.stringify(DEFAULT_SCREENTIME_APPS)),
+          lastUpdated: new Date().toISOString()
+        };
+      } else {
+        delete this.data.history[targetDate];
+      }
+    }
+
+    this.save();
+    if (typeof document !== 'undefined') {
+      this.renderWidget();
+    }
+
+    const formatted = this.formatDisplayDate(targetDate);
+    if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
+      Components.showToast(`🗑️ Screen time data cleared for ${formatted}`, 'info');
+    }
+    return true;
   },
 
   cleanPackageName(pkg) {
@@ -776,6 +841,12 @@ const ScreentimeEngine = {
               <i data-lucide="smartphone"></i>
               <span>Auto-Bridge</span>
             </button>
+            ${hasData ? `
+            <button class="btn btn-secondary btn-sm screentime-delete-btn" onclick="ScreentimeEngine.confirmDeleteDay('${activeDate}')" title="Delete screen time for ${this.formatDisplayDate(activeDate)}">
+              <i data-lucide="trash-2"></i>
+              <span>Delete Day</span>
+            </button>
+            ` : ''}
           </div>
         </div>
 
@@ -799,6 +870,7 @@ const ScreentimeEngine = {
 
           <div class="screentime-date-quick-actions">
             ${!isToday ? `<button class="btn btn-secondary btn-xs" onclick="ScreentimeEngine.goToToday()"><i data-lucide="rotate-ccw"></i> Jump to Today</button>` : ''}
+            ${hasData ? `<button class="btn btn-secondary btn-xs screentime-delete-btn" onclick="ScreentimeEngine.confirmDeleteDay('${activeDate}')" title="Clear all screen time recorded on ${this.formatDisplayDate(activeDate)}"><i data-lucide="trash-2"></i> Clear Day Data</button>` : ''}
           </div>
         </div>
 
@@ -1069,9 +1141,17 @@ const ScreentimeEngine = {
             <button class="btn btn-secondary btn-xs" onclick="ScreentimeEngine.handleAddNewApp('${targetDate}')" style="width: 100%;">Add App</button>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 10px;">
-            <button class="btn btn-ghost btn-sm" onclick="ScreentimeEngine.closeModal('screentime-log-modal');">Cancel</button>
-            <button class="btn btn-primary btn-sm" onclick="ScreentimeEngine.saveLogModal('${targetDate}');">Save Screen Time</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%;">
+            ${(dateData.totalMinutes > 0 || (dateData.apps && dateData.apps.some(a => (a.minutes || 0) > 0))) ? `
+              <button type="button" class="btn btn-secondary btn-sm screentime-delete-btn" onclick="ScreentimeEngine.confirmDeleteDay('${targetDate}', true)" title="Delete screen time for this day">
+                <i data-lucide="trash-2"></i>
+                <span>Delete This Day</span>
+              </button>
+            ` : '<div></div>'}
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-ghost btn-sm" onclick="ScreentimeEngine.closeModal('screentime-log-modal');">Cancel</button>
+              <button class="btn btn-primary btn-sm" onclick="ScreentimeEngine.saveLogModal('${targetDate}');">Save Screen Time</button>
+            </div>
           </div>
         </div>
       </div>

@@ -241,4 +241,15 @@ describe('Digital Wellbeing & Screen Time Engine Tests', () => {
 
     delete global.window;
   });
+
+  it('deletes screen time data for a specific date and clears history', () => {
+    ScreentimeEngine.navigateDate(-1);
+    const yesterday = ScreentimeEngine.selectedDate;
+    ScreentimeEngine.quickAdjustApp('app_chess', 45, yesterday);
+    assert.strictEqual(ScreentimeEngine.getDateData(yesterday).totalMinutes, 45);
+
+    const res = ScreentimeEngine.deleteDayData(yesterday);
+    assert.strictEqual(res, true);
+    assert.strictEqual(ScreentimeEngine.data.history[yesterday], undefined);
+  });
 });
