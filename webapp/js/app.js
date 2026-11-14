@@ -927,10 +927,6 @@ function rotateMindsetPrinciple(isManual = false) {
   if (authorEl) authorEl.textContent = `— ${p.author}`;
   if (emojiEl) emojiEl.textContent = p.emoji;
 
-  if (isManual && typeof showToast === 'function') {
-    showToast(`💡 New Principle: ${p.category}`, 'info');
-  }
-
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
