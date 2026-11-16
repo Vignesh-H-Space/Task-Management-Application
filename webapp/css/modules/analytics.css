@@ -104,7 +104,7 @@
 .btn-report-current:hover {
   background: var(--accent-subtle-hover);
   border-color: var(--accent-primary);
-  color: #fef08a;
+  color: var(--text-primary);
 }
 
 .report-period-pill {
@@ -151,16 +151,48 @@
 }
 
 .btn-export-primary {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-  color: #08080a;
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: #ffffff !important;
   font-weight: 800;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+.btn-export-primary svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .btn-export-primary:hover {
-  background: var(--accent-primary);
+  background: var(--accent-primary-hover) !important;
+  border-color: var(--accent-primary-hover) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+.btn-export-primary.copied {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-export-primary.copied svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.btn-export-share {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-primary);
+}
+
+.btn-export-share:hover {
+  background: var(--accent-subtle-hover);
   border-color: var(--accent-primary);
-  color: #000;
+  color: var(--text-primary);
 }
 
 /* ── Header Banner ── */

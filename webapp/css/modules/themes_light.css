@@ -2203,3 +2203,213 @@ html[data-theme="light"] body,
 
 
 
+
+
+/* ── 20. Executive Reports & Export Suite (Light Theme) ── */
+[data-theme="light"] .report-toolbar {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .cadence-toggle-group {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .btn-cadence {
+  color: #475569;
+}
+
+[data-theme="light"] .btn-cadence:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .btn-cadence.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="light"] .btn-report-nav {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+[data-theme="light"] .btn-report-nav:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .btn-report-current {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #2563eb;
+}
+
+[data-theme="light"] .btn-report-current:hover {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .report-period-pill {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #2563eb;
+}
+
+[data-theme="light"] .btn-export-action {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+[data-theme="light"] .btn-export-action:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+[data-theme="light"] .btn-export-primary {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="light"] .btn-export-primary svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+[data-theme="light"] .btn-export-primary:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+[data-theme="light"] .btn-export-share {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #2563eb;
+}
+
+[data-theme="light"] .btn-export-share:hover {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .report-header-banner {
+  background: rgba(37, 99, 235, 0.04);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+[data-theme="light"] .report-banner-badge {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #2563eb;
+}
+
+[data-theme="light"] .report-banner-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .report-banner-meta {
+  color: #64748b;
+}
+
+[data-theme="light"] .report-kpi-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .report-kpi-card:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .report-kpi-card.gold {
+  background: rgba(37, 99, 235, 0.03);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="light"] .kpi-label {
+  color: #64748b;
+}
+
+[data-theme="light"] .kpi-value {
+  color: #0f172a;
+}
+
+[data-theme="light"] .kpi-sub {
+  color: #64748b;
+}
+
+[data-theme="light"] .kpi-progress-bar {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .report-chart-card,
+[data-theme="light"] .report-card-altitudes,
+[data-theme="light"] .report-card-insights,
+[data-theme="light"] .report-section-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .chart-title,
+[data-theme="light"] .report-section-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .chart-subtitle,
+[data-theme="light"] .report-section-sub {
+  color: #64748b;
+}
+
+[data-theme="light"] .report-ledger-row {
+  background: #f8fafc;
+  border-color: #f1f5f9;
+}
+
+[data-theme="light"] .report-ledger-row:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .ledger-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .ledger-meta {
+  color: #64748b;
+}
+
+[data-theme="light"] .heatmap-matrix-table {
+  background: #ffffff;
+}
+
+[data-theme="light"] .heatmap-header-row {
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .heatmap-data-row {
+  border-color: #f1f5f9;
+}
+
+[data-theme="light"] .habit-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .heatmap-cell.missed {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
