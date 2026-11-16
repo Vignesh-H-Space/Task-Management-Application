@@ -936,15 +936,62 @@ const ReportEngine = {
 
   copyMarkdown() {
     const md = this.generateMarkdown();
-    navigator.clipboard.writeText(md).then(() => {
+    const copyBtn = document.getElementById('btn-report-copy');
+
+    const setCopiedState = () => {
+      if (copyBtn) {
+        const originalContent = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i data-lucide="check"></i> <span>Copied!</span>';
+        copyBtn.classList.add('copied');
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        setTimeout(() => {
+          copyBtn.innerHTML = originalContent;
+          copyBtn.classList.remove('copied');
+          if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        }, 2000);
+      }
       if (typeof showToast === 'function') {
         showToast(`📋 Executive ${this.cadence} report copied to clipboard!`, 'success');
+      } else if (typeof Components !== 'undefined' && typeof Components.showToast === 'function') {
+        Components.showToast(`📋 Executive ${this.cadence} report copied to clipboard!`, 'success');
       }
-    }).catch(() => {
-      if (typeof showToast === 'function') {
-        showToast('Failed to copy report to clipboard.', 'error');
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).then(setCopiedState).catch(() => {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = md;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          setCopiedState();
+        } catch (e) {
+          if (typeof showToast === 'function') {
+            showToast('Failed to copy report to clipboard.', 'error');
+          }
+        }
+      });
+    } else {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = md;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        setCopiedState();
+      } catch (e) {
+        if (typeof showToast === 'function') {
+          showToast('Failed to copy report to clipboard.', 'error');
+        }
       }
-    });
+    }
   },
 
   printReport() {
