@@ -2492,3 +2492,48 @@
 .btn-signout:hover {
   background: rgba(239, 68, 68, 0.12) !important;
 }
+
+
+.login-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-top: 4px;
+}
+
+.login-status-badge.is-configured {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.login-status-badge.is-reset {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.login-status-badge svg {
+  width: 13px;
+  height: 13px;
+}
+
+.pass-match-hint {
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pass-match-hint.valid {
+  color: #10b981;
+}
+.pass-match-hint.invalid {
+  color: #f43f5e;
+}
