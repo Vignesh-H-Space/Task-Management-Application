@@ -49,6 +49,7 @@
         </div>
         <h1 class="login-brand-title">TESSERACT</h1>
         <p class="login-brand-tag">EXECUTIVE OS & MATRIX</p>
+        <div class="login-status-badge" id="login-status-badge" style="display: none;"></div>
       </div>
 
       <!-- Error / Alert Banner -->
@@ -68,7 +69,7 @@
           <label class="login-label" for="setup-username">Master Username</label>
           <div class="login-input-wrap">
             <i data-lucide="user" class="login-field-icon"></i>
-            <input type="text" id="setup-username" class="login-input" placeholder="Username" required autocomplete="username" autofocus>
+            <input type="text" id="setup-username" class="login-input" placeholder="Username" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus>
           </div>
         </div>
 
@@ -76,7 +77,7 @@
           <label class="login-label" for="setup-password">Master Password</label>
           <div class="login-input-wrap">
             <i data-lucide="lock" class="login-field-icon"></i>
-            <input type="password" id="setup-password" class="login-input" placeholder="Min. 6 characters" required autocomplete="new-password">
+            <input type="password" id="setup-password" class="login-input" placeholder="Min. 6 characters" required autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="checkSetupPassMatch()">
             <button type="button" class="login-pass-btn" onclick="togglePassVisibility('setup-password', this)" title="Show Password">
               <i data-lucide="eye"></i>
             </button>
@@ -87,7 +88,7 @@
           <label class="login-label" for="setup-confirm-password">Confirm Password</label>
           <div class="login-input-wrap">
             <i data-lucide="shield-check" class="login-field-icon"></i>
-            <input type="password" id="setup-confirm-password" class="login-input" placeholder="Re-enter master password" required autocomplete="new-password">
+            <input type="password" id="setup-confirm-password" class="login-input" placeholder="Re-enter master password" required autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="checkSetupPassMatch()">
             <button type="button" class="login-pass-btn" onclick="togglePassVisibility('setup-confirm-password', this)" title="Show Password">
               <i data-lucide="eye"></i>
             </button>
@@ -118,7 +119,7 @@
           <label class="login-label" for="login-username">Master Username</label>
           <div class="login-input-wrap">
             <i data-lucide="user" class="login-field-icon"></i>
-            <input type="text" id="login-username" class="login-input" placeholder="Enter username" required autocomplete="username" autofocus>
+            <input type="text" id="login-username" class="login-input" placeholder="Enter username" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus>
           </div>
         </div>
 
@@ -126,7 +127,7 @@
           <label class="login-label" for="login-password">Master Password</label>
           <div class="login-input-wrap">
             <i data-lucide="lock" class="login-field-icon"></i>
-            <input type="password" id="login-password" class="login-input" placeholder="Enter password" required autocomplete="current-password">
+            <input type="password" id="login-password" class="login-input" placeholder="Enter password" required autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
             <button type="button" class="login-pass-btn" onclick="togglePassVisibility('login-password', this)" title="Show Password">
               <i data-lucide="eye"></i>
             </button>
