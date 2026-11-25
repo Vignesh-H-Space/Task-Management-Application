@@ -1312,16 +1312,102 @@ if (typeof Components !== 'undefined' && typeof Components.initTheme === 'functi
   Components.initTheme();
 }
 
-// Register PWA Service Worker with Auto-Update
+// Register PWA Service Worker with Interactive "New Version Ready" Banner
+if (typeof Components !== 'undefined') {
+  Components.showUpdateBanner = function(waitingWorker) {
+    if (typeof document === 'undefined' || !waitingWorker) return;
+    if (document.getElementById('pwa-update-banner')) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'pwa-update-banner';
+    banner.className = 'pwa-update-banner';
+    banner.setAttribute('role', 'status');
+    banner.innerHTML = `
+      <div class="pwa-update-content">
+        <span class="pwa-update-icon">✨</span>
+        <div class="pwa-update-text">
+          <span class="pwa-update-title">New Version Ready</span>
+          <span class="pwa-update-sub">Tap to load the latest updates</span>
+        </div>
+      </div>
+      <div class="pwa-update-actions">
+        <button type="button" class="pwa-update-btn" id="pwa-update-now-btn">Refresh</button>
+        <button type="button" class="pwa-update-dismiss" id="pwa-update-dismiss-btn" aria-label="Dismiss update">&times;</button>
+      </div>
+    `;
+
+    document.body.appendChild(banner);
+
+    const refreshBtn = document.getElementById('pwa-update-now-btn');
+    const dismissBtn = document.getElementById('pwa-update-dismiss-btn');
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = 'Updating...';
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      });
+    }
+
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        banner.remove();
+      });
+    }
+  };
+}
+
 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  let swRegistration = null;
+  let lastUpdateCheck = 0;
+
+  const promptIfWaiting = (reg) => {
+    if (reg && reg.waiting && navigator.serviceWorker.controller) {
+      if (typeof Components !== 'undefined' && typeof Components.showUpdateBanner === 'function') {
+        Components.showUpdateBanner(reg.waiting);
+      }
+    }
+  };
+
+  const checkForSwUpdate = () => {
+    const now = Date.now();
+    if (!swRegistration || now - lastUpdateCheck < 60000) return;
+    lastUpdateCheck = now;
+    swRegistration.update().catch((err) => {
+      console.warn('[PWA] Update check failed:', err);
+    });
+  };
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then((reg) => {
+        swRegistration = reg;
+        lastUpdateCheck = Date.now();
         console.log('Tesseract PWA Service Worker Registered:', reg.scope);
-        if (reg) reg.update().catch(() => {});
+
+        promptIfWaiting(reg);
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              promptIfWaiting(reg);
+            }
+          });
+        });
+
+        reg.update().catch((err) => {
+          console.warn('[PWA] Initial update check failed:', err);
+        });
       })
       .catch((err) => console.log('Tesseract PWA Service Worker Registration Failed:', err));
   });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkForSwUpdate();
+  });
+  window.addEventListener('focus', checkForSwUpdate);
 
   let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {

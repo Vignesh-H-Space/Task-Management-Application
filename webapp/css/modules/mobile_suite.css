@@ -2537,3 +2537,125 @@
 .pass-match-hint.invalid {
   color: #f43f5e;
 }
+
+
+/* ── PWA Update Available Banner ── */
+.pwa-update-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: min(92vw, 440px);
+  padding: 12px 16px;
+  background: rgba(18, 20, 28, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--accent-primary, #3b82f6);
+  border-radius: 16px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(59, 130, 246, 0.2);
+  color: #f8fafc;
+  opacity: 0;
+  animation: pwaBannerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pwaBannerSlideIn {
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.pwa-update-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pwa-update-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.pwa-update-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pwa-update-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.pwa-update-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.pwa-update-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pwa-update-btn {
+  background: var(--accent-primary, #3b82f6);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.pwa-update-btn:hover {
+  background: var(--accent-primary-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
+.pwa-update-dismiss {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.pwa-update-dismiss:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .pwa-update-banner {
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .pwa-update-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .pwa-update-sub {
+  color: #475569;
+}
+
+[data-theme="light"] .pwa-update-dismiss:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}

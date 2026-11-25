@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tesseract-pwa-v33';
+const CACHE_NAME = 'tesseract-pwa-v34';
 const ASSETS_TO_CACHE = [
   './',
   './login.html',
@@ -66,9 +66,8 @@ const ASSETS_TO_CACHE = [
   './icons/shortcut-roadmap.svg'
 ];
 
-// Install Event - Pre-cache Assets & Immediately Skip Waiting
+// Install Event - Pre-cache Assets (waits for user confirmation via SKIP_WAITING on updates)
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
