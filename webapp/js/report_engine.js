@@ -75,6 +75,13 @@ const ReportEngine = {
     return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
   },
 
+  formatLocalISO(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
   getDateRange() {
     const anchor = new Date(this.anchorDate);
     const year = anchor.getFullYear();
@@ -139,85 +146,105 @@ const ReportEngine = {
 
     const tasks = (typeof state !== 'undefined' && Array.isArray(state.tasks)) ? state.tasks : [];
     const profile = (typeof state !== 'undefined' && state.profile) ? state.profile : { name: 'Executive Leader' };
-    const xpData = (typeof XPEngine !== 'undefined' && XPEngine.data) ? XPEngine.data : { totalXP: 1450, level: 3, rankTitle: 'Strategist', streak: 12 };
+    const xpData = (typeof XPEngine !== 'undefined' && XPEngine.data)
+      ? XPEngine.data
+      : { totalXP: 0, level: 1, rankTitle: 'Initiate', streak: 0 };
 
-    // 1. Completed Tasks in Range
-    const completedTasks = tasks.filter(t => {
+    const isTimeInRange = (ts) => {
+      if (!ts) return false;
+      const t = new Date(ts).getTime();
+      return !Number.isNaN(t) && t >= startTime && t <= endTime;
+    };
+
+    // 1. Completed Tasks in Range (from active state.tasks + daily rollover archive)
+    const activeCompleted = tasks.filter(t => {
       if (!t.completed) return false;
-      if (t.completedAt) {
-        const cTime = new Date(t.completedAt).getTime();
-        return cTime >= startTime && cTime <= endTime;
+      if (t.completedAt) return isTimeInRange(t.completedAt);
+      if (t.dueDate) return isTimeInRange(t.dueDate + 'T12:00:00');
+      if (t.createdAt) return isTimeInRange(t.createdAt);
+      return false;
+    });
+
+    let archivedCompletions = [];
+    try {
+      const archiveRaw = typeof localStorage !== 'undefined'
+        ? localStorage.getItem('tesseract_daily_completions_archive')
+        : null;
+      if (archiveRaw) {
+        const parsedArchive = JSON.parse(archiveRaw);
+        if (Array.isArray(parsedArchive)) {
+          archivedCompletions = parsedArchive.filter(a => {
+            if (a.completedAt && isTimeInRange(a.completedAt)) return true;
+            if (a.date && isTimeInRange(a.date + 'T12:00:00')) return true;
+            return false;
+          }).map(a => ({
+            id: a.taskId || `arch_${a.date}_${a.title}`,
+            title: a.title,
+            category: a.category || 'General',
+            tier: a.tier || 'daily',
+            priority: 'medium',
+            completed: true,
+            completedAt: a.completedAt || (a.date + 'T12:00:00'),
+            dueDate: a.date
+          }));
+        }
       }
-      // Fallback for demo/seed data: check dueDate or createdAt
-      if (t.dueDate) {
-        const dTime = new Date(t.dueDate).getTime();
-        if (dTime >= startTime && dTime <= endTime) return true;
+    } catch (e) {
+      console.warn('[Report] Failed to read daily completions archive:', e);
+    }
+
+    const seenCompletionKeys = new Set(
+      activeCompleted.map(t => `${t.id}|${(t.completedAt || t.dueDate || '').slice(0, 10)}`)
+    );
+    const completedTasks = [...activeCompleted];
+    archivedCompletions.forEach(a => {
+      const key = `${a.id}|${(a.completedAt || a.dueDate || '').slice(0, 10)}`;
+      if (!seenCompletionKeys.has(key)) {
+        seenCompletionKeys.add(key);
+        completedTasks.push(a);
       }
-      // If yearly view, include all completed in that year
-      if (this.cadence === 'yearly') {
-        const year = range.start.getFullYear();
-        if (t.completedAt && new Date(t.completedAt).getFullYear() === year) return true;
-        if (t.createdAt && new Date(t.createdAt).getFullYear() === year) return true;
-      }
-      return true; // fallback to include demo completed tasks
     });
 
     // 2. Active Tasks
     const activeTasks = tasks.filter(t => !t.completed);
 
-    // 3. Focus / Deep Work Sessions
+    // 3. Focus / Deep Work Sessions (100% real sessions, no mock fallback)
     let sessions = [];
     if (typeof FocusEngine !== 'undefined' && typeof FocusEngine.getSessions === 'function') {
       sessions = FocusEngine.getSessions();
-    } else {
+    } else if (typeof localStorage !== 'undefined') {
       try {
         const raw = localStorage.getItem('tesseract_focus_sessions');
         if (raw) sessions = JSON.parse(raw);
       } catch (e) {
-      console.warn('[Report] Handled exception:', e);
-    }
+        console.warn('[Report] Handled exception:', e);
+      }
     }
 
-    const sessionsInRange = sessions.filter(s => {
-      if (!s.timestamp) return true;
-      const sTime = new Date(s.timestamp).getTime();
-      return sTime >= startTime && sTime <= endTime;
+    const effectiveSessions = (Array.isArray(sessions) ? sessions : []).filter(s => {
+      if (!s || !s.timestamp) return false;
+      return isTimeInRange(s.timestamp);
     });
 
-    // Seed mock fallback sessions if empty for rich analytics display
-    const effectiveSessions = sessionsInRange.length > 0 ? sessionsInRange : [
-      { id: 'f1', durationMinutes: 50, tag: 'Engineering', timestamp: new Date(startTime + 86400000).toISOString() },
-      { id: 'f2', durationMinutes: 25, tag: 'Product', timestamp: new Date(startTime + 2 * 86400000).toISOString() },
-      { id: 'f3', durationMinutes: 45, tag: 'Architecture', timestamp: new Date(startTime + 4 * 86400000).toISOString() },
-      { id: 'f4', durationMinutes: 30, tag: 'Review', timestamp: new Date(startTime + 5 * 86400000).toISOString() }
-    ];
-
-    const focusMins = effectiveSessions.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+    const focusMins = effectiveSessions.reduce((sum, s) => sum + (Number(s.durationMinutes) || 0), 0);
     const focusHours = (focusMins / 60).toFixed(1);
     const avgSessionMins = effectiveSessions.length > 0 ? Math.round(focusMins / effectiveSessions.length) : 0;
 
-    // 4. Habits Consistency
+    // 4. Habits Consistency (100% real habits, no mock fallback)
     let habitsList = [];
-    if (typeof HabitsEngine !== 'undefined' && HabitsEngine.habits && HabitsEngine.habits.length > 0) {
+    if (typeof HabitsEngine !== 'undefined' && Array.isArray(HabitsEngine.habits)) {
       habitsList = HabitsEngine.habits;
-    } else {
+    } else if (typeof localStorage !== 'undefined') {
       try {
         const raw = localStorage.getItem('tesseract_habits_data');
         if (raw) habitsList = JSON.parse(raw);
       } catch (e) {
-      console.warn('[Report] Handled exception:', e);
+        console.warn('[Report] Handled exception:', e);
+      }
     }
-    }
-    if (habitsList.length === 0) {
-      habitsList = [
-        { id: 'h1', title: 'Deep Work Block (90m)', icon: '⚡', category: 'Productivity', history: {} },
-        { id: 'h2', title: 'Hydration & Electrolytes', icon: '💧', category: 'Health', history: {} },
-        { id: 'h3', title: 'Executive Journaling & Planning', icon: '📓', category: 'Mindset', history: {} },
-        { id: 'h4', title: 'Zone 2 Cardio / Mobility', icon: '🏃', category: 'Health', history: {} }
-      ];
-    }
+    if (!Array.isArray(habitsList)) habitsList = [];
 
-    // Days array for heatmap/velocity chart
+    // Days array for heatmap/velocity chart (using local YYYY-MM-DD)
     const daysInPeriod = [];
     if (this.cadence === 'weekly') {
       for (let i = 0; i < 7; i++) {
@@ -225,7 +252,7 @@ const ReportEngine = {
         cur.setDate(range.start.getDate() + i);
         daysInPeriod.push({
           date: cur,
-          iso: cur.toISOString().split('T')[0],
+          iso: this.formatLocalISO(cur),
           dayName: cur.toLocaleDateString('en-US', { weekday: 'short' }),
           dayNumber: cur.getDate()
         });
@@ -236,7 +263,7 @@ const ReportEngine = {
         const cur = new Date(range.start.getFullYear(), range.start.getMonth(), i);
         daysInPeriod.push({
           date: cur,
-          iso: cur.toISOString().split('T')[0],
+          iso: this.formatLocalISO(cur),
           dayName: cur.toLocaleDateString('en-US', { weekday: 'narrow' }),
           dayNumber: i
         });
@@ -254,20 +281,30 @@ const ReportEngine = {
       }
     }
 
-    // Compute habit matrix stats
-    let totalPossibleHabitChecks = habitsList.length * daysInPeriod.length;
+    // Compute real habit matrix stats
+    let totalPossibleHabitChecks = 0;
     let actualHabitChecks = 0;
 
     const habitHeatmapRows = habitsList.map(h => {
+      const history = (h && h.history && typeof h.history === 'object') ? h.history : {};
       let checks = 0;
       const cellData = daysInPeriod.map(d => {
-        // Check if marked in history or generate consistent mock if empty
-        const isDone = (h.history && h.history[d.iso]) || ((d.dayNumber % 3 !== 0) && (h.id.charCodeAt(1) % 2 === 0));
-        if (isDone) checks++;
+        let isDone = false;
+        if (this.cadence === 'yearly') {
+          const monthEntries = Object.entries(history).filter(([dt, val]) => dt.startsWith(d.iso) && !!val);
+          isDone = monthEntries.length > 0;
+          checks += monthEntries.length;
+        } else {
+          isDone = !!history[d.iso];
+          if (isDone) checks++;
+        }
         return { iso: d.iso, label: d.dayName, isDone };
       });
+
+      const possibleForHabit = this.cadence === 'yearly' ? range.daysCount : daysInPeriod.length;
+      totalPossibleHabitChecks += possibleForHabit;
       actualHabitChecks += checks;
-      const pct = daysInPeriod.length > 0 ? Math.round((checks / daysInPeriod.length) * 100) : 0;
+      const pct = possibleForHabit > 0 ? Math.min(100, Math.round((checks / possibleForHabit) * 100)) : 0;
       return {
         id: h.id,
         title: h.title,
@@ -280,8 +317,8 @@ const ReportEngine = {
     });
 
     const habitAdherencePct = totalPossibleHabitChecks > 0
-      ? Math.round((actualHabitChecks / totalPossibleHabitChecks) * 100)
-      : 92;
+      ? Math.min(100, Math.round((actualHabitChecks / totalPossibleHabitChecks) * 100))
+      : 0;
 
     // 5. Category Breakdown — Merges cascade tasks + backlog objectives
     const categoryColors = {
@@ -292,7 +329,6 @@ const ReportEngine = {
       Health: '#f43f5e',
       Personal: '#ec4899',
       General: '#a855f7',
-      // Backlog group colors
       Work: '#3b82f6',
       Household: '#8b5cf6',
       Physical: '#10b981',
@@ -301,10 +337,7 @@ const ReportEngine = {
       'Petty Errands': '#06b6d4'
     };
 
-    // Unified category map to accumulate both cascade tasks and backlog items
     const catMap = {};
-
-    // a) Cascade task categories
     const cascadeCategories = ['Product', 'Engineering', 'Career', 'Finance', 'Health', 'Personal'];
     cascadeCategories.forEach(cat => {
       const catCompleted = completedTasks.filter(t => (t.category || 'Product') === cat).length;
@@ -315,14 +348,12 @@ const ReportEngine = {
       }
     });
 
-    // b) Backlog group distribution
     if (typeof BacklogEngine !== 'undefined' && Array.isArray(BacklogEngine.items)) {
       const backlogGroupMeta = (typeof BACKLOG_GROUPS !== 'undefined') ? BACKLOG_GROUPS : {};
       const bklItems = BacklogEngine.items;
       const bklCompleted = (typeof BacklogEngine.completedItems !== 'undefined' && Array.isArray(BacklogEngine.completedItems))
         ? BacklogEngine.completedItems : [];
 
-      // Active backlogs
       bklItems.filter(b => !b.completed).forEach(b => {
         const groupKey = b.group || 'work';
         const meta = backlogGroupMeta[groupKey];
@@ -332,12 +363,8 @@ const ReportEngine = {
         catMap[label].total++;
       });
 
-      // Completed backlogs in range
       bklCompleted.forEach(b => {
-        if (b.completedAt) {
-          const cTime = new Date(b.completedAt).getTime();
-          if (cTime < startTime || cTime > endTime) return;
-        }
+        if (b.completedAt && !isTimeInRange(b.completedAt)) return;
         const groupKey = b.group || 'work';
         const meta = backlogGroupMeta[groupKey];
         const label = meta ? meta.label : groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
@@ -347,7 +374,6 @@ const ReportEngine = {
       });
     }
 
-    // Convert to sorted array, descending by total count, filter out zero-total entries
     const categoryStats = Object.values(catMap)
       .filter(c => c.total > 0)
       .sort((a, b) => b.total - a.total);
@@ -357,13 +383,44 @@ const ReportEngine = {
     const linkedTactical = tacticalTasks.filter(t => t.parentId);
     const alignmentScore = tacticalTasks.length > 0
       ? Math.round((linkedTactical.length / tacticalTasks.length) * 100)
-      : 88;
+      : (tasks.length > 0 ? 100 : 0);
 
     // 7. Velocity Numbers
     const totalGoalsInScope = completedTasks.length + activeTasks.length;
     const completionRate = totalGoalsInScope > 0
       ? Math.round((completedTasks.length / totalGoalsInScope) * 100)
       : 0;
+
+    // 8. Digital Wellbeing / Screen Time Aggregation
+    let screentimeStore = null;
+    if (typeof ScreentimeEngine !== 'undefined' && ScreentimeEngine.data) {
+      screentimeStore = ScreentimeEngine.data;
+    } else if (typeof localStorage !== 'undefined') {
+      try {
+        const rawSt = localStorage.getItem('tesseract_screentime_data');
+        if (rawSt) screentimeStore = JSON.parse(rawSt);
+      } catch (e) {
+        console.warn('[Report] Failed to read screentime data:', e);
+      }
+    }
+
+    const stGoalMins = (screentimeStore && screentimeStore.dailyGoalMinutes) ? screentimeStore.dailyGoalMinutes : 180;
+    const stHistory = (screentimeStore && screentimeStore.history) ? screentimeStore.history : {};
+    let stTotalMins = 0;
+    let stDaysLogged = 0;
+    let stDaysUnderGoal = 0;
+
+    Object.entries(stHistory).forEach(([dt, rec]) => {
+      if (!rec || !(rec.totalMinutes > 0)) return;
+      if (isTimeInRange(dt + 'T12:00:00')) {
+        stTotalMins += rec.totalMinutes;
+        stDaysLogged++;
+        if (rec.totalMinutes <= stGoalMins) stDaysUnderGoal++;
+      }
+    });
+
+    const stAvgDailyMins = stDaysLogged > 0 ? Math.round(stTotalMins / stDaysLogged) : 0;
+    const stCompliancePct = stDaysLogged > 0 ? Math.round((stDaysUnderGoal / stDaysLogged) * 100) : 100;
 
     return {
       userName: profile.name || 'Executive Leader',
@@ -381,7 +438,15 @@ const ReportEngine = {
       categoryStats,
       alignmentScore,
       completionRate,
-      totalGoalsInScope
+      totalGoalsInScope,
+      screentime: {
+        totalMinutes: stTotalMins,
+        avgDailyMinutes: stAvgDailyMins,
+        daysLogged: stDaysLogged,
+        daysUnderGoal: stDaysUnderGoal,
+        compliancePct: stCompliancePct,
+        dailyGoalMinutes: stGoalMins
+      }
     };
   },
 
@@ -579,15 +644,23 @@ const ReportEngine = {
     const chartWidth = width - paddingLeft - paddingRight;
     const chartHeight = height - paddingTop - paddingBottom;
 
-    // Distribute completed tasks and focus minutes across periods
-    const barsData = items.map((item, idx) => {
-      const taskHits = Math.max(0, (idx % 3 === 0 ? 3 : idx % 2 === 0 ? 2 : 1) + (idx === 3 ? 2 : 0));
-      const focusHits = ((idx * 1.3) % 3.5 + 0.5).toFixed(1);
+    // Real completed tasks and focus minutes per day (or month in yearly mode)
+    const barsData = items.map((item) => {
+      const matchPeriod = (tsOrDate) => {
+        if (!tsOrDate) return false;
+        if (this.cadence === 'yearly') return String(tsOrDate).startsWith(item.iso);
+        const d = new Date(tsOrDate);
+        if (Number.isNaN(d.getTime())) return String(tsOrDate).startsWith(item.iso);
+        return this.formatLocalISO(d) === item.iso;
+      };
+
+      const taskHits = (data.completedTasks || []).filter(t => matchPeriod(t.completedAt || (t.dueDate ? t.dueDate + 'T12:00:00' : t.createdAt))).length;
+      const focusMinsForDay = (data.effectiveSessions || []).filter(s => matchPeriod(s.timestamp)).reduce((sum, s) => sum + (Number(s.durationMinutes) || 0), 0);
       return {
         label: item.dayName,
         sublabel: item.dayNumber || '',
         tasks: taskHits,
-        focus: parseFloat(focusHits)
+        focus: parseFloat((focusMinsForDay / 60).toFixed(1))
       };
     });
 
@@ -889,7 +962,7 @@ const ReportEngine = {
     md += `| **Deep Work Flow Time** | ${data.focusHours} Hours (${data.effectiveSessions.length} sprints • ~${data.avgSessionMins}m avg) |\n`;
     md += `| **Strategic Alignment Score** | ${data.alignmentScore}% (${data.alignmentScore >= 80 ? 'Optimal' : 'Action Required'}) |\n`;
     md += `| **Habit Adherence Index** | ${data.habitAdherencePct}% Consistency |\n`;
-    md += `| **Executive Rank & XP** | Level ${data.xpData.level} — ${data.xpData.rankTitle} (${data.xpData.totalXP.toLocaleString()} XP) |\n\n`;
+    md += `| **Digital Wellbeing** | ${data.screentime.daysLogged > 0 ? `${data.screentime.avgDailyMinutes}m/day avg (${data.screentime.compliancePct}% under goal)` : 'No logs'} |\n| **Executive Rank & XP** | Level ${data.xpData.level} — ${data.xpData.rankTitle} (${data.xpData.totalXP.toLocaleString()} XP) |\n\n`;
 
     md += `## 🎯 Category Domain Allocation\n`;
     md += `| Domain | Completed | In-Flight | Total Allocation |\n`;
@@ -999,3 +1072,7 @@ const ReportEngine = {
   }
 };
 
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ReportEngine;
+}
